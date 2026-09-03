@@ -66,19 +66,20 @@ echo "12) Fix File Permissions, /dev/kvm & Node Recovery"
 echo "13) System Health & Diagnostic Dashboard"
 echo "14) Create Full Lab & Database Backup Archive"
 echo "15) AI Lab Builder & Ollama MCP Integration"
-echo "16) Apply ALL Essential Fixes & Performance Suite (Recommended)"
-echo "17) Exit"
+echo "16) Freeze Version & Block Future Updates (Anti-Conflict Lock)"
+echo "17) Apply ALL Essential Fixes & Performance Suite (Recommended)"
+echo "18) Exit"
 echo "============================================================"
 
 # Handle interactive /dev/tty or non-interactive argument/fallback
 CHOICE=""
-if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-7])$ ]]; then
+if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-8])$ ]]; then
     CHOICE="$1"
 elif [ -e /dev/tty ]; then
-    read -rp "Select an option [1-17, default: 16]: " USER_INPUT < /dev/tty || true
-    CHOICE="${USER_INPUT:-16}"
+    read -rp "Select an option [1-18, default: 17]: " USER_INPUT < /dev/tty || true
+    CHOICE="${USER_INPUT:-17}"
 else
-    CHOICE="16"
+    CHOICE="17"
 fi
 
 case "$CHOICE" in
@@ -135,35 +136,41 @@ case "$CHOICE" in
         bash "${SCRIPT_DIR}/setup-ollama.sh" "$HOST_IP" "$MODEL"
         ;;
     16)
-        echo "--> [1/8] Applying Permanent Session Fix..."
+        bash "${SCRIPT_DIR}/pnetlab-block-updates.sh"
+        ;;
+    17)
+        echo "--> [1/9] Applying Permanent Session Fix..."
         bash "${SCRIPT_DIR}/pnetlab-disable-logout.sh"
         echo ""
-        echo "--> [2/8] Applying Lab Export & APT Fix..."
+        echo "--> [2/9] Applying Lab Export & APT Fix..."
         bash "${SCRIPT_DIR}/pnetlab-fix-export-and-apt.sh"
         echo ""
-        echo "--> [3/8] Applying 512MB Upload Limits & Docker Routing..."
+        echo "--> [3/9] Applying 512MB Upload Limits & Docker Routing..."
         bash "${SCRIPT_DIR}/pnetlab-upload-and-docker-fix.sh"
         echo ""
-        echo "--> [4/8] Applying SSL IP-SAN, Console & Cloud Bridge Fix..."
+        echo "--> [4/9] Applying SSL IP-SAN, Console & Cloud Bridge Fix..."
         bash "${SCRIPT_DIR}/pnetlab-system-and-console-fix.sh"
         echo ""
-        echo "--> [5/8] Applying Database SQL Mode, 1M Limits & Logrotate..."
+        echo "--> [5/9] Applying Database SQL Mode, 1M Limits & Logrotate..."
         bash "${SCRIPT_DIR}/pnetlab-database-and-system-deep-fix.sh"
         echo ""
-        echo "--> [6/8] Fixing File Permissions & Sockets..."
+        echo "--> [6/9] Fixing File Permissions & Sockets..."
         bash "${SCRIPT_DIR}/pnetlab-fix-permissions.sh"
         echo ""
-        echo "--> [7/8] Applying High-Performance Speed Optimizer..."
+        echo "--> [7/9] Applying High-Performance Speed Optimizer..."
         bash "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh"
         echo ""
-        echo "--> [8/8] Activating Dataplane Fast-Path Accelerator..."
+        echo "--> [8/9] Activating Dataplane Fast-Path Accelerator..."
         bash "${SCRIPT_DIR}/pnetlab-dataplane-engine.sh"
+        echo ""
+        echo "--> [9/9] Freezing Version & Blocking Future Updates..."
+        bash "${SCRIPT_DIR}/pnetlab-block-updates.sh"
         echo ""
         echo "============================================================"
         echo "  [SUCCESS] ALL ESSENTIAL ENHANCEMENTS APPLIED SUCCESSFULLY! "
         echo "============================================================"
         ;;
-    17)
+    18)
         echo "Exiting."
         exit 0
         ;;

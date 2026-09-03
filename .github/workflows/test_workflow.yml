@@ -1,0 +1,33 @@
+name: Run Workflow Test
+
+on:
+  workflow_dispatch:  # Allows manual 1-click test run from GitHub Actions tab
+  pull_request:
+    branches: [ main, master ]
+
+defaults:
+  run:
+    working-directory: EMULATOR/0-P-UNTOUCHED
+
+jobs:
+  test:
+    name: Run Workflow Self-Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure Git Safe Directory
+        working-directory: .
+        run: |
+          git config --global --add safe.directory "*"
+
+      - name: Execute Self-Test Suite
+        run: |
+          python test_workflow.py

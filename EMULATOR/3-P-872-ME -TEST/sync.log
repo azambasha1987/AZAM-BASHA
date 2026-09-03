@@ -1,0 +1,96 @@
+[2026-09-03 11:34:23] ==================================================
+[2026-09-03 11:34:23] STARTING 24-HOUR SYNC CYCLE
+[2026-09-03 11:34:23] ==================================================
+[2026-09-03 11:34:23] --- Checking Track 1 (Git Repository) ---
+[2026-09-03 11:34:24] Git repository is up to date.
+[2026-09-03 11:34:24] Current Track 1 HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4
+[2026-09-03 11:34:24] --- Checking Track 2 (Package API & Releases) ---
+[2026-09-03 11:34:25] Retrieved 42 total package records from API.
+[2026-09-03 11:34:30] Status: 73 files already verified locally. 0 new/missing files to download.
+[2026-09-03 11:34:31] Sync complete. New: 0, Verified: 73, Failed: 0
+[2026-09-03 11:34:31] SYNC CYCLE FINISHED SUCCESSFULLY.
+[2026-09-03 11:36:55] ============================================================
+[2026-09-03 11:36:55] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:36:55] ============================================================
+[2026-09-03 11:36:55] FATAL ERROR during sync cycle: 'charmap' codec can't encode character '\u25b6' in position 22: character maps to <undefined>
+[2026-09-03 11:37:14] ============================================================
+[2026-09-03 11:37:14] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:37:14] ============================================================
+[2026-09-03 11:37:14] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 11:37:14] [Track 1] Up to date (HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4)
+[2026-09-03 11:37:14] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 11:37:21] [Track 2] All 73 files are unchanged. 0 bytes downloaded.
+[2026-09-03 11:37:21] Sync finished. New/Changed files downloaded: 0, Unchanged skipped: 73
+[2026-09-03 11:37:21] ============================================================
+[2026-09-03 11:38:29] ============================================================
+[2026-09-03 11:38:29] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:38:29] ============================================================
+[2026-09-03 11:38:29] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 11:38:30] [Track 1] Up to date (HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4)
+[2026-09-03 11:38:30] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 11:38:36] [Track 2] All 73 files are unchanged. 0 bytes downloaded.
+[2026-09-03 11:38:37] Sync finished. New/Changed files downloaded: 0, Unchanged skipped: 73
+[2026-09-03 11:38:37] ============================================================
+[2026-09-03 11:38:58] ============================================================
+[2026-09-03 11:38:58] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:38:58] ============================================================
+[2026-09-03 11:38:58] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 11:38:59] [Track 1] Up to date (HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4)
+[2026-09-03 11:38:59] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 11:39:05] [Track 2] New file detected: debian/pool/resolute/main/pnetlab-docker_6.8.72resolute1_amd64.deb
+[2026-09-03 11:39:05] [Track 2] File size change detected: generic/6.8.72resolute1/pnetlab-6.8.72resolute1-manifest.json
+[2026-09-03 11:39:05] [Track 2] Downloading 2 changed/new files...
+[2026-09-03 11:39:06] [Track 2] DOWNLOADED & VERIFIED: pnetlab-docker_6.8.72resolute1_amd64.deb (3,618 bytes | SHA256: ed4a801ef5d20112...)
+[2026-09-03 11:39:06] [Track 2] DOWNLOADED & VERIFIED: pnetlab-6.8.72resolute1-manifest.json (1,274 bytes | SHA256: 61416468e8dba97f...)
+[2026-09-03 11:39:07] Sync finished. New/Changed files downloaded: 2, Unchanged skipped: 71
+[2026-09-03 11:39:07] ============================================================
+[2026-09-03 11:40:58] ============================================================
+[2026-09-03 11:40:58] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:40:58] ============================================================
+[2026-09-03 11:40:58] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 11:40:59] [Track 1] Up to date (HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4)
+[2026-09-03 11:40:59] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 11:41:05] [Track 2] All 73 files are unchanged. 0 bytes downloaded.
+[2026-09-03 11:41:06] Sync finished. New/Changed files downloaded: 0, Unchanged skipped: 73
+[2026-09-03 11:41:06] ============================================================
+[2026-09-03 11:41:06] ============================================================
+[2026-09-03 11:41:06] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:41:06] ============================================================
+[2026-09-03 11:41:06] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 11:41:07] [Track 1] Up to date (HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4)
+[2026-09-03 11:41:07] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 11:41:13] [Track 2] File size change detected: generic/6.8.72resolute1/pnetlab-6.8.72resolute1-manifest.json
+[2026-09-03 11:41:13] [Track 2] Downloading 1 changed/new files...
+[2026-09-03 11:41:14] [Track 2] DOWNLOADED & VERIFIED: pnetlab-6.8.72resolute1-manifest.json (1,274 bytes | SHA256: 61416468e8dba97f...)
+[2026-09-03 11:41:14] Sync finished. New/Changed files downloaded: 1, Unchanged skipped: 72
+[2026-09-03 11:41:14] ============================================================
+[2026-09-03 11:44:23] ============================================================
+[2026-09-03 11:44:23] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:44:23] ============================================================
+[2026-09-03 11:44:23] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 11:44:24] [Track 1] Up to date (HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4)
+[2026-09-03 11:44:24] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 11:44:30] [Track 2] All 73 files are unchanged. 0 bytes downloaded.
+[2026-09-03 11:44:30] Sync finished. New/Changed files downloaded: 0, Unchanged skipped: 73
+[2026-09-03 11:44:30] ============================================================
+[2026-09-03 11:44:30] ============================================================
+[2026-09-03 11:44:30] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 11:44:30] ============================================================
+[2026-09-03 11:44:30] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 11:44:31] [Track 1] Up to date (HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4)
+[2026-09-03 11:44:31] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 11:44:37] [Track 2] File size change detected: generic/6.8.72resolute1/pnetlab-6.8.72resolute1-manifest.json
+[2026-09-03 11:44:37] [Track 2] Downloading 1 changed/new files...
+[2026-09-03 11:44:38] [Track 2] DOWNLOADED & VERIFIED: pnetlab-6.8.72resolute1-manifest.json (1,274 bytes | SHA256: 61416468e8dba97f...)
+[2026-09-03 11:44:39] Sync finished. New/Changed files downloaded: 1, Unchanged skipped: 72
+[2026-09-03 11:44:39] ============================================================
+[2026-09-03 06:23:21] ============================================================
+[2026-09-03 06:23:21] STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC
+[2026-09-03 06:23:21] ============================================================
+[2026-09-03 06:23:21] [Track 1] Checking Git Commits & Repository Source...
+[2026-09-03 06:23:21] [Track 1] Initializing repository at /home/runner/work/AZAM-BASHA/AZAM-BASHA/EMULATOR/0-P-UNTOUCHED/track-1-git...
+[2026-09-03 06:23:22] [Track 1] Cloned at HEAD: fde04f7c1aff7c2a2d3e0c1ad305c30fa7b9cdb4
+[2026-09-03 06:23:22] [Track 2] Checking Codeberg Package API & Debian Releases...
+[2026-09-03 06:23:27] [Track 2] All 73 files are unchanged. 0 bytes downloaded.
+[2026-09-03 06:23:28] Sync finished. New/Changed files downloaded: 0, Unchanged skipped: 73
+[2026-09-03 06:23:28] ============================================================

@@ -14,14 +14,18 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
     echo "Usage: sudo bash $0 [OPTION_NUMBER | --check]"
     echo ""
     echo "Options:"
-    echo "  1    Apply Permanent Session Fix (Never-Logout, 10-Year Session)"
-    echo "  2    Apply Lab Export & APT Sources Fix"
-    echo "  3    Apply High-Performance Speed Optimizer Suite"
-    echo "  4    Configure AI Lab Builder & Ollama Integration"
-    echo "  5    Fix File Permissions, /dev/kvm & Node Recovery"
-    echo "  6    Run Comprehensive Health & Diagnostic Dashboard"
-    echo "  7    Create Full Lab & Database Backup"
-    echo "  8    Apply ALL Essential Fixes & Optimizations (1 + 2 + 3 + 5)"
+    echo "  1    Permanent Session Fix (Never-Logout, 10-Year Session)"
+    echo "  2    Lab Export & APT Sources Fix (zip/unzip, nested labs)"
+    echo "  3    High-Performance Speed Optimizer Suite (KSM, OPcache, Gzip, Sysctl)"
+    echo "  4    High-Performance Dataplane Accelerator (2× Throughput, 1/3 CPU)"
+    echo "  5    Link Quality & Impairment Controller (latency, jitter, loss)"
+    echo "  6    Packet Capture & Live Wireshark Streamer"
+    echo "  7    Real-Time Per-Link Telemetry Monitor"
+    echo "  8    Fix File Permissions, /dev/kvm & Clean Node Locks"
+    echo "  9    System Health & Diagnostic Dashboard"
+    echo "  10   Create Full Lab & Database Backup"
+    echo "  11   Configure AI Lab Builder & Ollama Integration"
+    echo "  12   Apply ALL Essential Fixes & Dataplane Suite (Recommended)"
     echo "  --check  Run non-destructive diagnostic health check"
     exit 0
 fi
@@ -46,23 +50,27 @@ echo "============================================================"
 echo "1) Permanent Session Fix (Never-Logout, 10-Year Session)"
 echo "2) Lab Export & APT Sources Fix (zip/unzip, nested labs)"
 echo "3) High-Performance Speed Optimizer (KSM, OPcache, Gzip, Sysctl)"
-echo "4) AI Lab Builder & Ollama MCP Integration"
-echo "5) Fix File Permissions, /dev/kvm & Clean Node Locks"
-echo "6) System Health & Diagnostic Dashboard"
-echo "7) Create Full Lab & Database Backup Archive"
-echo "8) Apply ALL Essential Fixes & Performance Suite (Recommended)"
-echo "9) Exit"
+echo "4) Dataplane Fast-Path Accelerator (~2× Throughput, 1/3 CPU)"
+echo "5) Link Impairment Controller (Latency, Jitter, Packet Loss)"
+echo "6) Packet Capture & Live Wireshark Streamer"
+echo "7) Real-Time Per-Link Telemetry Monitor"
+echo "8) Fix File Permissions, /dev/kvm & Node Recovery"
+echo "9) System Health & Diagnostic Dashboard"
+echo "10) Create Full Lab & Database Backup Archive"
+echo "11) AI Lab Builder & Ollama MCP Integration"
+echo "12) Apply ALL Essential Fixes & Performance Suite (Recommended)"
+echo "13) Exit"
 echo "============================================================"
 
 # Handle interactive /dev/tty or non-interactive argument/fallback
 CHOICE=""
-if [ -n "${1:-}" ] && [[ "$1" =~ ^[1-9]$ ]]; then
+if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-3])$ ]]; then
     CHOICE="$1"
 elif [ -e /dev/tty ]; then
-    read -rp "Select an option [1-9, default: 8]: " USER_INPUT < /dev/tty || true
-    CHOICE="${USER_INPUT:-8}"
+    read -rp "Select an option [1-13, default: 12]: " USER_INPUT < /dev/tty || true
+    CHOICE="${USER_INPUT:-12}"
 else
-    CHOICE="8"
+    CHOICE="12"
 fi
 
 case "$CHOICE" in
@@ -76,6 +84,27 @@ case "$CHOICE" in
         bash "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh"
         ;;
     4)
+        bash "${SCRIPT_DIR}/pnetlab-dataplane-engine.sh"
+        ;;
+    5)
+        bash "${SCRIPT_DIR}/pnetlab-link-impairment.sh" --help
+        ;;
+    6)
+        bash "${SCRIPT_DIR}/pnetlab-capture-stream.sh" --help
+        ;;
+    7)
+        python3 "${SCRIPT_DIR}/pnetlab-dataplane-stats.py"
+        ;;
+    8)
+        bash "${SCRIPT_DIR}/pnetlab-fix-permissions.sh"
+        ;;
+    9)
+        bash "${SCRIPT_DIR}/pnetlab-health-check.sh"
+        ;;
+    10)
+        bash "${SCRIPT_DIR}/pnetlab-backup-restore.sh" backup
+        ;;
+    11)
         HOST_IP=""
         MODEL="qwen2.5:14b-instruct"
         if [ -e /dev/tty ]; then
@@ -85,33 +114,27 @@ case "$CHOICE" in
         fi
         bash "${SCRIPT_DIR}/setup-ollama.sh" "$HOST_IP" "$MODEL"
         ;;
-    5)
-        bash "${SCRIPT_DIR}/pnetlab-fix-permissions.sh"
-        ;;
-    6)
-        bash "${SCRIPT_DIR}/pnetlab-health-check.sh"
-        ;;
-    7)
-        bash "${SCRIPT_DIR}/pnetlab-backup-restore.sh" backup
-        ;;
-    8)
-        echo "--> [1/4] Applying Permanent Session Fix..."
+    12)
+        echo "--> [1/5] Applying Permanent Session Fix..."
         bash "${SCRIPT_DIR}/pnetlab-disable-logout.sh"
         echo ""
-        echo "--> [2/4] Applying Lab Export & APT Fix..."
+        echo "--> [2/5] Applying Lab Export & APT Fix..."
         bash "${SCRIPT_DIR}/pnetlab-fix-export-and-apt.sh"
         echo ""
-        echo "--> [3/4] Fixing File Permissions & Sockets..."
+        echo "--> [3/5] Fixing File Permissions & Sockets..."
         bash "${SCRIPT_DIR}/pnetlab-fix-permissions.sh"
         echo ""
-        echo "--> [4/4] Applying High-Performance Speed Optimizer..."
+        echo "--> [4/5] Applying High-Performance Speed Optimizer..."
         bash "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh"
+        echo ""
+        echo "--> [5/5] Activating Dataplane Fast-Path Accelerator..."
+        bash "${SCRIPT_DIR}/pnetlab-dataplane-engine.sh"
         echo ""
         echo "============================================================"
         echo "  [SUCCESS] ALL ESSENTIAL ENHANCEMENTS APPLIED SUCCESSFULLY! "
         echo "============================================================"
         ;;
-    9)
+    13)
         echo "Exiting."
         exit 0
         ;;

@@ -550,6 +550,28 @@ systemctl enable --now guacd.service 2>/dev/null || true
 systemctl enable --now pnet-guac-lite.service 2>/dev/null || true
 systemctl enable --now pnet-console-mux.service 2>/dev/null || true
 
+# Enable PNetLab Privilege Broker Daemon
+cat > /etc/systemd/system/pnetlab-brokerd.service << 'EOF'
+[Unit]
+Description=PNetLab privilege broker (allowlisted root verbs for the engine)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/unetlab/scripts/pnetlab-brokerd.py
+RuntimeDirectory=pnetlab
+RuntimeDirectoryMode=0755
+User=root
+Group=root
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload 2>/dev/null || true
+systemctl enable --now pnetlab-brokerd.service 2>/dev/null || true
+
 # --- Step 7: Fix Permissions & Cloud Bridges ---
 echo "[7/8] Setting proper permissions and bridge devices..."
 if [ -x /opt/unetlab/wrappers/unl_wrapper ]; then

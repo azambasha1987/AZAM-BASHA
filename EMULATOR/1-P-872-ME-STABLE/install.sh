@@ -168,17 +168,23 @@ if [ -f /opt/unetlab/schema/guacdb-1.6.0-schema.sql ]; then
 fi
 
 # Seed Default Admin User (admin / pnet)
-ADMIN_HASH=$(printf 'pnet' | sha256sum | awk '{print $1}')
 mysql -u pnetlab -ppnetlab pnetlab_db <<EOF || true
 INSERT INTO control (control_name, control_value) VALUES
-  ('ctrl_offline_mode','0'), ('ctrl_online_mode','1'),
-  ('ctrl_default_mode','online'), ('ctrl_captcha','0'),
+  ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
+  ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),
   ('ctrl_version','8.2.0')
 ON DUPLICATE KEY UPDATE control_value = VALUES(control_value);
-INSERT INTO users (username,password,role,offline,user_status,online_time)
-  SELECT 'admin','$ADMIN_HASH','0',0,1,UNIX_TIMESTAMP()
-  WHERE NOT EXISTS (SELECT 1 FROM users WHERE username='admin');
-UPDATE users SET password='$ADMIN_HASH', role='0', offline=0, user_status=1, online_time=UNIX_TIMESTAMP() WHERE username='admin';
+INSERT INTO users (username, password, role, offline, user_status, online_time, expired_time, active_time, pod)
+  VALUES ('admin', SHA2('pnet', 256), 0, 1, 1, UNIX_TIMESTAMP(), 0, 0, 0)
+ON DUPLICATE KEY UPDATE
+  password = SHA2('pnet', 256),
+  role = 0,
+  offline = 1,
+  user_status = 1,
+  online_time = UNIX_TIMESTAMP(),
+  expired_time = 0,
+  active_time = 0,
+  pod = 0;
 EOF
 
 # --- Step 5: Configure Apache & PHP-FPM ---

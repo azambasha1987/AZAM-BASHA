@@ -264,6 +264,41 @@ chown www-data:www-data /opt/unetlab/html/.htaccess 2>/dev/null || true
 chmod 644 /opt/unetlab/html/.htaccess 2>/dev/null || true
 fi
 
+# Ensure Export & Logs directories and symlinks
+mkdir -p /opt/unetlab/data/Exports /opt/unetlab/data/Logs /opt/unetlab/labs
+ln -sfn /opt/unetlab/data/Exports /opt/unetlab/html/Exports 2>/dev/null || true
+ln -sfn /opt/unetlab/data/Exports /opt/unetlab/html/exports 2>/dev/null || true
+chown -R www-data:www-data /opt/unetlab/data/Exports /opt/unetlab/data/Logs /opt/unetlab/labs 2>/dev/null || true
+chmod -R 775 /opt/unetlab/data/Exports /opt/unetlab/data/Logs /opt/unetlab/labs 2>/dev/null || true
+
+# Patch remove_uuid.sh for nested subfolders and absolute zip paths
+cat << 'EOF' > /opt/unetlab/scripts/remove_uuid.sh
+#!/bin/bash
+if [ $# -ne 1 ]; then
+    echo "ERROR: wrong options given."
+    exit 15
+fi
+if [ ! -f "$1" ]; then
+    echo "ERROR: file does not exist."
+    exit 15
+fi
+TARGET_ZIP="$(readlink -f "$1" 2>/dev/null || realpath "$1" 2>/dev/null || echo "$1")"
+TEMP=$(mktemp -d --suffix=_unetlab)
+unzip -q -o -d "$TEMP" "$TARGET_ZIP"
+if [ $? -ne 0 ]; then
+    rm -rf "$TEMP"
+    echo "ERROR: cannot unzip file."
+    exit 15
+fi
+find "$TEMP" -name "*.unl" -exec sed -i "s/ id=\"[0-9a-f-]\{36\}\"//g" "{}" \;
+cd "$TEMP"
+zip -q -r -u "$TARGET_ZIP" *
+cd /
+rm -rf "$TEMP"
+exit 0
+EOF
+chmod +x /opt/unetlab/scripts/remove_uuid.sh /opt/unetlab/scripts/* 2>/dev/null || true
+
 # Configure Apache VirtualHosts
 cat > /etc/apache2/sites-available/pnetlab.conf << 'EOF'
 <VirtualHost *:80>
@@ -272,6 +307,13 @@ cat > /etc/apache2/sites-available/pnetlab.conf << 'EOF'
     RewriteCond %{REMOTE_ADDR} !^127\.
     RewriteCond %{REMOTE_ADDR} !^::1$
     RewriteRule ^/?(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+    Alias /Exports /opt/unetlab/data/Exports
+    Alias /exports /opt/unetlab/data/Exports
+    Alias /data/Exports /opt/unetlab/data/Exports
+    Alias /Logs /opt/unetlab/data/Logs
+    Alias /logs /opt/unetlab/data/Logs
+
     <Directory /opt/unetlab/html>
         Options FollowSymLinks
         AllowOverride All
@@ -279,6 +321,11 @@ cat > /etc/apache2/sites-available/pnetlab.conf << 'EOF'
         DirectoryIndex index.php index.html
     </Directory>
     <Directory /opt/unetlab/data/Exports>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+    <Directory /opt/unetlab/data/Logs>
         Options Indexes FollowSymLinks
         AllowOverride None
         Require all granted
@@ -302,6 +349,13 @@ cat > /etc/apache2/sites-available/pnetlab-ssl.conf << 'EOF'
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
     DocumentRoot /opt/unetlab/html
+
+    Alias /Exports /opt/unetlab/data/Exports
+    Alias /exports /opt/unetlab/data/Exports
+    Alias /data/Exports /opt/unetlab/data/Exports
+    Alias /Logs /opt/unetlab/data/Logs
+    Alias /logs /opt/unetlab/data/Logs
+
     <Directory /opt/unetlab/html>
         Options FollowSymLinks
         AllowOverride All
@@ -309,6 +363,11 @@ cat > /etc/apache2/sites-available/pnetlab-ssl.conf << 'EOF'
         DirectoryIndex index.php index.html
     </Directory>
     <Directory /opt/unetlab/data/Exports>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+    <Directory /opt/unetlab/data/Logs>
         Options Indexes FollowSymLinks
         AllowOverride None
         Require all granted

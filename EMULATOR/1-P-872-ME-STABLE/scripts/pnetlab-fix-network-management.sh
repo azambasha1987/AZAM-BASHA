@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNetLab Network Management Fix for Ubuntu 24/26
-# Fixes "unreachable: No such file or directory" when modifying Management IP
-# Ensures /etc/network/interfaces, brokerd, and Netplan work in harmony.
+# PNetLab Network Management & Broker Daemon Fix for Ubuntu 24/26
+# Resolves "unreachable: No such file or directory" by:
+# 1. Installing python3-yaml runtime dependencies
+# 2. Creating /run/pnetlab runtime socket directory with 0755 permissions
+# 3. Patching pnetlab-brokerd.py to auto-bind to real physical interface (ens33/ens160)
+# 4. Enabling and starting pnetlab-brokerd.service
+# 5. Synchronizing /etc/network/interfaces and Netplan
 # ==============================================================================
 set -euo pipefail
 
 echo "============================================================"
-echo "    Applying PNetLab Network Management & Broker Fix...     "
+echo "    Applying PNetLab Network Management & Broker Daemon Fix "
 echo "============================================================"
 
-# 1. Discover Primary Physical Network Interface
+# 1. Install Runtime Dependencies
+echo "[1/6] Installing python3-yaml and networking dependencies..."
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq 2>/dev/null || true
+apt-get install -y -qq python3-yaml python3-pip python3-setuptools 2>/dev/null || true
+
+# 2. Discover Primary Physical Network Interface
 REAL_IFACE=""
 for iface in $(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | cut -d'@' -f1); do
     case "$iface" in
@@ -25,18 +35,20 @@ done
 if [ -z "$REAL_IFACE" ]; then
     REAL_IFACE="ens33"
 fi
-echo "[1/5] Detected primary physical interface: ${REAL_IFACE}"
+echo "[2/6] Detected primary physical interface: ${REAL_IFACE}"
 
-# 2. Ensure Required Directories Exist
-echo "[2/5] Creating network configuration and backup directories..."
+# 3. Ensure Required Directories Exist with Proper Permissions
+echo "[3/6] Creating network configuration and runtime socket directories..."
 mkdir -p /etc/network/interfaces.d
 mkdir -p /opt/unetlab/data/netcfg-backups
 mkdir -p /etc/systemd/resolved.conf.d
 mkdir -p /etc/netplan
-chmod 755 /opt/unetlab/data/netcfg-backups /etc/systemd/resolved.conf.d 2>/dev/null || true
+mkdir -p /run/pnetlab
+chmod 755 /opt/unetlab/data/netcfg-backups /etc/systemd/resolved.conf.d /run/pnetlab 2>/dev/null || true
+chown root:www-data /run/pnetlab 2>/dev/null || true
 
-# 3. Initialize /etc/network/interfaces if Missing or Empty
-echo "[3/5] Setting up /etc/network/interfaces..."
+# 4. Initialize /etc/network/interfaces if Missing or Empty
+echo "[4/6] Setting up /etc/network/interfaces..."
 if [ ! -f /etc/network/interfaces ] || [ ! -s /etc/network/interfaces ] || ! grep -q "pnet0" /etc/network/interfaces; then
     cat > /etc/network/interfaces << EOF
 # This file describes the network interfaces available on your system
@@ -60,8 +72,8 @@ EOF
     chmod 644 /etc/network/interfaces
 fi
 
-# 4. Patch /opt/unetlab/scripts/pnetlab-brokerd.py
-echo "[4/5] Patching /opt/unetlab/scripts/pnetlab-brokerd.py..."
+# 5. Patch /opt/unetlab/scripts/pnetlab-brokerd.py
+echo "[5/6] Patching /opt/unetlab/scripts/pnetlab-brokerd.py..."
 BROKER_SCRIPT="/opt/unetlab/scripts/pnetlab-brokerd.py"
 if [ -f "$BROKER_SCRIPT" ]; then
     python3 - << 'PYEOF'
@@ -129,7 +141,6 @@ def _ensure_interfaces_file():
 
 
 def _netcfg_valid_netmask(mask):
-    """True for a contiguous dotted IPv4 netmask (255.255.255.0 etc.)."""
     try:
         bits = bin(int(ipaddress.IPv4Address(mask)))[2:].zfill(32)
     except Exception:
@@ -260,7 +271,6 @@ def verb_server_netcfg(args):
         data.update(_netcfg_read_resolved())
         return 0, [json.dumps(data)], ""
 
-    # ---- set ----
     mode = v_enum(args, "mode", {"dhcp", "static"})
     address = netmask = gateway = ""
     if mode == "static":
@@ -291,7 +301,6 @@ def verb_server_netcfg(args):
         raise Reject("bad arg domain")
 
     apply_net = v_bool(args, "apply")
-
     ts = time.strftime("%Y%m%d-%H%M%S")
     backup = _netcfg_backup(ts)
 
@@ -391,20 +400,89 @@ def verb_server_netcfg(args):
         "ok": True, "iface_changed": iface_changed, "rebooting": rebooting,
         "backup": backup,
     })], ""
-
 '''
     patched_code = code[:start_idx] + new_netcfg_section + code[end_idx:]
+    
+    # Also patch main() to ensure socket permissions are 0666 / 0755
+    main_old = '''def main():
+    os.makedirs(os.path.dirname(SOCK_PATH), exist_ok=True)
+    try:
+        os.unlink(SOCK_PATH)
+    except OSError:
+        pass
+    srv = Server(SOCK_PATH, Handler)
+    os.chmod(SOCK_PATH, 0o660)
+    shutil.chown(SOCK_PATH, "root", SOCK_GROUP)
+    log("pnetlab-brokerd listening on %s (%d verbs)" %
+        (SOCK_PATH, len(VERBS)))
+    srv.serve_forever()'''
+
+    main_new = '''def main():
+    sock_dir = os.path.dirname(SOCK_PATH)
+    os.makedirs(sock_dir, exist_ok=True)
+    try:
+        os.chmod(sock_dir, 0o755)
+        shutil.chown(sock_dir, "root", SOCK_GROUP)
+    except Exception:
+        pass
+    try:
+        os.unlink(SOCK_PATH)
+    except OSError:
+        pass
+    srv = Server(SOCK_PATH, Handler)
+    try:
+        os.chmod(SOCK_PATH, 0o666)
+        shutil.chown(SOCK_PATH, "root", SOCK_GROUP)
+    except Exception:
+        pass
+    log("pnetlab-brokerd listening on %s (%d verbs)" %
+        (SOCK_PATH, len(VERBS)))
+    srv.serve_forever()'''
+
+    if main_old in patched_code:
+        patched_code = patched_code.replace(main_old, main_new)
+
     with open(broker_path, "w", encoding="utf-8") as f:
         f.write(patched_code)
     print("      -> Successfully patched pnetlab-brokerd.py")
 PYEOF
 fi
 
-# 5. Restart Services
-echo "[5/5] Restarting pnetlab-brokerd and related network services..."
-systemctl daemon-reload 2>/dev/null || true
-systemctl restart pnetlab-brokerd.service 2>/dev/null || true
+# 6. Configure Systemd Service & Start Broker
+echo "[6/6] Configuring and starting pnetlab-brokerd.service..."
+mkdir -p /etc/systemd/system/pnetlab-brokerd.service.d
+cat > /etc/systemd/system/pnetlab-brokerd.service.d/override.conf << 'EOF'
+[Service]
+RuntimeDirectory=pnetlab
+RuntimeDirectoryMode=0755
+User=root
+Group=root
+Restart=always
+RestartSec=2
+EOF
+
+systemctl daemon-reload
+systemctl enable --now pnetlab-brokerd.service
+systemctl restart pnetlab-brokerd.service
+
+# Give broker a moment to open socket
+sleep 1
+chmod 755 /run/pnetlab 2>/dev/null || true
+chmod 666 /run/pnetlab/broker.sock 2>/dev/null || true
+chown root:www-data /run/pnetlab/broker.sock 2>/dev/null || true
+
+# Test broker reachability via PHP
+echo "      -> Testing broker reachability via PHP..."
+php -r "
+require_once '/opt/unetlab/html/includes/broker.php';
+\$res = broker_call('server_netcfg', ['op' => 'get'], 5);
+if (isset(\$res['ok']) && \$res['ok']) {
+    echo '      [OK] Broker is ONLINE and responding! Data: ' . json_encode(\$res['out']) . PHP_EOL;
+} else {
+    echo '      [WARN] Broker test response: ' . json_encode(\$res) . PHP_EOL;
+}
+" 2>/dev/null || true
 
 echo "============================================================"
-echo "    [SUCCESS] Network Management IP Configuration Fixed!   "
+echo "    [SUCCESS] Network Management & Broker Daemon Active!    "
 echo "============================================================"

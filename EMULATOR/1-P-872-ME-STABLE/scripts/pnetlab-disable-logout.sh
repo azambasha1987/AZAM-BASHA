@@ -98,7 +98,7 @@ echo "[3/7] Patching status/api.php timeout bound..."
 STATUS_API="/opt/unetlab/html/status/api.php"
 if [ -f "$STATUS_API" ]; then
     cp "$STATUS_API" "${STATUS_API}.bak.${TIMESTAMP}"
-    sed -i -E "s/\\\$seconds\\s*>\\s*[0-9]+/\\\$seconds > ${TIMEOUT_SECONDS}/g" "$STATUS_API"
+    sed -i -E 's/\$seconds\s*>\s*[0-9]+/\$seconds > '"${TIMEOUT_SECONDS}"'/g' "$STATUS_API"
 fi
 
 # 4. Patch sliding cookie renewal in functions.php

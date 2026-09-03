@@ -342,7 +342,7 @@ def generate_report(remote_files):
     report_lines.append(f"Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
     report_lines.append("## Step 1: Git Repository Verification\n")
     report_lines.append("- **Remote URL**: `https://codeberg.org/netkillui/Pnetlabv8.git`")
-    track1_uri = f"file:///{os.path.join(BASE_DIR, 'track-1-git').replace('\\\\', '/')}"
+    track1_uri = f"file:///{os.path.join(BASE_DIR, 'track-1-git').replace('\\', '/')}"
     report_lines.append(f"- **Local Clone Path**: [`track-1-git/`]({track1_uri})")
     report_lines.append("- **Branch**: `main`\n")
 

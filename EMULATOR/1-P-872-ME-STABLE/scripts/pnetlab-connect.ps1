@@ -86,26 +86,29 @@ switch ($action) {
     }
     "2" {
         Write-Host "`nScanning active node console ports on $VmIp (30001-30050)..." -ForegroundColor Yellow
-        $found = 0
-        30001..30050 | ForEach-Object -Parallel {
-            $p = $_
-            $ip = $using:VmIp
+        $activeNodes = [System.Collections.Generic.List[PSCustomObject]]::new()
+        foreach ($p in 30001..30050) {
             $client = New-Object System.Net.Sockets.TcpClient
             try {
-                $async = $client.BeginConnect($ip, $p, $null, $null)
-                if ($async.AsyncWaitHandle.WaitOne(200, $false) -and $client.Connected) {
+                $async = $client.BeginConnect($VmIp, $p, $null, $null)
+                if ($async.AsyncWaitHandle.WaitOne(60, $false) -and $client.Connected) {
                     $nodeId = $p - 30000
-                    [PSCustomObject]@{
+                    $activeNodes.Add([PSCustomObject]@{
                         NodeID  = $nodeId
                         Port    = $p
                         Status  = "ACTIVE"
-                        Connect = "telnet $ip $p"
-                    }
+                        Connect = "telnet $VmIp $p"
+                    })
                 }
             } catch {} finally {
                 $client.Close()
             }
-        } -ThrottleLimit 30 | Format-Table -AutoSize
+        }
+        if ($activeNodes.Count -gt 0) {
+            $activeNodes | Format-Table -AutoSize
+        } else {
+            Write-Host "  -> No active node console ports found in range 30001-30050." -ForegroundColor DarkGray
+        }
     }
     "3" {
         Write-Host "Launching SSH to root@$VmIp..." -ForegroundColor Green

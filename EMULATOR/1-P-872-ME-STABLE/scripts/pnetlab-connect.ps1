@@ -87,21 +87,29 @@ switch ($action) {
     "2" {
         Write-Host "`nScanning active node console ports on $VmIp (30001-30050)..." -ForegroundColor Yellow
         $activeNodes = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $tasks = [System.Collections.Generic.List[PSCustomObject]]::new()
+        
         foreach ($p in 30001..30050) {
             $client = New-Object System.Net.Sockets.TcpClient
+            $iar = $client.BeginConnect($VmIp, $p, $null, $null)
+            $tasks.Add([PSCustomObject]@{ Client = $client; IAR = $iar; Port = $p })
+        }
+        
+        Start-Sleep -Milliseconds 150
+        
+        foreach ($t in $tasks) {
             try {
-                $async = $client.BeginConnect($VmIp, $p, $null, $null)
-                if ($async.AsyncWaitHandle.WaitOne(60, $false) -and $client.Connected) {
-                    $nodeId = $p - 30000
+                if ($t.IAR.IsCompleted -and $t.Client.Connected) {
+                    $nodeId = $t.Port - 30000
                     $activeNodes.Add([PSCustomObject]@{
                         NodeID  = $nodeId
-                        Port    = $p
+                        Port    = $t.Port
                         Status  = "ACTIVE"
-                        Connect = "telnet $VmIp $p"
+                        Connect = "telnet $VmIp $($t.Port)"
                     })
                 }
             } catch {} finally {
-                $client.Close()
+                $t.Client.Close()
             }
         }
         if ($activeNodes.Count -gt 0) {

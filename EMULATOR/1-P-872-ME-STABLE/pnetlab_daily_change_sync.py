@@ -110,6 +110,8 @@ def log_change_history(changes):
         "files_downloaded": changes.get("files_downloaded", []),
         "files_unchanged_count": changes.get("files_unchanged_count", 0)
     })
+    if len(history) > 100:
+        history = history[-100:]
     try:
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(history, f, indent=2)

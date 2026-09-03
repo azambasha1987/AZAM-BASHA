@@ -24,7 +24,13 @@ if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
     fi
 
     echo -n "[*] Database Session Timeout: "
-    mysql -u pnetlab -ppnetlab pnetlab_db -e "SELECT control_value FROM control WHERE control_name='ctrl_session_timeout';" 2>/dev/null | tail -n1 || echo "Could not query database"
+    if mysql -u pnetlab -ppnetlab pnetlab_db -e "SELECT control_value FROM control WHERE control_name='ctrl_session_timeout';" 2>/dev/null | tail -n1; then
+        :
+    elif mysql --defaults-file=/etc/mysql/debian.cnf pnetlab_db -e "SELECT control_value FROM control WHERE control_name='ctrl_session_timeout';" 2>/dev/null | tail -n1; then
+        :
+    else
+        echo "Could not query database"
+    fi
 
     echo -n "[*] Frontend Keepalive Heartbeat: "
     if grep -q "pnetlab-keepalive.js" /opt/unetlab/html/main/index.html 2>/dev/null; then
@@ -61,18 +67,22 @@ EOF
 chown www-data:www-data "$CONFIG_FILE" || true
 chmod 644 "$CONFIG_FILE"
 
-# 2. Update MySQL database (pnetlab_db)
+# 2. Update MySQL/MariaDB database (pnetlab_db)
 echo "[2/7] Updating database session limits in pnetlab_db..."
-MYSQL_CMD="mysql"
+MYSQL_CMD=""
 if mysql -u pnetlab -ppnetlab -e "USE pnetlab_db;" >/dev/null 2>&1; then
     MYSQL_CMD="mysql -u pnetlab -ppnetlab pnetlab_db"
+elif [ -f /etc/mysql/debian.cnf ] && mysql --defaults-file=/etc/mysql/debian.cnf -e "USE pnetlab_db;" >/dev/null 2>&1; then
+    MYSQL_CMD="mysql --defaults-file=/etc/mysql/debian.cnf pnetlab_db"
 elif mysql -u root -e "USE pnetlab_db;" >/dev/null 2>&1; then
     MYSQL_CMD="mysql -u root pnetlab_db"
+elif command -v mariadb &>/dev/null && mariadb -u root -e "USE pnetlab_db;" >/dev/null 2>&1; then
+    MYSQL_CMD="mariadb -u root pnetlab_db"
 else
     MYSQL_CMD="mysql pnetlab_db"
 fi
 
-$MYSQL_CMD << SQL
+$MYSQL_CMD << SQL || true
 INSERT INTO control (control_name, control_value) 
 VALUES ('ctrl_session_timeout', '${TIMEOUT_SECONDS}') 
 ON DUPLICATE KEY UPDATE control_value = '${TIMEOUT_SECONDS}';
@@ -88,7 +98,7 @@ echo "[3/7] Patching status/api.php timeout bound..."
 STATUS_API="/opt/unetlab/html/status/api.php"
 if [ -f "$STATUS_API" ]; then
     cp "$STATUS_API" "${STATUS_API}.bak.${TIMESTAMP}"
-    sed -i "s/\$seconds > 86400/\$seconds > ${TIMEOUT_SECONDS}/g" "$STATUS_API"
+    sed -i -E "s/\\\$seconds\\s*>\\s*[0-9]+/\\\$seconds > ${TIMEOUT_SECONDS}/g" "$STATUS_API"
 fi
 
 # 4. Patch sliding cookie renewal in functions.php
@@ -116,9 +126,9 @@ fi
 echo "[5/7] Updating session settings in PHP ini files..."
 for PHP_INI in /etc/php/*/apache2/php.ini /etc/php/*/fpm/php.ini /etc/php/*/cli/php.ini; do
     if [ -f "$PHP_INI" ]; then
-        sed -i 's/^session.gc_maxlifetime =.*/session.gc_maxlifetime = 315360000/' "$PHP_INI"
-        sed -i 's/^session.cookie_lifetime =.*/session.cookie_lifetime = 315360000/' "$PHP_INI"
-        sed -i 's/^session.cache_expire =.*/session.cache_expire = 5256000/' "$PHP_INI"
+        sed -i 's/^;*session.gc_maxlifetime =.*/session.gc_maxlifetime = 315360000/' "$PHP_INI"
+        sed -i 's/^;*session.cookie_lifetime =.*/session.cookie_lifetime = 315360000/' "$PHP_INI"
+        sed -i 's/^;*session.cache_expire =.*/session.cache_expire = 5256000/' "$PHP_INI"
     fi
 done
 
@@ -149,9 +159,9 @@ fi
 
 # 7. Restart services
 echo "[7/7] Restarting web server and PHP services..."
-systemctl restart apache2 || service apache2 restart || true
+systemctl restart apache2 2>/dev/null || service apache2 restart 2>/dev/null || true
 for PHP_FPM in $(systemctl list-units --type=service --state=running 2>/dev/null | grep -o 'php[0-9.]*-fpm' || true); do
-    systemctl restart "$PHP_FPM" || true
+    systemctl restart "$PHP_FPM" 2>/dev/null || true
 done
 
 echo "=== [SUCCESS] Session timeout set to 10 Years! Persistent logins active. ==="

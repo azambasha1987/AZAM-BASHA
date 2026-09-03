@@ -24,6 +24,9 @@ if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
     else
         echo "MISSING"
     fi
+
+    echo -n "[*] Python MCP Library: "
+    python3 -c "import mcp; print(getattr(mcp, '__version__', 'Installed'))" 2>/dev/null || echo "NOT INSTALLED"
     exit 0
 fi
 
@@ -57,14 +60,19 @@ if ! id -u pnetlab-mcp &>/dev/null; then
 fi
 usermod -aG pnetlab-mcp www-data || true
 
-# 2. Install Required Python Dependencies
+# 2. Ensure pip3 is available & Install Required Python Dependencies
 echo "[2/5] Installing required Python dependencies..."
-python3 -m pip install --break-system-packages --ignore-installed "mcp==1.29.1" "openai>=1.12.0" "httpx" || \
-python3 -m pip install "mcp==1.29.1" "openai>=1.12.0" "httpx"
+if ! command -v pip3 &>/dev/null && ! command -v pip &>/dev/null; then
+    apt-get update && apt-get install -y python3-pip python3-venv || true
+fi
+
+python3 -m pip install --break-system-packages --ignore-installed "mcp==1.29.1" "openai>=1.12.0" "httpx" 2>/dev/null || \
+python3 -m pip install "mcp==1.29.1" "openai>=1.12.0" "httpx" || true
 
 # 3. Directory Trees & Permissions
 echo "[3/5] Creating directory trees and setting permissions..."
 mkdir -p /opt/unetlab/data/ai/progress
+mkdir -p /opt/unetlab/scripts/mcp
 chmod 751 /opt/unetlab/data/ai
 chown root:www-data /opt/unetlab/data/ai || true
 chmod 750 /opt/unetlab/data/ai/progress
@@ -153,11 +161,11 @@ fi
 
 if [ -f "$SERVICE_DEST" ]; then
     chmod 644 "$SERVICE_DEST"
-    systemctl daemon-reload || true
-    systemctl enable pnetlab-mcp || true
-    systemctl restart pnetlab-mcp || true
+    systemctl daemon-reload 2>/dev/null || true
+    systemctl enable pnetlab-mcp 2>/dev/null || true
+    systemctl restart pnetlab-mcp 2>/dev/null || true
 fi
-systemctl restart apache2 || service apache2 restart || true
+systemctl restart apache2 2>/dev/null || service apache2 restart 2>/dev/null || true
 
 echo "=== [SUCCESS] PNETLab Ollama Integration Configured Successfully! ==="
 echo "Verify connectivity with: curl -m 3 http://${HOST_IP}:11434/v1/models"

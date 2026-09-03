@@ -8,8 +8,10 @@
 #>
 
 # Requires Administrator
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Error "Please run this script in PowerShell as Administrator."
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Warning "This script requires Administrator privileges to configure Firewall rules and system environment variables."
+    Write-Host "Please right-click PowerShell and select 'Run as Administrator', then run this script again." -ForegroundColor Yellow
     exit 1
 }
 
@@ -75,6 +77,16 @@ try {
     Write-Host "  -> Model pull completed." -ForegroundColor Green
 } catch {
     Write-Warning "Failed to pull model automatically. Run 'ollama pull qwen2.5:14b-instruct' manually if needed."
+}
+
+# Test local connectivity
+try {
+    $testResp = Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/tags" -TimeoutSec 3 -ErrorAction SilentlyContinue
+    if ($testResp) {
+        Write-Host "  -> Ollama API is responsive at http://127.0.0.1:11434" -ForegroundColor Green
+    }
+} catch {
+    Write-Host "  -> Note: Ollama service initializing..." -ForegroundColor DarkGray
 }
 
 # Display IPv4 addresses

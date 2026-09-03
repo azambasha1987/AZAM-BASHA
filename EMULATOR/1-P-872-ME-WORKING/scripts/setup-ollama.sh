@@ -29,19 +29,20 @@ echo "[1/5] Setting up system account and permissions..."
 if ! id -u pnetlab-mcp &>/dev/null; then
     useradd --system --no-create-home --user-group --shell /usr/sbin/nologin pnetlab-mcp
 fi
-usermod -aG pnetlab-mcp www-data
+usermod -aG pnetlab-mcp www-data || true
 
 # 2. Install Required Python Dependencies
 echo "[2/5] Installing required Python dependencies..."
-python3 -m pip install --break-system-packages --ignore-installed "mcp==1.29.1" "openai>=1.12.0" "httpx"
+python3 -m pip install --break-system-packages --ignore-installed "mcp==1.29.1" "openai>=1.12.0" "httpx" || \
+python3 -m pip install "mcp==1.29.1" "openai>=1.12.0" "httpx"
 
 # 3. Directory Trees & Permissions
 echo "[3/5] Creating directory trees and setting permissions..."
 mkdir -p /opt/unetlab/data/ai/progress
 chmod 751 /opt/unetlab/data/ai
-chown root:www-data /opt/unetlab/data/ai
+chown root:www-data /opt/unetlab/data/ai || true
 chmod 750 /opt/unetlab/data/ai/progress
-chown root:www-data /opt/unetlab/data/ai/progress
+chown root:www-data /opt/unetlab/data/ai/progress || true
 
 # 4. Configure config.json & bridge.secret
 echo "[4/5] Configuring AI configuration & bridge secrets..."
@@ -91,16 +92,42 @@ with open(cfg_path, "w") as f:
 PYEOF
 
 chmod 640 /opt/unetlab/data/ai/config.json
-chown root:pnetlab-mcp /opt/unetlab/data/ai/config.json
+chown root:pnetlab-mcp /opt/unetlab/data/ai/config.json || true
 chmod 640 /opt/unetlab/data/ai/bridge.secret
-chown root:www-data /opt/unetlab/data/ai/bridge.secret
+chown root:www-data /opt/unetlab/data/ai/bridge.secret || true
 
 # 5. Enable and Restart Services
 echo "[5/5] Enabling and restarting PNETLab MCP and Apache services..."
-if [ -f "/opt/unetlab/scripts/mcp/pnetlab-mcp.service" ]; then
-    cp -f /opt/unetlab/scripts/mcp/pnetlab-mcp.service /etc/systemd/system/pnetlab-mcp.service
-    chmod 644 /etc/systemd/system/pnetlab-mcp.service
-    systemctl daemon-reload
+SERVICE_SRC="/opt/unetlab/scripts/mcp/pnetlab-mcp.service"
+SERVICE_DEST="/etc/systemd/system/pnetlab-mcp.service"
+
+if [ -f "$SERVICE_SRC" ]; then
+    cp -f "$SERVICE_SRC" "$SERVICE_DEST"
+elif [ ! -f "$SERVICE_DEST" ]; then
+    cat << 'EOF' > "$SERVICE_DEST"
+[Unit]
+Description=PNETLab Model Context Protocol (MCP) Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=pnetlab-mcp
+Group=pnetlab-mcp
+WorkingDirectory=/opt/unetlab/data/ai
+ExecStart=/usr/bin/python3 -m mcp run /opt/unetlab/data/ai
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+fi
+
+if [ -f "$SERVICE_DEST" ]; then
+    chmod 644 "$SERVICE_DEST"
+    systemctl daemon-reload || true
     systemctl enable pnetlab-mcp || true
     systemctl restart pnetlab-mcp || true
 fi

@@ -120,7 +120,8 @@ def sync_parent_github_repo():
     # If running in local environment, pull latest commits from GitHub
     if not os.environ.get("GITHUB_ACTIONS"):
         try:
-            parent_repo = os.path.dirname(os.path.dirname(BASE_DIR)) # E:\Git
+            res = subprocess.run(["git", "-C", BASE_DIR, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+            parent_repo = res.stdout.strip() if res.returncode == 0 else os.path.dirname(os.path.dirname(BASE_DIR))
             log(f"[GitHub Sync] Checking for GitHub updates on parent repository ({parent_repo})...")
             pull_res = subprocess.run(["git", "-C", parent_repo, "pull", "--rebase"], capture_output=True, text=True)
             if pull_res.returncode == 0:
@@ -341,7 +342,8 @@ def generate_report(remote_files):
     report_lines.append(f"Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
     report_lines.append("## Step 1: Git Repository Verification\n")
     report_lines.append("- **Remote URL**: `https://codeberg.org/netkillui/Pnetlabv8.git`")
-    report_lines.append("- **Local Clone Path**: [`track-1-git/`](file:///e:/Git/EMULATOR/0-P-UNTOUCHED/track-1-git)")
+    track1_uri = f"file:///{os.path.join(BASE_DIR, 'track-1-git').replace('\\\\', '/')}"
+    report_lines.append(f"- **Local Clone Path**: [`track-1-git/`]({track1_uri})")
     report_lines.append("- **Branch**: `main`\n")
 
     report_lines.append("## Step 2: Codeberg Package API Releases Verification\n")

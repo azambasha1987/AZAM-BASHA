@@ -29,13 +29,15 @@ apt-get update && apt-get install -y zip unzip
 # 3. Create the Exports directory and link it directly into Apache DocumentRoot
 echo "[3/5] Setting up /opt/unetlab/data/Exports directory and symlink..."
 mkdir -p /opt/unetlab/data/Exports
+mkdir -p /opt/unetlab/html
 ln -sfn /opt/unetlab/data/Exports /opt/unetlab/html/Exports
-chown -R www-data:www-data /opt/unetlab/data/Exports /opt/unetlab/html/Exports
+chown -R www-data:www-data /opt/unetlab/data/Exports /opt/unetlab/html/Exports || true
 chmod -R 775 /opt/unetlab/data/Exports
 
 # 4. Patch remove_uuid.sh to support subfolders and nested labs
 echo "[4/5] Patching /opt/unetlab/scripts/remove_uuid.sh for recursive nested lab support..."
 UUID_SCRIPT="/opt/unetlab/scripts/remove_uuid.sh"
+mkdir -p "$(dirname "$UUID_SCRIPT")"
 [ -f "$UUID_SCRIPT" ] && cp "$UUID_SCRIPT" "${UUID_SCRIPT}.bak.${TIMESTAMP}"
 
 cat << 'EOF' > "$UUID_SCRIPT"

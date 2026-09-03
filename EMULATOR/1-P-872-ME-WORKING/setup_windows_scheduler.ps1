@@ -1,15 +1,21 @@
 # PowerShell Script to register Windows Task Scheduler job for 24-Hour PNetLab Differential Sync
 $TaskName = "PNetLab-24h-Sync"
-$ScriptPath = "e:\Git\EMULATOR\0-P-UNTOUCHED\pnetlab_daily_change_sync.py"
-$PythonExe = (Get-Command python.exe).Source
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+if (-not $ScriptDir) { $ScriptDir = $PSScriptRoot }
+if (-not $ScriptDir) { $ScriptDir = (Get-Location).Path }
+
+$ScriptPath = Join-Path $ScriptDir "pnetlab_daily_change_sync.py"
+$PythonExe = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
+if (-not $PythonExe) { $PythonExe = "python.exe" }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "Registering Windows Scheduled Task: $TaskName" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
+Write-Host "Working Directory: $ScriptDir"
 Write-Host "Python Executable: $PythonExe"
 Write-Host "Target Script:     $ScriptPath"
 
-$Action = New-ScheduledTaskAction -Execute $PythonExe -Argument "`"$ScriptPath`"" -WorkingDirectory "e:\Git\EMULATOR\0-P-UNTOUCHED"
+$Action = New-ScheduledTaskAction -Execute $PythonExe -Argument "`"$ScriptPath`"" -WorkingDirectory "$ScriptDir"
 $Trigger = New-ScheduledTaskTrigger -Daily -At 03:00AM
 $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable
 

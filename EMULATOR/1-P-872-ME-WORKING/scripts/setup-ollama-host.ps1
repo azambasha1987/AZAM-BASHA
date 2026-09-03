@@ -38,13 +38,31 @@ Write-Host "[3/4] Restarting Ollama background process..." -ForegroundColor Yell
 Stop-Process -Name "ollama*" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 2
 
-$ollamaAppPath = "$env:LOCALAPPDATA\Programs\Ollama\ollama app.exe"
-if (Test-Path $ollamaAppPath) {
-    Start-Process -FilePath $ollamaAppPath
-    Write-Host "  -> Ollama app launched." -ForegroundColor Green
-} else {
-    Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
-    Write-Host "  -> Ollama server service started." -ForegroundColor Green
+# Search possible Ollama executable paths
+$possiblePaths = @(
+    "$env:LOCALAPPDATA\Programs\Ollama\ollama app.exe",
+    "$env:ProgramFiles\Ollama\ollama app.exe",
+    "${env:ProgramFiles(x86)}\Ollama\ollama app.exe"
+)
+
+$started = $false
+foreach ($p in $possiblePaths) {
+    if (Test-Path $p) {
+        Start-Process -FilePath $p
+        Write-Host "  -> Ollama app launched from: $p" -ForegroundColor Green
+        $started = $true
+        break
+    }
+}
+
+if (-not $started) {
+    $ollamaCmd = Get-Command "ollama.exe" -ErrorAction SilentlyContinue
+    if ($ollamaCmd) {
+        Start-Process -FilePath $ollamaCmd.Source -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
+        Write-Host "  -> Ollama server started via PATH ($($ollamaCmd.Source))." -ForegroundColor Green
+    } else {
+        Write-Warning "Ollama executable not found in standard paths. Please ensure Ollama is installed."
+    }
 }
 
 Start-Sleep -Seconds 3

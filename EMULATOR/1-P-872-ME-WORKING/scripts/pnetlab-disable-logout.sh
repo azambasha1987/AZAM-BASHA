@@ -19,6 +19,7 @@ TIMEOUT_SECONDS=315360000   # 10 years (3650 days)
 # 1. Update /opt/unetlab/html/includes/config.php
 echo "[1/7] Updating /opt/unetlab/html/includes/config.php..."
 CONFIG_FILE="/opt/unetlab/html/includes/config.php"
+mkdir -p "$(dirname "$CONFIG_FILE")"
 [ -f "$CONFIG_FILE" ] && cp "$CONFIG_FILE" "${CONFIG_FILE}.bak.${TIMESTAMP}"
 
 cat << 'EOF' > "$CONFIG_FILE"
@@ -66,11 +67,20 @@ echo "[4/7] Patching sliding cookie renewal in functions.php..."
 FUNCTIONS_FILE="/opt/unetlab/html/includes/functions.php"
 if [ -f "$FUNCTIONS_FILE" ] && ! grep -q "Never-Logout Sliding Cookie" "$FUNCTIONS_FILE"; then
     cp "$FUNCTIONS_FILE" "${FUNCTIONS_FILE}.bak.${TIMESTAMP}"
-    sed -i '/function updateUserCookie(\$db, \$username, \$cookie)/{
-n
-N
-a\        // Never-Logout Sliding Cookie\n        if (!headers_sent()) {\n            @setcookie("token", $cookie, [\n                "expires"  => time() + 315360000,\n                "path"     => "/",\n                "secure"   => true,\n                "httponly" => true,\n                "samesite" => "Strict",\n            ]);\n        }
-}' "$FUNCTIONS_FILE"
+    python3 - <<PYEOF || true
+with open("${FUNCTIONS_FILE}", "r", encoding="utf-8", errors="ignore") as f:
+    content = f.read()
+
+target = "function updateUserCookie"
+if target in content:
+    idx = content.find(target)
+    brace_idx = content.find("{", idx)
+    if brace_idx != -1:
+        injection = '\n        // Never-Logout Sliding Cookie\n        if (!headers_sent()) {\n            @setcookie("token", $cookie, [\n                "expires"  => time() + 315360000,\n                "path"     => "/",\n                "secure"   => true,\n                "httponly" => true,\n                "samesite" => "Strict",\n            ]);\n        }\n'
+        content = content[:brace_idx+1] + injection + content[brace_idx+1:]
+        with open("${FUNCTIONS_FILE}", "w", encoding="utf-8") as f:
+            f.write(content)
+PYEOF
 fi
 
 # 5. Configure PHP ini files
@@ -101,7 +111,11 @@ chmod 644 "$KEEPALIVE_JS"
 
 MAIN_HTML="/opt/unetlab/html/main/index.html"
 if [ -f "$MAIN_HTML" ] && ! grep -q "pnetlab-keepalive.js" "$MAIN_HTML"; then
-    sed -i 's|</body>|<script src="/themes/default/js/pnetlab-keepalive.js"></script></body>|' "$MAIN_HTML"
+    if grep -iq "</body>" "$MAIN_HTML"; then
+        sed -i -E 's|</body>|<script src="/themes/default/js/pnetlab-keepalive.js"></script></body>|I' "$MAIN_HTML"
+    else
+        echo '<script src="/themes/default/js/pnetlab-keepalive.js"></script>' >> "$MAIN_HTML"
+    fi
 fi
 
 # 7. Restart services

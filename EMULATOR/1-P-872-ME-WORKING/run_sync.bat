@@ -1,5 +1,5 @@
 @echo off
-cd /d "e:\Git\EMULATOR\0-P-UNTOUCHED"
+cd /d "%~dp0"
 echo ========================================================
 echo Checking for PNetLab Updates (Differential Sync Engine)
 echo ========================================================

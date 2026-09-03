@@ -5,7 +5,7 @@ Last updated: 2026-09-03 06:23:27 UTC
 ## Step 1: Git Repository Verification
 
 - **Remote URL**: `https://codeberg.org/netkillui/Pnetlabv8.git`
-- **Local Clone Path**: [`track-1-git/`](file:///e:/Git/EMULATOR/0-P-UNTOUCHED/track-1-git)
+- **Local Clone Path**: [`track-1-git/`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/track-1-git)
 - **Branch**: `main`
 
 ## Step 2: Codeberg Package API Releases Verification

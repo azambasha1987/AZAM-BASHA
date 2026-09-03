@@ -515,6 +515,10 @@ a2enconf "php${PHP_VER}-fpm" 2>/dev/null || true
 a2dissite 000-default default-ssl pnetlabs 2>/dev/null || true
 a2ensite pnetlab pnetlab-ssl 2>/dev/null || true
 
+# Patch Cookie Compatibility in api.php for HTTP & HTTPS
+sed -i 's/"secure" *=> *true/"secure" => (!empty($_SERVER["HTTPS"]) \&\& $_SERVER["HTTPS"] !== "off")/g' /opt/unetlab/html/api.php 2>/dev/null || true
+sed -i 's/"samesite" *=> *"Strict"/"samesite" => "Lax"/g' /opt/unetlab/html/api.php 2>/dev/null || true
+
 systemctl enable --now "php${PHP_VER}-fpm" 2>/dev/null || true
 systemctl restart "php${PHP_VER}-fpm" 2>/dev/null || true
 systemctl enable --now apache2 2>/dev/null || true

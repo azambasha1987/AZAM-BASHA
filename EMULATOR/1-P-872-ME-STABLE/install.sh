@@ -31,6 +31,38 @@ echo "[1/8] Performing pre-flight hardware and OS checks..."
 UBUNTU_VER="$(lsb_release -rs 2>/dev/null || grep -oP '(?<=VERSION_ID=")[^"]*' /etc/os-release || echo "unknown")"
 echo "      Detected OS Version: Ubuntu $UBUNTU_VER"
 
+# Detect Active Physical Management Network Interface
+REAL_IFACE="$(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep -vE '^(lo|docker|pnet|vunl|virbr|br)' | head -n1 || true)"
+if [ -n "$REAL_IFACE" ]; then
+    echo "      Detected Physical Network Interface: $REAL_IFACE"
+    # Ensure interface is up
+    ip link set dev "$REAL_IFACE" up 2>/dev/null || true
+    
+    # Preserve/Ensure Netplan configuration for the real interface
+    mkdir -p /etc/netplan
+    if [ ! -f /etc/netplan/01-pnetlab-netcfg.yaml ]; then
+        cat << NETEOF > /etc/netplan/01-pnetlab-netcfg.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    $REAL_IFACE:
+      dhcp4: true
+      dhcp6: false
+NETEOF
+    fi
+
+    # Ensure /etc/network/interfaces does not break on missing eth0
+    mkdir -p /etc/network
+    cat << INTEOF > /etc/network/interfaces
+auto lo
+iface lo inet loopback
+
+auto $REAL_IFACE
+iface $REAL_IFACE inet dhcp
+INTEOF
+fi
+
 if ! grep -Eq '(vmx|svm)' /proc/cpuinfo; then
     echo "      [WARNING] Hardware virtualization (Intel VT-x / AMD-V) was NOT detected in /proc/cpuinfo."
     echo "      Ensure nested virtualization is enabled on your hypervisor (VMware / Proxmox / KVM / Hyper-V)."
@@ -455,6 +487,12 @@ if [ -f "${SCRIPT_DIR}/scripts/pnetlab-speed-optimizer.sh" ]; then
 fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" || true
+fi
+
+# Refresh & Re-assert Network Interface
+if [ -n "${REAL_IFACE:-}" ]; then
+    ip link set dev "$REAL_IFACE" up 2>/dev/null || true
+    netplan apply 2>/dev/null || systemctl restart systemd-networkd 2>/dev/null || true
 fi
 
 # Get Primary IP Address

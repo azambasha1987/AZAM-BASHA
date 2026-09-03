@@ -582,6 +582,9 @@ fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-speed-optimizer.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-speed-optimizer.sh" || true
 fi
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" || true
+fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" || true
 fi

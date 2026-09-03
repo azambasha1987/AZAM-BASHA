@@ -211,7 +211,7 @@ for i in {1..30}; do
     sleep 1
 done
 
-# Initialize database, users, and schemas with robust host grants
+# Initialize database, users, tables, and admin credentials in one atomic script
 mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
 CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -231,16 +231,9 @@ GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'127.0.0.1';
 GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'%';
 GRANT ALL PRIVILEGES ON guacdb.* TO 'guacuser'@'localhost';
 FLUSH PRIVILEGES;
-EOF
 
-# Ensure /opt/unetlab/schema directory exists and copy shipped schemas
-mkdir -p /opt/unetlab/schema
-if [ -d "${SCRIPT_DIR}/schema" ]; then
-    cp -f "${SCRIPT_DIR}/schema/"*.sql /opt/unetlab/schema/ 2>/dev/null || true
-fi
+USE pnetlab_db;
 
-# Direct DDL Table Creation in pnetlab_db
-mysql pnetlab_db << 'EOF' 2>/dev/null || mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || true
 CREATE TABLE IF NOT EXISTS control (
   control_name varchar(150) NOT NULL,
   control_value text,
@@ -334,6 +327,12 @@ INSERT INTO users (
     1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
 );
 EOF
+
+# Ensure /opt/unetlab/schema directory exists and copy shipped schemas
+mkdir -p /opt/unetlab/schema
+if [ -d "${SCRIPT_DIR}/schema" ]; then
+    cp -f "${SCRIPT_DIR}/schema/"*.sql /opt/unetlab/schema/ 2>/dev/null || true
+fi
 
 # Clear any login rate-limit lockouts
 rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true

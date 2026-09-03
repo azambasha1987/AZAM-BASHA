@@ -211,8 +211,9 @@ for i in {1..30}; do
     sleep 1
 done
 
-# Initialize database, users, tables, and admin credentials in one atomic script
-mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
+# Initialize database, users, tables, and admin credentials via temp SQL script
+SQL_INIT=$(mktemp --suffix=_pnetlab.sql)
+cat > "$SQL_INIT" << 'EOF'
 CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
@@ -327,6 +328,9 @@ INSERT INTO users (
     1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
 );
 EOF
+
+mysql < "$SQL_INIT" 2>/dev/null || mysql -u root < "$SQL_INIT" 2>/dev/null || true
+rm -f "$SQL_INIT"
 
 # Ensure /opt/unetlab/schema directory exists and copy shipped schemas
 mkdir -p /opt/unetlab/schema

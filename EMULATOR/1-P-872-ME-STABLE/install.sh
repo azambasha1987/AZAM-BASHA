@@ -156,15 +156,17 @@ FLUSH PRIVILEGES;
 EOF
 
 # Import PNetLab Database Schema
-if [ -f /opt/unetlab/schema/pnetlab_db-schema.sql ]; then
-    mysql -u pnetlab -ppnetlab pnetlab_db < /opt/unetlab/schema/pnetlab_db-schema.sql 2>/dev/null || true
-elif [ -f /opt/unetlab/schema/pnetlab_db.sql ]; then
-    mysql -u pnetlab -ppnetlab pnetlab_db < /opt/unetlab/schema/pnetlab_db.sql 2>/dev/null || true
+SCHEMA_FILE="$(find /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
+if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
+    echo "      -> Importing PNetLab schema from $SCHEMA_FILE..."
+    mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true
 fi
 
 # Import Guacamole Database Schema
-if [ -f /opt/unetlab/schema/guacdb-1.6.0-schema.sql ]; then
-    mysql -u guacuser -ppnetlab guacdb < /opt/unetlab/schema/guacdb-1.6.0-schema.sql 2>/dev/null || true
+GUAC_SCHEMA="$(find /opt/unetlab/schema /opt/unetlab -name '*guac*.sql' 2>/dev/null | head -n1)"
+if [ -n "$GUAC_SCHEMA" ] && [ -f "$GUAC_SCHEMA" ]; then
+    echo "      -> Importing Guacamole schema from $GUAC_SCHEMA..."
+    mysql guacdb < "$GUAC_SCHEMA" 2>/dev/null || mysql -u guacuser -ppnetlab guacdb < "$GUAC_SCHEMA" 2>/dev/null || true
 fi
 
 # Seed Default Admin User (admin / pnet)

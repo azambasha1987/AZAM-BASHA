@@ -468,6 +468,7 @@ RestartSec=2
 [Install]
 WantedBy=multi-user.target
 EOF
+chmod 644 /etc/systemd/system/pnetlab-brokerd.service
 
 systemctl daemon-reload
 systemctl enable --now pnetlab-brokerd.service

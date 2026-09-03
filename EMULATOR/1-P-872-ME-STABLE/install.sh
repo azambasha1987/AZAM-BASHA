@@ -562,8 +562,23 @@ if ! grep -q "^net.ipv4.ip_forward=1" /etc/sysctl.conf /etc/sysctl.d/* 2>/dev/nu
     echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-pnetlab-forwarding.conf
 fi
 
-# --- Step 8: Apply Essential Fixes Suite ---
-echo "[8/8] Applying optimization, session fixes, and update freeze..."
+# --- Step 8: Apply Modernization Suite & Essential Fixes ---
+echo "[8/8] Applying Ubuntu 26 modernization, session fixes, and update freeze..."
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" || true
+fi
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-modern-netplan-engine.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-modern-netplan-engine.sh" || true
+fi
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-php-modernizer.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-php-modernizer.sh" || true
+fi
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-cgroups-v2-engine.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-cgroups-v2-engine.sh" || true
+fi
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-python-environment-setup.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-python-environment-setup.sh" || true
+fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-database-and-system-deep-fix.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-database-and-system-deep-fix.sh" || true
 fi
@@ -581,9 +596,6 @@ if [ -f "${SCRIPT_DIR}/scripts/pnetlab-system-and-console-fix.sh" ]; then
 fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-speed-optimizer.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-speed-optimizer.sh" || true
-fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" || true
 fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" || true

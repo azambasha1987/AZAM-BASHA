@@ -68,14 +68,14 @@ ACCELERATED DATAPLANE FORWARDING (Low Overhead & Fast-Path):
 
 ## 3. Toolkit Overview & Operational Commands
 
-Located in [`scripts/`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts):
+Located in [`scripts/`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts):
 
 | Tool | Purpose | Quick Command |
 | :--- | :--- | :--- |
-| [`scripts/pnetlab-dataplane-engine.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-dataplane-engine.sh) | **Dataplane Accelerator**: Enables kernel netfilter bridge bypass, TAP ring buffer scaling, and fast queueing. | `sudo bash scripts/pnetlab-dataplane-engine.sh` |
-| [`scripts/pnetlab-link-impairment.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-link-impairment.sh) | **Link Quality & Impairment**: Injects latency, jitter, packet loss, bandwidth throttling, and corruption. | `sudo bash scripts/pnetlab-link-impairment.sh` |
-| [`scripts/pnetlab-capture-stream.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-capture-stream.sh) | **Zero-Copy Capture**: Streams live PCAP directly to Wireshark or saves to file without CPU overhead. | `sudo bash scripts/pnetlab-capture-stream.sh` |
-| [`scripts/pnetlab-dataplane-stats.py`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-dataplane-stats.py) | **Real-Time Telemetry**: Live terminal monitor, JSON export, and Prometheus metrics server. | `python3 scripts/pnetlab-dataplane-stats.py` |
+| [`scripts/pnetlab-dataplane-engine.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/pnetlab-dataplane-engine.sh) | **Dataplane Accelerator**: Enables kernel netfilter bridge bypass, TAP ring buffer scaling, and fast queueing. | `sudo bash scripts/pnetlab-dataplane-engine.sh` |
+| [`scripts/pnetlab-link-impairment.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/pnetlab-link-impairment.sh) | **Link Quality & Impairment**: Injects latency, jitter, packet loss, bandwidth throttling, and corruption. | `sudo bash scripts/pnetlab-link-impairment.sh` |
+| [`scripts/pnetlab-capture-stream.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/pnetlab-capture-stream.sh) | **Zero-Copy Capture**: Streams live PCAP directly to Wireshark or saves to file without CPU overhead. | `sudo bash scripts/pnetlab-capture-stream.sh` |
+| [`scripts/pnetlab-dataplane-stats.py`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/pnetlab-dataplane-stats.py) | **Real-Time Telemetry**: Live terminal monitor, JSON export, and Prometheus metrics server. | `python3 scripts/pnetlab-dataplane-stats.py` |
 
 ---
 

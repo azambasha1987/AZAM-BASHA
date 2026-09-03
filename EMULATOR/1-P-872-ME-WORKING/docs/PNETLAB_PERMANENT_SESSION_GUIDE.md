@@ -23,7 +23,7 @@ By default, PNETLab implements strict idle and session timeout mechanisms design
 ## 2. Quick Deployment
 
 ### Method A: Run Pre-Packaged Script (Recommended)
-Copy [`scripts/pnetlab-disable-logout.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-disable-logout.sh) to the VM via SCP/SSH or git and run:
+Copy [`scripts/pnetlab-disable-logout.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/pnetlab-disable-logout.sh) to the VM via SCP/SSH or git and run:
 
 ```bash
 chmod +x pnetlab-disable-logout.sh

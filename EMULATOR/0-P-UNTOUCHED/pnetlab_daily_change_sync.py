@@ -8,11 +8,12 @@ Source Tracks:
 - Track 2: https://codeberg.org/api/v1/packages/netkillui & Debian APT Pool (Releases & .deb packages)
 
 Differential Sync Rules:
-1. Git: Pulls ONLY if remote HEAD or refs differ from local repository.
-2. Package API & Debian Pool: Computes cryptographic SHA256 hashes of all remote files.
-3. Downloads ONLY new files or files whose SHA256 checksum has changed.
-4. Unchanged files are skipped with zero network overhead.
-5. Maintains state.json, changes_history.json, sync.log, and VERIFICATION_REPORT.md.
+1. Parent Repo (GitHub): Automatically pulls latest GitHub changes into local repository.
+2. Git: Pulls ONLY if remote HEAD or refs differ from local repository.
+3. Package API & Debian Pool: Computes cryptographic SHA256 hashes of all remote files.
+4. Downloads ONLY new files or files whose SHA256 checksum has changed.
+5. Unchanged files are skipped with zero network overhead.
+6. Maintains state.json, changes_history.json, sync.log, and VERIFICATION_REPORT.md.
 """
 
 import os
@@ -115,9 +116,22 @@ def log_change_history(changes):
     except Exception as e:
         log(f"Warning: could not write changes_history.json: {e}")
 
+def sync_parent_github_repo():
+    # If running in local environment, pull latest commits from GitHub
+    if not os.environ.get("GITHUB_ACTIONS"):
+        try:
+            parent_repo = os.path.dirname(os.path.dirname(BASE_DIR)) # E:\Git
+            log(f"[GitHub Sync] Checking for GitHub updates on parent repository ({parent_repo})...")
+            pull_res = subprocess.run(["git", "-C", parent_repo, "pull", "--rebase"], capture_output=True, text=True)
+            if pull_res.returncode == 0:
+                log(f"[GitHub Sync] GitHub repository in sync: {pull_res.stdout.strip()}")
+            else:
+                log(f"[GitHub Sync] Notice: {pull_res.stderr.strip()}")
+        except Exception as e:
+            log(f"[GitHub Sync] Note: could not auto-pull parent repo: {e}")
+
 def check_and_sync_track1(state, changes):
     log("[Track 1] Checking Git Commits & Repository Source...")
-    # If track-1-git doesn't exist or isn't a valid git repo with .git, clone cleanly
     git_dot_git = os.path.join(GIT_DIR, ".git")
     if not os.path.exists(git_dot_git):
         log(f"[Track 1] Initializing repository at {GIT_DIR}...")
@@ -362,6 +376,7 @@ def execute_sync_cycle():
     log("="*60)
     log("STARTING 24-HOUR DIFFERENTIAL CHANGE-DETECTION SYNC")
     log("="*60)
+    sync_parent_github_repo()
     state = load_state()
     changes = {
         "git_changes": [],

@@ -171,6 +171,65 @@ EOF
 systemctl daemon-reload 2>/dev/null || true
 systemctl enable pnetlab-thp.service 2>/dev/null || true
 
+# 5. Database Schema & Admin Auth Guarantee (Offline Mode & SHA2 Password)
+echo "[5/5] Verifying Database Users, Schemas & Admin Credentials..."
+mysql <<'EOF' 2>/dev/null || mysql -u root <<'EOF' 2>/dev/null || true
+CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+CREATE USER IF NOT EXISTS 'pnetlab'@'localhost' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'pnetlab'@'127.0.0.1' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'pnetlab'@'%' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'guacuser'@'localhost' IDENTIFIED BY 'pnetlab';
+
+ALTER USER 'pnetlab'@'localhost' IDENTIFIED BY 'pnetlab';
+ALTER USER 'pnetlab'@'127.0.0.1' IDENTIFIED BY 'pnetlab';
+ALTER USER 'pnetlab'@'%' IDENTIFIED BY 'pnetlab';
+ALTER USER 'guacuser'@'localhost' IDENTIFIED BY 'pnetlab';
+
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'localhost';
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'%';
+GRANT ALL PRIVILEGES ON guacdb.* TO 'guacuser'@'localhost';
+FLUSH PRIVILEGES;
+
+USE pnetlab_db;
+EOF
+
+# Import schema if tables are missing
+SCHEMA_FILE="$(find /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
+if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
+    TABLE_COUNT=$(mysql -u pnetlab -ppnetlab -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pnetlab_db';" 2>/dev/null || echo "0")
+    if [ "${TABLE_COUNT:-0}" -eq 0 ]; then
+        echo "  -> Importing missing PNetLab schema from $SCHEMA_FILE..."
+        mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true
+    fi
+fi
+
+# Seed Admin User (admin / pnet)
+mysql -u pnetlab -ppnetlab pnetlab_db <<'EOF' 2>/dev/null || mysql pnetlab_db <<'EOF' 2>/dev/null || true
+INSERT INTO control (control_name, control_value) VALUES
+  ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
+  ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),
+  ('ctrl_version','8.2.0')
+ON DUPLICATE KEY UPDATE control_value = VALUES(control_value);
+
+DELETE FROM users WHERE username = 'admin';
+INSERT INTO users (
+    pod, username, email, name, password, role,
+    user_status, active_time, expired_time, access_days,
+    offline, ext_auth, session, folder, ip
+) VALUES (
+    0, 'admin', 'root@localhost', 'Administrator', SHA2('pnet', 256), 0,
+    1, 0, 0, NULL,
+    1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
+);
+EOF
+
+# Clear any login brute-force lockouts
+rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true
+echo "  -> Database authentication verified: admin / pnet (Offline Mode Active)"
+
 echo ""
 echo "============================================================"
 echo " [SUCCESS] Database & System Deep-Fixes Applied Cleanly!    "

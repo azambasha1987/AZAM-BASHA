@@ -20,28 +20,33 @@ instructions. It does not host the application source.
 - Minimum 4 vCPU / 8 GB RAM / 40 GB disk for light use; scale up for larger labs
 - Ubuntu 26.04 LTS ("27H1 Resolute") for the network install method
 
-## Installation
+## Installation Options
 
-### Option 1 — Network install (recommended)
-
-Run the network install script on a fresh Ubuntu 26.04 server:
+### Option 1 — Single-Line Installation via Uploaded Folder / Zip
+If you uploaded and extracted the package directory on your Ubuntu 26 server:
 
 ```bash
-curl -fsSL https://codeberg.org/api/packages/netkillui/generic/pnetlab-core-assets/0.channel/pnetlab-network-install-latest.sh | sudo bash -s -- --yes --release latest
+cd /opt/pnetlab/EMULATOR/1-P-872-ME-STABLE && sudo bash install.sh
 ```
 
-The script partitions storage, installs dependencies, and pulls the latest
-PNetLab v8 package automatically.
+---
 
-### Option 2 — OVA (autoinstaller)
+### Option 2 — Single-Line Installation via GitHub Directly (Recommended)
+On a fresh or existing Ubuntu 26.04 server, run this single line in your terminal:
 
-1. Download the OVA from the table above.
-2. Import it into VMware Workstation/ESXi or VirtualBox.
-3. Power on the VM. It boots into an unattended autoinstaller that partitions
-  the disk and installs Ubuntu 26.04 + PNetLab v8 with no manual input beyond
-  DHCP/static IP choice.
-4. Once the install finishes and the VM reboots, log in to the web UI at
-  `https://<host-ip>/`.
+```bash
+sudo git clone https://github.com/azambasha1987/AZAM-BASHA.git /opt/pnetlab && cd /opt/pnetlab/EMULATOR/1-P-872-ME-STABLE && sudo bash install.sh
+```
+
+*(If `/opt/pnetlab` already exists, update and run: `cd /opt/pnetlab/EMULATOR/1-P-872-ME-STABLE && sudo git pull && sudo bash install.sh`)*
+
+---
+
+### Web Dashboard & Login:
+* **URL**: `https://<YOUR_UBUNTU_IP>/`
+* **Username**: `admin`
+* **Password**: `pnet`
+* **Console**: `Native` *(or HTML5)*
 
 ## Updating
 

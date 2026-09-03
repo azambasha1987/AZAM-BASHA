@@ -117,9 +117,19 @@ openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 chmod 600 "${SSL_DIR}/pnetlab.key"
 chmod 644 "${SSL_DIR}/pnetlab.crt"
 
+# Mirror to standard paths expected by Ubuntu Apache configurations
+mkdir -p /etc/ssl/certs /etc/ssl/private
+cp -f "${SSL_DIR}/pnetlab.crt" /etc/ssl/certs/pnetlab-selfsigned.crt 2>/dev/null || true
+cp -f "${SSL_DIR}/pnetlab.crt" /etc/ssl/certs/apache-selfsigned.crt 2>/dev/null || true
+cp -f "${SSL_DIR}/pnetlab.key" /etc/ssl/private/pnetlab-selfsigned.key 2>/dev/null || true
+cp -f "${SSL_DIR}/pnetlab.key" /etc/ssl/private/apache-selfsigned.key 2>/dev/null || true
+chmod 600 /etc/ssl/private/* 2>/dev/null || true
+
 # Configure Apache SSL Site
 if [ -d /etc/apache2 ]; then
-    a2enmod ssl rewrite headers proxy proxy_http proxy_wstunnel 2>/dev/null || true
+    a2enmod ssl rewrite headers proxy proxy_http proxy_wstunnel mpm_event proxy_fcgi setenvif 2>/dev/null || true
+    a2dissite pnetlabs 000-default default-ssl 2>/dev/null || true
+    a2ensite pnetlab pnetlab-ssl 2>/dev/null || true
     cat << 'EOF' > /etc/apache2/conf-available/pnetlab-ssl-hardening.conf
 # Modern TLS Hardening for PNETLab
 SSLCipherSuite HIGH:!aNULL:!MD5:!3DES:!CAMELLIA:!AES128
@@ -128,7 +138,7 @@ SSLHonorCipherOrder on
 EOF
     a2enconf pnetlab-ssl-hardening 2>/dev/null || true
 fi
-echo "  -> 10-Year IP-SAN SSL Certificate installed covering all VM IP addresses."
+echo "  -> 10-Year IP-SAN SSL Certificate installed covering all VM IP addresses and paths."
 
 # 2. HTML5 Guacamole & Console WebSocket Fix
 echo "[2/4] Hardening HTML5 Guacamole (guacd) Web Console Daemon..."

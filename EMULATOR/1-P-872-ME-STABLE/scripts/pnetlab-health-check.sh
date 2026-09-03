@@ -111,8 +111,29 @@ else
     echo -e "  * AI MCP Daemon:     ${YELLOW}✘ INACTIVE / NOT CONFIGURED${NC}"
 fi
 
-# 6. Installed Node Images Inventory
-echo -e "\n${BOLD}[6] Node Images Inventory${NC}"
+# 6. Web UI & Authentication Status
+echo -e "\n${BOLD}[6] Web Dashboard & Authentication Status${NC}"
+AUTH_RESP=$(curl -k -s -m 5 -X POST https://127.0.0.1/api/auth \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"pnet"}' 2>/dev/null || echo "")
+
+if echo "$AUTH_RESP" | grep -q '"code":200'; then
+    echo -e "  * Admin Auth (admin/pnet): ${GREEN}✔ ACTIVE (User authenticated successfully)${NC}"
+elif [ -z "$AUTH_RESP" ]; then
+    echo -e "  * Web UI HTTPS Endpoint:  ${RED}✘ UNREACHABLE (Check Apache2 / SSL service)${NC}"
+else
+    echo -e "  * Admin Auth (admin/pnet): ${YELLOW}✘ FAILED (${AUTH_RESP:0:80})${NC}"
+fi
+
+# Cisco IOL License Key
+if [ -f /opt/unetlab/addons/iol/bin/iourc ] && grep -q "license" /opt/unetlab/addons/iol/bin/iourc 2>/dev/null; then
+    echo -e "  * Cisco IOL License Key:   ${GREEN}✔ INSTALLED (/opt/unetlab/addons/iol/bin/iourc)${NC}"
+else
+    echo -e "  * Cisco IOL License Key:   ${YELLOW}✘ MISSING (Run pnetlab-fix-permissions.sh to generate)${NC}"
+fi
+
+# 7. Installed Node Images Inventory
+echo -e "\n${BOLD}[7] Node Images Inventory${NC}"
 QEMU_COUNT=$(find /opt/unetlab/addons/qemu -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l || echo 0)
 IOL_COUNT=$(find /opt/unetlab/addons/iol/bin -type f -name "*.bin" 2>/dev/null | wc -l || echo 0)
 DYN_COUNT=$(find /opt/unetlab/addons/dynamips -type f -name "*.image" -o -name "*.bin" 2>/dev/null | wc -l || echo 0)

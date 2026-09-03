@@ -75,7 +75,8 @@ This repository includes automated maintenance scripts and configuration enhance
 
 | Script | Purpose | Quick Run |
 | :--- | :--- | :--- |
-| [`scripts/pnetlab-apply-all-fixes.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-apply-all-fixes.sh) | **Master Runner**: Interactive menu to apply Session, Export, and AI fixes. | `sudo bash scripts/pnetlab-apply-all-fixes.sh` |
+| [`scripts/pnetlab-apply-all-fixes.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-apply-all-fixes.sh) | **Master Runner**: Interactive menu to apply Session, Export, Speed Optimizer, and AI fixes. | `sudo bash scripts/pnetlab-apply-all-fixes.sh` |
+| [`scripts/pnetlab-speed-optimizer.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-speed-optimizer.sh) | **Speed Optimizer**: KSM memory deduplication (30-50% RAM savings), OPcache 256MB, Apache Gzip, & sysctl tuning. | `sudo bash scripts/pnetlab-speed-optimizer.sh` |
 | [`scripts/pnetlab-disable-logout.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-disable-logout.sh) | **Permanent Session Fix**: Sets 10-year session across PHP, MySQL, cookies, and keepalive heartbeat. | `sudo bash scripts/pnetlab-disable-logout.sh` |
 | [`scripts/pnetlab-fix-export-and-apt.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/pnetlab-fix-export-and-apt.sh) | **Export & APT Fix**: Cleans duplicate repos, installs zip/unzip, fixes permissions, and enables recursive subfolder lab export. | `sudo bash scripts/pnetlab-fix-export-and-apt.sh` |
 | [`scripts/setup-ollama.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/scripts/setup-ollama.sh) | **AI Lab Builder VM Setup**: Configures PNETLab v8.72+ MCP service and connects to local Ollama LLM. | `sudo bash scripts/setup-ollama.sh <HOST_IP>` |
@@ -87,6 +88,7 @@ This repository includes automated maintenance scripts and configuration enhance
 
 Detailed administrator documentation is available in [`docs/`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/docs):
 
+- **Speed & Resource Optimizer**: [`docs/PNETLAB_SPEED_OPTIMIZER_GUIDE.md`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/docs/PNETLAB_SPEED_OPTIMIZER_GUIDE.md) — KSM RAM deduplication, OPcache bytecode acceleration, Apache compression, and network stack tuning.
 - **AI Lab Builder & Ollama**: [`docs/AI_LAB_BUILDER_OLLAMA_GUIDE.md`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/docs/AI_LAB_BUILDER_OLLAMA_GUIDE.md) — Architecture diagram, 4-stage execution flow, troubleshooting matrix, and sample prompts.
 - **Permanent Session Guide**: [`docs/PNETLAB_PERMANENT_SESSION_GUIDE.md`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/docs/PNETLAB_PERMANENT_SESSION_GUIDE.md) & [HTML Version](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/docs/pnetlab-never-logout-guide.html) — Full root-cause analysis and multi-layer session fix.
 - **Lab Export & APT Fix**: [`docs/PNETLAB_EXPORT_AND_APT_FIX_GUIDE.md`](file:///e:/Git/EMULATOR/1-P-872-ME-WORKING/docs/PNETLAB_EXPORT_AND_APT_FIX_GUIDE.md) — Step-by-step resolution for export errors and nested labs.

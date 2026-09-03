@@ -6,10 +6,41 @@
 # 2. Missing zip / unzip utilities required for lab import/export
 # 3. /opt/unetlab/html/Exports symlink and write permissions
 # 4. /opt/unetlab/scripts/remove_uuid.sh recursive support for subfolders & nested labs
+#
+# Supports piped execution & non-root diagnostic checks.
 # ==============================================================================
 set -euo pipefail
 
-echo "=== Applying PNETLab Export & APT Sources Fix ==="
+# Support non-root diagnostic/check mode
+if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
+    echo "Usage: sudo bash $0 [--check | --status]"
+    exit 0
+fi
+
+if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
+    echo "=== PNETLab Export & APT Diagnostic Check ==="
+    echo -n "[*] Conflicting codeberg.list: "
+    if [ -f /etc/apt/sources.list.d/pnetlab-netinstall-codeberg.list ]; then
+        echo "PRESENT (Needs removal)"
+    else
+        echo "CLEAN (None found)"
+    fi
+
+    echo -n "[*] zip / unzip tools: "
+    if command -v zip &>/dev/null && command -v unzip &>/dev/null; then
+        echo "INSTALLED"
+    else
+        echo "MISSING"
+    fi
+
+    echo -n "[*] /opt/unetlab/html/Exports symlink: "
+    if [ -L /opt/unetlab/html/Exports ]; then
+        echo "VALID -> $(readlink -f /opt/unetlab/html/Exports)"
+    else
+        echo "MISSING / NOT A SYMLINK"
+    fi
+    exit 0
+fi
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "[ERROR] Please run this script as root (sudo bash $0)" >&2
@@ -17,6 +48,8 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+echo "=== Applying PNETLab Export & APT Sources Fix ==="
 
 # 1. Remove duplicate/conflicting installer repo entry
 echo "[1/5] Removing duplicate/conflicting installer repository entry..."
@@ -34,7 +67,7 @@ ln -sfn /opt/unetlab/data/Exports /opt/unetlab/html/Exports
 chown -R www-data:www-data /opt/unetlab/data/Exports /opt/unetlab/html/Exports || true
 chmod -R 775 /opt/unetlab/data/Exports
 
-# 4. Patch remove_uuid.sh to support subfolders and nested labs
+# 4. Patch remove_uuid.sh to support subfolders, nested labs, and absolute target path resolution
 echo "[4/5] Patching /opt/unetlab/scripts/remove_uuid.sh for recursive nested lab support..."
 UUID_SCRIPT="/opt/unetlab/scripts/remove_uuid.sh"
 mkdir -p "$(dirname "$UUID_SCRIPT")"
@@ -52,8 +85,11 @@ if [ ! -f "$1" ]; then
     exit 15
 fi
 
+# Resolve absolute path before changing directory into TEMP
+TARGET_ZIP="$(readlink -f "$1" 2>/dev/null || realpath "$1" 2>/dev/null || echo "$1")"
+
 TEMP=$(mktemp -d --suffix=_unetlab)
-unzip -q -o -d "$TEMP" "$1"
+unzip -q -o -d "$TEMP" "$TARGET_ZIP"
 if [ $? -ne 0 ]; then
     rm -rf "$TEMP"
     echo "ERROR: cannot unzip file."
@@ -62,7 +98,7 @@ fi
 
 find "$TEMP" -name "*.unl" -exec sed -i "s/ id=\"[0-9a-f-]\{36\}\"//g" "{}" \;
 
-(cd "$TEMP" && zip -q -r -u "$1" .)
+(cd "$TEMP" && zip -q -r -u "$TARGET_ZIP" .)
 rm -rf "$TEMP"
 exit 0
 EOF

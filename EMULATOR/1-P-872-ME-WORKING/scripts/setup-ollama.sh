@@ -2,8 +2,30 @@
 # ==============================================================================
 # PNETLab AI Lab Builder & Local Ollama VM Provisioning Script
 # Configures PNETLab v8.72+ to communicate with an external/host Ollama LLM engine
+#
+# Supports piped execution & non-root diagnostic checks.
 # ==============================================================================
 set -euo pipefail
+
+# Support non-root diagnostic/check mode
+if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
+    echo "Usage: sudo bash $0 [HOST_IP] [MODEL] | [--check | --status]"
+    exit 0
+fi
+
+if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
+    echo "=== PNETLab AI & MCP Daemon Diagnostic Check ==="
+    echo -n "[*] MCP Daemon Service Status: "
+    systemctl is-active pnetlab-mcp 2>/dev/null || echo "INACTIVE / NOT INSTALLED"
+
+    echo -n "[*] AI Config File (/opt/unetlab/data/ai/config.json): "
+    if [ -f /opt/unetlab/data/ai/config.json ]; then
+        echo "PRESENT"
+    else
+        echo "MISSING"
+    fi
+    exit 0
+fi
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "[ERROR] Please run this script as root (sudo bash $0)" >&2
@@ -15,8 +37,12 @@ echo "=== PNETLab AI Lab Builder & Ollama Setup ==="
 HOST_IP="${1:-}"
 if [[ -z "$HOST_IP" ]]; then
     DEFAULT_GW=$(ip route | grep default | awk '{print $3}' | head -n1 || true)
-    read -rp "Windows Host IP [Default: ${DEFAULT_GW}]: " INPUT_IP
-    HOST_IP="${INPUT_IP:-$DEFAULT_GW}"
+    if [ -e /dev/tty ]; then
+        read -rp "Windows Host IP [Default: ${DEFAULT_GW}]: " INPUT_IP < /dev/tty || true
+        HOST_IP="${INPUT_IP:-$DEFAULT_GW}"
+    else
+        HOST_IP="$DEFAULT_GW"
+    fi
 fi
 
 OLLAMA_MODEL="${2:-qwen2.5:14b-instruct}"

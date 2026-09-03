@@ -3,10 +3,37 @@
 # PNETLab Never-Logout Script
 # Sets infinite/10-year session timeout across PHP, Database, Cookies & Frontend
 # Compatibility: PNETLab v5, v6, v7, v8 (Ubuntu 18.04 / 20.04 / 22.04 / 24.04 / 26.04)
+#
+# Supports piped execution & non-root diagnostic checks.
 # ==============================================================================
 set -euo pipefail
 
-echo "=== Applying PNETLab Permanent Session Fix ==="
+# Support non-root diagnostic/check mode
+if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
+    echo "Usage: sudo bash $0 [--check | --status]"
+    exit 0
+fi
+
+if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
+    echo "=== PNETLab Session Timeout Diagnostic Check ==="
+    echo -n "[*] config.php SESSION constant: "
+    if grep -q "define('SESSION', '315360000')" /opt/unetlab/html/includes/config.php 2>/dev/null; then
+        echo "10 YEARS (315360000s)"
+    else
+        echo "DEFAULT / UNPATCHED"
+    fi
+
+    echo -n "[*] Database Session Timeout: "
+    mysql -u pnetlab -ppnetlab pnetlab_db -e "SELECT control_value FROM control WHERE control_name='ctrl_session_timeout';" 2>/dev/null | tail -n1 || echo "Could not query database"
+
+    echo -n "[*] Frontend Keepalive Heartbeat: "
+    if grep -q "pnetlab-keepalive.js" /opt/unetlab/html/main/index.html 2>/dev/null; then
+        echo "INSTALLED"
+    else
+        echo "MISSING"
+    fi
+    exit 0
+fi
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "[ERROR] Please run this script as root (sudo bash $0)" >&2
@@ -15,6 +42,8 @@ fi
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 TIMEOUT_SECONDS=315360000   # 10 years (3650 days)
+
+echo "=== Applying PNETLab Permanent Session Fix ==="
 
 # 1. Update /opt/unetlab/html/includes/config.php
 echo "[1/7] Updating /opt/unetlab/html/includes/config.php..."

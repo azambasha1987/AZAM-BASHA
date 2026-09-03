@@ -1,0 +1,24 @@
+name: Run Workflow Test
+
+on:
+  workflow_dispatch:  # Allows manual 1-click test run from GitHub Actions tab
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Workflow Self-Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Execute Self-Test Suite
+        run: |
+          python test_workflow.py

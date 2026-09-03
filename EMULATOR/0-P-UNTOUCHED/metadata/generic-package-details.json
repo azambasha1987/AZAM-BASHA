@@ -2,7 +2,6 @@
   {
     "name": "pnetlab-core-assets",
     "version": "6.8.72resolute1",
-    "type": "generic",
     "files": [
       {
         "id": 15531863,
@@ -99,7 +98,6 @@
   {
     "name": "pnetlab-core-assets",
     "version": "6.8.71resolute1",
-    "type": "generic",
     "files": [
       {
         "id": 15489593,
@@ -196,7 +194,6 @@
   {
     "name": "pnetlab-core-assets",
     "version": "6.8.70resolute1",
-    "type": "generic",
     "files": [
       {
         "id": 15488630,
@@ -293,7 +290,6 @@
   {
     "name": "pnetlab-core-assets",
     "version": "0.channel",
-    "type": "generic",
     "files": [
       {
         "id": 15532577,

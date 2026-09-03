@@ -1,0 +1,51 @@
+name: PNetLab 24h Sync & Verification
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs automatically every 24 hours at 00:00 UTC
+  workflow_dispatch:      # Allows manual 1-click trigger from GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Check & Fetch Changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run Differential Change Sync
+        run: |
+          python pnetlab_daily_change_sync.py
+
+      - name: Upload Verification Report & Sync Log
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-logs
+          path: |
+            VERIFICATION_REPORT.md
+            sync.log
+            changes_history.json
+            state.json
+
+      - name: Commit & Push Changes (if any new files downloaded)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit. All files up to date."
+          else
+            git commit -m "chore: automated 24h sync update [skip ci]"
+            git push
+          fi

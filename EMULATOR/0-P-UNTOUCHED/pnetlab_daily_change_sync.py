@@ -19,6 +19,7 @@ import os
 import sys
 import json
 import time
+import shutil
 import hashlib
 import subprocess
 import urllib.request
@@ -51,8 +52,11 @@ def log(msg):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     formatted = f"[{timestamp}] {msg}"
     print(formatted)
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(formatted + "\n")
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(formatted + "\n")
+    except Exception:
+        pass
 
 def get_url(url, retries=5):
     for attempt in range(retries):
@@ -85,8 +89,11 @@ def load_state():
 
 def save_state(state):
     state["last_run_utc"] = get_utc_now_str()
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2)
+    try:
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2)
+    except Exception as e:
+        log(f"Warning: could not save state.json: {e}")
 
 def log_change_history(changes):
     history = []
@@ -102,13 +109,20 @@ def log_change_history(changes):
         "files_downloaded": changes.get("files_downloaded", []),
         "files_unchanged_count": changes.get("files_unchanged_count", 0)
     })
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history, f, indent=2)
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history, f, indent=2)
+    except Exception as e:
+        log(f"Warning: could not write changes_history.json: {e}")
 
 def check_and_sync_track1(state, changes):
     log("[Track 1] Checking Git Commits & Repository Source...")
-    if not os.path.exists(GIT_DIR):
+    # If track-1-git doesn't exist or isn't a valid git repo with .git, clone cleanly
+    git_dot_git = os.path.join(GIT_DIR, ".git")
+    if not os.path.exists(git_dot_git):
         log(f"[Track 1] Initializing repository at {GIT_DIR}...")
+        if os.path.exists(GIT_DIR):
+            shutil.rmtree(GIT_DIR, ignore_errors=True)
         subprocess.run(["git", "clone", "https://codeberg.org/netkillui/Pnetlabv8.git", GIT_DIR], check=True)
         head_now = subprocess.run(["git", "-C", GIT_DIR, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
         state["git_head"] = head_now
@@ -117,24 +131,31 @@ def check_and_sync_track1(state, changes):
         return
 
     # Check remote refs
-    subprocess.run(["git", "-C", GIT_DIR, "fetch", "origin"], check=True)
-    status_out = subprocess.run(["git", "-C", GIT_DIR, "status", "-uno"], capture_output=True, text=True).stdout
-    
-    old_head = subprocess.run(["git", "-C", GIT_DIR, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
-    
-    if "Your branch is behind" in status_out:
-        log("[Track 1] Remote updates detected! Pulling latest commits...")
-        pull_res = subprocess.run(["git", "-C", GIT_DIR, "pull", "--ff-only"], capture_output=True, text=True)
-        new_head = subprocess.run(["git", "-C", GIT_DIR, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
-        diff_res = subprocess.run(["git", "-C", GIT_DIR, "diff", "--name-status", old_head, new_head], capture_output=True, text=True).stdout.strip()
+    try:
+        subprocess.run(["git", "-C", GIT_DIR, "fetch", "origin"], check=True)
+        status_out = subprocess.run(["git", "-C", GIT_DIR, "status", "-uno"], capture_output=True, text=True).stdout
+        old_head = subprocess.run(["git", "-C", GIT_DIR, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
         
-        state["git_head"] = new_head
-        change_desc = f"Updated from {old_head[:8]} to {new_head[:8]}. Changed files:\n{diff_res}"
-        changes["git_changes"].append(change_desc)
-        log(f"[Track 1] Updated: {change_desc}")
-    else:
-        log(f"[Track 1] Up to date (HEAD: {old_head})")
-        state["git_head"] = old_head
+        if "Your branch is behind" in status_out:
+            log("[Track 1] Remote updates detected! Pulling latest commits...")
+            pull_res = subprocess.run(["git", "-C", GIT_DIR, "pull", "--ff-only"], capture_output=True, text=True)
+            new_head = subprocess.run(["git", "-C", GIT_DIR, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+            diff_res = subprocess.run(["git", "-C", GIT_DIR, "diff", "--name-status", old_head, new_head], capture_output=True, text=True).stdout.strip()
+            
+            state["git_head"] = new_head
+            change_desc = f"Updated from {old_head[:8]} to {new_head[:8]}. Changed files:\n{diff_res}"
+            changes["git_changes"].append(change_desc)
+            log(f"[Track 1] Updated: {change_desc}")
+        else:
+            log(f"[Track 1] Up to date (HEAD: {old_head})")
+            state["git_head"] = old_head
+    except Exception as e:
+        log(f"[Track 1] Fetch warning: {e}. Re-cloning repository...")
+        shutil.rmtree(GIT_DIR, ignore_errors=True)
+        subprocess.run(["git", "clone", "https://codeberg.org/netkillui/Pnetlabv8.git", GIT_DIR], check=True)
+        head_now = subprocess.run(["git", "-C", GIT_DIR, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        state["git_head"] = head_now
+        log(f"[Track 1] Re-cloned at HEAD: {head_now}")
 
 def check_and_sync_track2(state, changes):
     log("[Track 2] Checking Codeberg Package API & Debian Releases...")
@@ -292,7 +313,10 @@ def check_and_sync_track2(state, changes):
             except Exception as e:
                 log(f"[Track 2] Failed downloading {fname}: {e}")
                 if os.path.exists(tmp_dest):
-                    os.remove(tmp_dest)
+                    try:
+                        os.remove(tmp_dest)
+                    except Exception:
+                        pass
 
     state["files"] = state_files
     generate_report(remote_files)
@@ -324,11 +348,12 @@ def generate_report(remote_files):
         else:
             report_lines.append(f"| {info['category']} | `{rel_path}` | - | ❌ MISSING | - |")
 
-    for f in sorted(os.listdir(META_DIR)):
-        fpath = os.path.join(META_DIR, f)
-        size = os.path.getsize(fpath)
-        sha = compute_sha256(fpath)
-        report_lines.append(f"| Metadata Index | `metadata/{f}` | {size:,} | ✅ VERIFIED | `{sha}` |")
+    if os.path.exists(META_DIR):
+        for f in sorted(os.listdir(META_DIR)):
+            fpath = os.path.join(META_DIR, f)
+            size = os.path.getsize(fpath)
+            sha = compute_sha256(fpath)
+            report_lines.append(f"| Metadata Index | `metadata/{f}` | {size:,} | ✅ VERIFIED | `{sha}` |")
 
     with open(REPORT_FILE, "w", encoding="utf-8") as f:
         f.write("\n".join(report_lines) + "\n")

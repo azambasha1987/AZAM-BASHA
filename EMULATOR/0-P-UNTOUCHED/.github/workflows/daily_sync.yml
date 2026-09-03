@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+defaults:
+  run:
+    working-directory: EMULATOR/0-P-UNTOUCHED
+
 jobs:
   sync:
     name: Check & Fetch Changes
@@ -24,6 +28,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Configure Git Safe Directory
+        working-directory: .
+        run: |
+          git config --global --add safe.directory "*"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Run Differential Change Sync
         run: |
           python pnetlab_daily_change_sync.py
@@ -33,16 +44,15 @@ jobs:
         with:
           name: verification-logs
           path: |
-            VERIFICATION_REPORT.md
-            sync.log
-            changes_history.json
-            state.json
+            EMULATOR/0-P-UNTOUCHED/VERIFICATION_REPORT.md
+            EMULATOR/0-P-UNTOUCHED/sync.log
+            EMULATOR/0-P-UNTOUCHED/changes_history.json
+            EMULATOR/0-P-UNTOUCHED/state.json
 
-      - name: Commit & Push Changes (if any new files downloaded)
+      - name: Commit & Push Changes (if any metadata / manifests updated)
+        working-directory: .
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add EMULATOR/0-P-UNTOUCHED/VERIFICATION_REPORT.md EMULATOR/0-P-UNTOUCHED/sync.log EMULATOR/0-P-UNTOUCHED/changes_history.json EMULATOR/0-P-UNTOUCHED/state.json EMULATOR/0-P-UNTOUCHED/metadata/
           if git diff --staged --quiet; then
             echo "No changes to commit. All files up to date."
           else

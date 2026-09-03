@@ -45,6 +45,7 @@ echo "============================================================"
 
 # Phase 1: Network & Broker Datapath
 run_or_fetch "pnetlab-fix-network.py"
+run_or_fetch "pnetlab-fix-eth0-permanent.py"
 run_or_fetch "pnetlab-modern-netplan-engine.sh"
 
 # Phase 2: PHP 8.4/8.5 Engine & Session Tuning

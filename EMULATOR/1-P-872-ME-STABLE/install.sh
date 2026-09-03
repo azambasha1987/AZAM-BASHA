@@ -591,6 +591,9 @@ if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" ]; then
 elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" || true
 fi
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-eth0-permanent.py" ]; then
+    python3 "${SCRIPT_DIR}/scripts/pnetlab-fix-eth0-permanent.py" || true
+fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-modern-netplan-engine.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-modern-netplan-engine.sh" || true
 fi

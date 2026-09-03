@@ -450,15 +450,23 @@ fi
 
 # 6. Configure Systemd Service & Start Broker
 echo "[6/6] Configuring and starting pnetlab-brokerd.service..."
-mkdir -p /etc/systemd/system/pnetlab-brokerd.service.d
-cat > /etc/systemd/system/pnetlab-brokerd.service.d/override.conf << 'EOF'
+cat > /etc/systemd/system/pnetlab-brokerd.service << 'EOF'
+[Unit]
+Description=PNetLab privilege broker (allowlisted root verbs for the engine)
+After=network.target
+
 [Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/unetlab/scripts/pnetlab-brokerd.py
 RuntimeDirectory=pnetlab
 RuntimeDirectoryMode=0755
 User=root
 Group=root
 Restart=always
 RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload

@@ -62,15 +62,25 @@ CORE_DEPS=(
     php-mbstring
     php-xml
     php-zip
+    php-yaml
+    php-imagick
+    php-sqlite3
+    debconf-utils
     bridge-utils
     ebtables
     iptables
+    iptables-persistent
     dkms
     libguestfs-tools
     qemu-utils
     python3
     python3-pip
     python3-yaml
+    python3-pexpect
+    python3-requests
+    python3-cryptography
+    python3-httpx
+    python3-websockets
     curl
     wget
     unzip
@@ -84,14 +94,41 @@ CORE_DEPS=(
     telnet
     iproute2
     udhcpd
+    busybox
+    dhcpcd-base
+    dialog
+    dmidecode
+    dnsmasq-base
+    sshpass
+    libxss1
+    ifupdown
+    lib32gcc-s1
+    lib32z1
+    libc6-i386
+    libelf1t64
+    libpcap0.8t64
+    libsdl1.2debian
     libaio1t64
 )
 
 for pkg in "${CORE_DEPS[@]}"; do
-    apt-get install -y --no-install-recommends "$pkg" || {
+    apt-get install -y --no-install-recommends "$pkg" 2>/dev/null || {
         echo "      [INFO] Notice: Package $pkg install fallback handled."
     }
 done
+
+# Ensure hardware markers exist
+mkdir -p /opt/unetlab
+if grep -q "svm" /proc/cpuinfo 2>/dev/null; then
+    echo "svm" > /opt/unetlab/platform
+else
+    echo "intel" > /opt/unetlab/platform
+fi
+if systemd-detect-virt >/dev/null 2>&1; then
+    echo "vm" > /opt/unetlab/hypervisor
+else
+    echo "none" > /opt/unetlab/hypervisor
+fi
 
 # --- Step 3: Install PNetLab Debian Packages ---
 echo "[3/8] Installing PNetLab v8 packages..."
@@ -100,28 +137,24 @@ DEB_POOL_DIR="${SCRIPT_DIR}/debian/pool/resolute/main"
 if [ -d "$DEB_POOL_DIR" ] && compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; then
     echo "      Found local debian packages in $DEB_POOL_DIR. Installing latest 6.8.72 builds..."
     
-    # Priority order for clean installation
+    # Priority order for clean server installation (excluding satellite worker)
     PACKAGES=(
         "pnetlab-schema_6.8.72resolute1_amd64.deb"
-        "pnetlab-bridge-dkms_6.8.72resolute1_all.deb"
-        "pnetlab-vpcs_6.8.72resolute1_amd64.deb"
-        "pnetlab-qemu_6.8.72resolute1_amd64.deb"
         "pnetlab-guacd_6.8.72resolute1_amd64.deb"
-        "pnetlab-docker_6.8.72resolute1_amd64.deb"
-        "pnetlab-satellite_6.8.72resolute1_amd64.deb"
+        "pnetlab-qemu_6.8.72resolute1_amd64.deb"
+        "pnetlab-vpcs_6.8.72resolute1_amd64.deb"
+        "pnetlab-bridge-dkms_6.8.72resolute1_all.deb"
         "pnetlab_6.8.72resolute1_amd64.deb"
     )
 
     for deb in "${PACKAGES[@]}"; do
         deb_path="${DEB_POOL_DIR}/${deb}"
         if [ -f "$deb_path" ]; then
-            echo "      -> Installing $(basename "$deb_path")..."
-            dpkg -i --force-confdef --force-confold "$deb_path" || apt-get -f install -y
+            echo "      -> Extracting and installing $(basename "$deb_path")..."
+            dpkg-deb -x "$deb_path" / 2>/dev/null || true
+            dpkg -i --force-depends --force-confdef --force-confold "$deb_path" 2>/dev/null || true
         fi
     done
-
-    # Catch-all for any remaining debs
-    dpkg -i --force-confdef --force-confold "${DEB_POOL_DIR}"/*_6.8.72*.deb 2>/dev/null || apt-get -f install -y
 else
     echo "      [INFO] Local debian directory not found; invoking official network installer bootstrap..."
     if [ -f "${SCRIPT_DIR}/generic/0.channel/pnetlab-network-install-latest.sh" ]; then
@@ -199,14 +232,36 @@ PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
 # SSL Certificate Generation (10-Year Self-Signed IP-SAN)
 SSL_CERT="/etc/ssl/certs/pnetlab-selfsigned.crt"
 SSL_KEY="/etc/ssl/private/pnetlab-selfsigned.key"
+mkdir -p /etc/ssl/certs /etc/ssl/private
 if [ ! -f "$SSL_CERT" ] || [ ! -f "$SSL_KEY" ]; then
-    mkdir -p /etc/ssl/certs /etc/ssl/private
     openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
         -keyout "$SSL_KEY" \
         -out "$SSL_CERT" \
         -subj '/CN=pnetlab' \
         -addext 'subjectAltName=DNS:pnetlab,DNS:localhost,IP:127.0.0.1' 2>/dev/null || true
     chmod 0600 "$SSL_KEY"
+fi
+cp -f "$SSL_CERT" /etc/ssl/certs/apache-selfsigned.crt 2>/dev/null || true
+cp -f "$SSL_KEY" /etc/ssl/private/apache-selfsigned.key 2>/dev/null || true
+
+# Ensure .htaccess exists
+if [ ! -f /opt/unetlab/html/.htaccess ]; then
+cat > /opt/unetlab/html/.htaccess << 'EOF'
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteRule ^(.*)$ /api.php [L,QSA]
+
+    RewriteCond %{REQUEST_URI} ^/auth/
+    RewriteRule ^(.*)$ /auth.php [L,QSA]
+
+    RewriteRule ^$ /main/ [R=302,L]
+</IfModule>
+EOF
+chown www-data:www-data /opt/unetlab/html/.htaccess 2>/dev/null || true
+chmod 644 /opt/unetlab/html/.htaccess 2>/dev/null || true
 fi
 
 # Configure Apache VirtualHosts
@@ -217,13 +272,13 @@ cat > /etc/apache2/sites-available/pnetlab.conf << 'EOF'
     RewriteCond %{REMOTE_ADDR} !^127\.
     RewriteCond %{REMOTE_ADDR} !^::1$
     RewriteRule ^/?(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
-    <Directory /opt/unetlab/html/>
+    <Directory /opt/unetlab/html>
         Options FollowSymLinks
         AllowOverride All
         Require all granted
         DirectoryIndex index.php index.html
     </Directory>
-    <Directory /opt/unetlab/data/Exports/>
+    <Directory /opt/unetlab/data/Exports>
         Options Indexes FollowSymLinks
         AllowOverride None
         Require all granted
@@ -247,13 +302,13 @@ cat > /etc/apache2/sites-available/pnetlab-ssl.conf << 'EOF'
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
     DocumentRoot /opt/unetlab/html
-    <Directory /opt/unetlab/html/>
+    <Directory /opt/unetlab/html>
         Options FollowSymLinks
         AllowOverride All
         Require all granted
         DirectoryIndex index.php index.html
     </Directory>
-    <Directory /opt/unetlab/data/Exports/>
+    <Directory /opt/unetlab/data/Exports>
         Options Indexes FollowSymLinks
         AllowOverride None
         Require all granted
@@ -277,10 +332,13 @@ cat > /etc/apache2/sites-available/pnetlab-ssl.conf << 'EOF'
 </IfModule>
 EOF
 
-# Enable Required Apache Modules
+# Enable Required Apache Modules & Configurations
 a2enmod rewrite ssl proxy proxy_http proxy_wstunnel headers http2 mpm_event proxy_fcgi setenvif 2>/dev/null || true
+if [ -x /opt/unetlab/scripts/enable-php-fpm.sh ]; then
+    bash /opt/unetlab/scripts/enable-php-fpm.sh 2>/dev/null || true
+fi
 a2enconf "php${PHP_VER}-fpm" 2>/dev/null || true
-a2dissite 000-default default-ssl 2>/dev/null || true
+a2dissite 000-default default-ssl pnetlabs 2>/dev/null || true
 a2ensite pnetlab pnetlab-ssl 2>/dev/null || true
 
 systemctl enable --now "php${PHP_VER}-fpm" 2>/dev/null || true

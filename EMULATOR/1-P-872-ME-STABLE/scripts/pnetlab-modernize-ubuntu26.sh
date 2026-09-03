@@ -14,15 +14,28 @@ run_or_fetch() {
     local local_file="${SCRIPT_DIR}/${script_name}"
     local pnet_file="/PNET/pnetlab-v8-ubuntu26-installer/scripts/${script_name}"
     
-    if [ -f "$local_file" ]; then
-        bash "$local_file" || true
-    elif [ -f "$pnet_file" ]; then
-        bash "$pnet_file" || true
+    if [[ "$script_name" == *.py ]]; then
+        if [ -f "$local_file" ]; then
+            python3 "$local_file" || true
+        elif [ -f "$pnet_file" ]; then
+            python3 "$pnet_file" || true
+        else
+            echo "      -> Fetching ${script_name} from GitHub..."
+            local tmp_file="/tmp/${script_name}"
+            curl -fsSL "${GITHUB_RAW}/${script_name}" -o "$tmp_file" 2>/dev/null && python3 "$tmp_file" || true
+            rm -f "$tmp_file" 2>/dev/null || true
+        fi
     else
-        echo "      -> Fetching ${script_name} from GitHub..."
-        local tmp_file="/tmp/${script_name}"
-        curl -fsSL "${GITHUB_RAW}/${script_name}" -o "$tmp_file" 2>/dev/null && bash "$tmp_file" || true
-        rm -f "$tmp_file" 2>/dev/null || true
+        if [ -f "$local_file" ]; then
+            bash "$local_file" || true
+        elif [ -f "$pnet_file" ]; then
+            bash "$pnet_file" || true
+        else
+            echo "      -> Fetching ${script_name} from GitHub..."
+            local tmp_file="/tmp/${script_name}"
+            curl -fsSL "${GITHUB_RAW}/${script_name}" -o "$tmp_file" 2>/dev/null && bash "$tmp_file" || true
+            rm -f "$tmp_file" 2>/dev/null || true
+        fi
     fi
 }
 
@@ -31,7 +44,7 @@ echo "    PNETLab Master Modernization for Ubuntu 26+ (Resolute) "
 echo "============================================================"
 
 # Phase 1: Network & Broker Datapath
-run_or_fetch "pnetlab-fix-network-management.sh"
+run_or_fetch "pnetlab-fix-network.py"
 run_or_fetch "pnetlab-modern-netplan-engine.sh"
 
 # Phase 2: PHP 8.4/8.5 Engine & Session Tuning

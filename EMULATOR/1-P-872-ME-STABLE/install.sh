@@ -586,7 +586,9 @@ fi
 
 # --- Step 8: Apply Modernization Suite & Essential Fixes ---
 echo "[8/8] Applying Ubuntu 26 modernization, session fixes, and update freeze..."
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" ]; then
+    python3 "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" || true
+elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" || true
 fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-modern-netplan-engine.sh" ]; then

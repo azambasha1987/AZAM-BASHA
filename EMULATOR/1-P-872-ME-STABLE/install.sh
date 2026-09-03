@@ -202,8 +202,8 @@ systemctl enable --now mysql || systemctl start mysql
 
 # Initialize database, users, and schemas with robust host grants
 mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
-CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8 COLLATE utf8_general_ci;
-CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE USER IF NOT EXISTS 'pnetlab'@'localhost' IDENTIFIED BY 'pnetlab';
 CREATE USER IF NOT EXISTS 'pnetlab'@'127.0.0.1' IDENTIFIED BY 'pnetlab';
@@ -228,22 +228,84 @@ if [ -d "${SCRIPT_DIR}/schema" ]; then
     cp -f "${SCRIPT_DIR}/schema/"*.sql /opt/unetlab/schema/ 2>/dev/null || true
 fi
 
-# Import PNetLab Database Schema
-SCHEMA_FILE="$(find "${SCRIPT_DIR}/schema" /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
-if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
-    echo "      -> Importing PNetLab schema from $SCHEMA_FILE..."
-    mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true
-fi
+# Direct DDL Table Creation in pnetlab_db
+mysql pnetlab_db << 'EOF' 2>/dev/null || mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || true
+CREATE TABLE IF NOT EXISTS control (
+  control_name varchar(150) NOT NULL,
+  control_value text,
+  PRIMARY KEY (control_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-# Import Guacamole Database Schema
-GUAC_SCHEMA="$(find "${SCRIPT_DIR}/schema" /opt/unetlab/schema /opt/unetlab -name '*guac*.sql' 2>/dev/null | head -n1)"
-if [ -n "$GUAC_SCHEMA" ] && [ -f "$GUAC_SCHEMA" ]; then
-    echo "      -> Importing Guacamole schema from $GUAC_SCHEMA..."
-    mysql -u guacuser -ppnetlab guacdb < "$GUAC_SCHEMA" 2>/dev/null || mysql guacdb < "$GUAC_SCHEMA" 2>/dev/null || true
-fi
+CREATE TABLE IF NOT EXISTS schema_version (
+  version int NOT NULL,
+  applied_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  description text,
+  PRIMARY KEY (version)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-# Seed Default Admin User & Enable Offline Mode
-mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || mysql pnetlab_db << 'EOF' 2>/dev/null || true
+CREATE TABLE IF NOT EXISTS users (
+  pod int NOT NULL AUTO_INCREMENT,
+  username text,
+  cookie text,
+  email varchar(150) DEFAULT NULL,
+  expiration int DEFAULT -1,
+  name text,
+  password text,
+  session int DEFAULT NULL,
+  ip text,
+  role text,
+  folder text,
+  lab_session int DEFAULT NULL,
+  html5 tinyint(1) DEFAULT NULL,
+  license text,
+  online_time int DEFAULT NULL,
+  note text,
+  offline int DEFAULT NULL,
+  active_time int DEFAULT NULL,
+  expired_time int DEFAULT NULL,
+  user_status int DEFAULT 1,
+  user_workspace text,
+  max_node int DEFAULT NULL,
+  max_node_lab int DEFAULT NULL,
+  user_max_cpu int DEFAULT NULL,
+  user_max_ram int DEFAULT NULL,
+  access_days varchar(16) DEFAULT NULL,
+  ext_auth varchar(8) DEFAULT NULL,
+  PRIMARY KEY (pod),
+  UNIQUE KEY email (email)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS html5 (
+  username text,
+  pod int DEFAULT NULL,
+  token text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS lab_sessions (
+  id int NOT NULL AUTO_INCREMENT,
+  lab_id text,
+  pod int DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS node_sessions (
+  id int NOT NULL AUTO_INCREMENT,
+  lab_session int DEFAULT NULL,
+  node_id int DEFAULT NULL,
+  node_session_port int DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS if_sessions (
+  if_session_id bigint NOT NULL AUTO_INCREMENT,
+  if_session_lab int DEFAULT NULL,
+  if_session_node int DEFAULT NULL,
+  if_session_ifid int DEFAULT NULL,
+  if_session_name text,
+  if_session_type text,
+  PRIMARY KEY (if_session_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO control (control_name, control_value) VALUES
   ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
   ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),

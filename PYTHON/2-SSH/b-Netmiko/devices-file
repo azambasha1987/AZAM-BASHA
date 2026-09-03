@@ -1,0 +1,7 @@
+192.168.1.104,cisco-xe,GW-R1
+192.168.1.105,cisco-xe,CORE-SW1
+192.168.1.106,cisco-xe,DIS-SW1
+192.168.1.107,cisco-xe,DIS-SW2
+192.168.1.108,cisco-xe,ACCESS-SW1
+192.168.1.109,cisco-xe,ACCESS-SW2
+192.168.1.110,cisco-xe,ACCESS-SW3

@@ -1,6 +1,6 @@
 # PNetLab Artifacts & Releases Verification Report
 
-Last updated: 2026-09-03 06:14:38 UTC
+Last updated: 2026-09-03 06:23:27 UTC
 
 ## Step 1: Git Repository Verification
 
@@ -93,5 +93,5 @@ Last updated: 2026-09-03 06:14:38 UTC
 | Metadata Index | `metadata/binary-all-Packages` | 5,471 | ✅ VERIFIED | `edafb920ee15fabcd9479d0e282a81e93b3054665828339a57d39ad4f8b8a4c6` |
 | Metadata Index | `metadata/binary-amd64-Packages` | 65,690 | ✅ VERIFIED | `9e0e8afe16eca58d7986df4086aa8fd10e024b478a5ba9f50f94a3ba34c3fa42` |
 | Metadata Index | `metadata/dists-resolute-Release` | 2,641 | ✅ VERIFIED | `2d0b2aa8041ea2c46af6cff993c4700a2038bb88b4cdfc85f0f9f64a9a96b71d` |
-| Metadata Index | `metadata/generic-package-details.json` | 17,282 | ✅ VERIFIED | `19775c5d4f07691867f043be268e69fc1fd868d5a82f30373ee405bed94e81b9` |
-| Metadata Index | `metadata/packages-api-response.json` | 80,203 | ✅ VERIFIED | `a7cb06572853be85bb97e61774aa1c63718047fd5c567bcdb48dc4b79938d64c` |
+| Metadata Index | `metadata/generic-package-details.json` | 16,942 | ✅ VERIFIED | `e37de324f1288404c80a831fca5f94bae7aeb5163815bc7e31eca05a839d5d86` |
+| Metadata Index | `metadata/packages-api-response.json` | 77,640 | ✅ VERIFIED | `9fca5ebe8e1271096474a8be1a08f9ccaae534fa3369cfa5169e13ff379e55a0` |

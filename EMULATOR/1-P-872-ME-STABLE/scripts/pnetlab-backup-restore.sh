@@ -127,9 +127,27 @@ case "$COMMAND" in
         ls -lh "$BACKUP_DIR"/*.tar.gz 2>/dev/null || echo "No backups found."
         ;;
 
+    schedule|--schedule)
+        echo "============================================================"
+        echo "     Configuring Automated Daily PNETLab Backup Cron        "
+        echo "============================================================"
+        CRON_SCRIPT="/etc/cron.daily/pnetlab-backup"
+        SCRIPT_PATH="$(readlink -f "$0")"
+        cat > "$CRON_SCRIPT" <<EOF
+#!/usr/bin/env bash
+# Automated daily PNETLab backup (retains 7 latest snapshots)
+bash "$SCRIPT_PATH" backup >/dev/null 2>&1
+# Purge backups older than 7 days
+find "$BACKUP_DIR" -name "pnetlab_backup_*.tar.gz" -type f -mtime +7 -delete >/dev/null 2>&1
+EOF
+        chmod 755 "$CRON_SCRIPT"
+        echo "  [OK] Daily automated backup job installed: $CRON_SCRIPT"
+        echo "  [OK] Snapshots will run daily and automatically retain 7 days of history."
+        ;;
+
     *)
         echo "Invalid command: $COMMAND"
-        echo "Usage: sudo bash $0 [backup | restore <FILE> | list]"
+        echo "Usage: sudo bash $0 [backup | restore <FILE> | list | schedule]"
         exit 1
         ;;
 esac

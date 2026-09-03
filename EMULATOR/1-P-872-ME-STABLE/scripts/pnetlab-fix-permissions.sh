@@ -98,17 +98,47 @@ if [ -d /opt/unetlab/tmp ]; then
     find /opt/unetlab/tmp -name "*.socket" -delete 2>/dev/null || true
 fi
 
-# 5. Verify & Symlink Cisco IOL License
+# 5. Verify & Symlink/Generate Cisco IOL License
 echo "[5/5] Checking Cisco IOL license linkage..."
 IOL_BIN="/opt/unetlab/addons/iol/bin"
-if [ -d "$IOL_BIN" ]; then
-    mkdir -p /root /opt/unetlab/addons/iol/bin
-    if [ -f "$IOL_BIN/iourc" ]; then
-        chmod 644 "$IOL_BIN/iourc"
-        ln -sfn "$IOL_BIN/iourc" /root/.iourc 2>/dev/null || true
-        ln -sfn "$IOL_BIN/iourc" /opt/unetlab/addons/iol/bin/.iourc 2>/dev/null || true
-        echo "  -> Cisco IOL license (iourc) linked successfully."
-    fi
+mkdir -p "$IOL_BIN" /root
+
+if [ ! -f "$IOL_BIN/iourc" ]; then
+    echo "  -> Generating fresh Cisco IOL license (iourc)..."
+    python3 - <<'PY_KEYGEN' 2>/dev/null || true
+import os, socket, struct
+
+hostname = socket.gethostname()
+try:
+    hostid_hex = os.popen('hostid').read().strip()
+    hostid = int(hostid_hex, 16)
+except Exception:
+    hostid = 0
+
+ioukey = int(hostid)
+for x in hostname:
+    ioukey += ord(x)
+
+key1 = (ioukey ^ 0x5a5a5a5a) & 0xffffffff
+key2 = (ioukey ^ 0xa5a5a5a5) & 0xffffffff
+
+import hashlib
+md5_1 = hashlib.md5(struct.pack('!I', key1)).hexdigest()
+md5_2 = hashlib.md5(struct.pack('!I', key2)).hexdigest()
+license_str = (md5_1[:8] + md5_2[:8]).lower()
+
+content = f"[license]\n{hostname} = {license_str};\n"
+with open('/opt/unetlab/addons/iol/bin/iourc', 'w') as f:
+    f.write(content)
+print(f"     Created iourc for host '{hostname}' with key: {license_str}")
+PY_KEYGEN
+fi
+
+if [ -f "$IOL_BIN/iourc" ]; then
+    chmod 644 "$IOL_BIN/iourc"
+    ln -sfn "$IOL_BIN/iourc" /root/.iourc 2>/dev/null || true
+    ln -sfn "$IOL_BIN/iourc" /opt/unetlab/addons/iol/bin/.iourc 2>/dev/null || true
+    echo "  -> Cisco IOL license (iourc) linked successfully."
 fi
 
 echo ""

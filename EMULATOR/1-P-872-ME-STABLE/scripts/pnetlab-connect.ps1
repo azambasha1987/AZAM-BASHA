@@ -72,10 +72,11 @@ Write-Host "============================================================" -Foreg
 Write-Host " 1) Open PNETLab Web UI in Default Browser"
 Write-Host " 2) Scan Active Lab Node Console Ports (Ports 30001-30050)"
 Write-Host " 3) Launch SSH Session (ssh root@$VmIp)"
-Write-Host " 4) Exit"
+Write-Host " 4) Setup 1-Click Wireshark Protocol Handler (pnetlab://)"
+Write-Host " 5) Exit"
 Write-Host "============================================================" -ForegroundColor Cyan
 
-$action = Read-Host "Select option [1-4, Default: 1]"
+$action = Read-Host "Select option [1-5, Default: 1]"
 if (-not $action) { $action = "1" }
 
 switch ($action) {
@@ -123,6 +124,14 @@ switch ($action) {
         Start-Process "ssh" -ArgumentList "root@$VmIp"
     }
     "4" {
+        $wiresharkScript = "$PSScriptRoot\setup-windows-wireshark.ps1"
+        if (Test-Path $wiresharkScript) {
+            & $wiresharkScript
+        } else {
+            Write-Warning "setup-windows-wireshark.ps1 not found in scripts directory."
+        }
+    }
+    "5" {
         Write-Host "Exiting."
     }
 }

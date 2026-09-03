@@ -1,0 +1,345 @@
+[
+  {
+    "name": "pnetlab-core-assets",
+    "version": "6.8.72resolute1",
+    "type": "generic",
+    "files": [
+      {
+        "id": 15531863,
+        "Size": 75116414,
+        "name": "pnetlab-core-assets-6.8.72resolute1.tar.zst",
+        "md5": "87492be0fff4cfa72b2bc51b4448551e",
+        "sha1": "ae00672b9905e0b4d0cb653642af96b690b42a63",
+        "sha256": "0d07dd0b4c52d782f0ce1dc0d5350a0f1a0e36ad4dba6daaca53f7c31404c2d9",
+        "sha512": "8fc11bad2f619cb9d31effc4af49c9ff7e6fcba425cdde32393fdb152ce4e39a9117d71cadd5340244b69080d9ae43ecfbcb4d6d5636ff019373ce6baf6ac4a8"
+      },
+      {
+        "id": 15531938,
+        "Size": 110,
+        "name": "pnetlab-core-assets-6.8.72resolute1.tar.zst.sha256",
+        "md5": "69f68d20b4a44d551c8e840a2dd6a121",
+        "sha1": "5aaa5100a5a60e5877df7804661c9c6c04a1f8e7",
+        "sha256": "a8dd2c0332cad7b8281d3ec1f7f61d15842da9087be0eb34d518a79e793b974a",
+        "sha512": "1474aef63e63d79d21db04dd677d8c10d441e3f1d005269c137c9193df387dba41a6bae51e53dd949647bee88b7b05af6484a14ea482a920b128507b32e132d9"
+      },
+      {
+        "id": 15531941,
+        "Size": 566,
+        "name": "pnetlab-core-assets-6.8.72resolute1.tar.zst.sig",
+        "md5": "b60028e75fbbd85d21be8346581aa6e1",
+        "sha1": "9b5b8daf7290e793285af4723520d157029b7742",
+        "sha256": "25203dfe7586fedb6b82a8980b3ef5e3f78e3bde7b3c1b368f1b5fa1c9ecf0d3",
+        "sha512": "04b6796fe598f1c1e159f00b7402cff0dc6d159a7ecf8352feac453c6d2f9dc7f234653d7a8c88f1228b29e86b1f898ca6bc55f0a53d2968cd3c835c33954949"
+      },
+      {
+        "id": 15532370,
+        "Size": 1274,
+        "name": "pnetlab-6.8.72resolute1-manifest.json",
+        "md5": "de69c5f074e4647633d7abe92cfdb257",
+        "sha1": "9b0ad47e555852e0a0d978a987b2e194d09aa74c",
+        "sha256": "61416468e8dba97f5f1dca2a4a04598cd50394fffeaae5a2564c685a9d969f02",
+        "sha512": "ae496ca0f776fc5d792afcdde8002f597016e60d58b8e1ccc9ee76560939346a98f4ee7a3cde3b205af077294996df6c359a781bfcf60a21e272a9836b6bc9e2"
+      },
+      {
+        "id": 15532373,
+        "Size": 104,
+        "name": "pnetlab-6.8.72resolute1-manifest.json.sha256",
+        "md5": "809f02057a9c0c0cdc5664075fab923c",
+        "sha1": "77631c40f822a4c448bb9c898dea6a845d44ffd8",
+        "sha256": "f54a298600ec8e26df0e836aca3cb9edbba7962e8f28afaec0dad4f6d0ae6d26",
+        "sha512": "bc3fcb0a661c4e8cc629e00ca891826f2bd4ec3698dc04c0a6da2d20925f3b31b25fbe4fffa89a2a44d1bef91d3935823807484c5a7088bf3e7acd87d842bd54"
+      },
+      {
+        "id": 15532376,
+        "Size": 566,
+        "name": "pnetlab-6.8.72resolute1-manifest.json.sig",
+        "md5": "9903c17e9cb43becb709c4b040b2e47d",
+        "sha1": "1b321996248acb8499abfa1baf805a06dc58b8d2",
+        "sha256": "76a897b851147ee8583d2000eb86e8f6bcd83d2b1788896aa55783eba5407e38",
+        "sha512": "8a2d42b3eb132ad4b1034773114a6824894a2bd311d434b53c1a11cd75b717a9a8a66b7dd689df50449163ae66f02a8e14c4c30f22cfc9471ad12bc944ceafa5"
+      },
+      {
+        "id": 15532565,
+        "Size": 167549,
+        "name": "pnetlab-network-install-6.8.72resolute1.sh",
+        "md5": "91f62d7b7181b881acc4d82f9f962fce",
+        "sha1": "4f32ad501f5ad90404332527cfc0204cc96f1b32",
+        "sha256": "be8fbad8be91a5a9694592244a67951a6de08eb3ca582c0b0a8683c46cc0c8e1",
+        "sha512": "bc8861a8b40d117bdf53d17a5c93c9e906a076d16bb62c94df1aa4f6d512de41453d6d75c5d96c1c1e2a51c38276f96250455679dee8cab668c6b46f1e218d51"
+      },
+      {
+        "id": 15532568,
+        "Size": 109,
+        "name": "pnetlab-network-install-6.8.72resolute1.sh.sha256",
+        "md5": "5839ac8b746f4b8a4be9d88549a556a9",
+        "sha1": "281f80789e9822e2159ff3fdb97d513ee8d38b4c",
+        "sha256": "461fef1bd11a2a35750bff9963dda9110cea122e1f678f88af20b25696e79829",
+        "sha512": "7e4a48ea1e20f0c3639497b0f9a9e38baffab83d672655d361cc9226f56d78c6bc0b62e0c6ec2f4bfeaa1de273569247cd959d380c625b1e6f2b22e14380fc28"
+      },
+      {
+        "id": 15532571,
+        "Size": 15185,
+        "name": "pnetlab-install-resolute-satellite-6.8.72resolute1.sh",
+        "md5": "b14d11b1dafec72b47707acca04054a0",
+        "sha1": "b9776e4984ecebde4f7d9edb12dcc84e05eca787",
+        "sha256": "6e6469593a7a42519939b076cfed55ea3017fc107e38db0d7080d96674e4c751",
+        "sha512": "85b34d428f3e55acf67b696414cd2a6fab7c69e1f9aeffb299fef7ac0e87ede64ad8d83b9a6a665234b4868794ae400f2c4b962a0a451e2b5a8c4ddc1b899cba"
+      },
+      {
+        "id": 15532574,
+        "Size": 120,
+        "name": "pnetlab-install-resolute-satellite-6.8.72resolute1.sh.sha256",
+        "md5": "4fa5a4fcc662d97bfde4f64dd1e49b79",
+        "sha1": "e1b54837defcde71ce3ffc796dd26588cd91cddc",
+        "sha256": "603d3eb2e7a4bef8390874243e63d85842d0946b7a5648df4d3241382abf2073",
+        "sha512": "d475a12d9c24f706e27d8358fddcb5102af34940ce969d7a6c2b026bca9fd092312e8a2aefe7228b7f4aaa956b649c81289b7e08a57700381f6ac656e7db8270"
+      }
+    ]
+  },
+  {
+    "name": "pnetlab-core-assets",
+    "version": "6.8.71resolute1",
+    "type": "generic",
+    "files": [
+      {
+        "id": 15489593,
+        "Size": 75116414,
+        "name": "pnetlab-core-assets-6.8.71resolute1.tar.zst",
+        "md5": "87492be0fff4cfa72b2bc51b4448551e",
+        "sha1": "ae00672b9905e0b4d0cb653642af96b690b42a63",
+        "sha256": "0d07dd0b4c52d782f0ce1dc0d5350a0f1a0e36ad4dba6daaca53f7c31404c2d9",
+        "sha512": "8fc11bad2f619cb9d31effc4af49c9ff7e6fcba425cdde32393fdb152ce4e39a9117d71cadd5340244b69080d9ae43ecfbcb4d6d5636ff019373ce6baf6ac4a8"
+      },
+      {
+        "id": 15489596,
+        "Size": 110,
+        "name": "pnetlab-core-assets-6.8.71resolute1.tar.zst.sha256",
+        "md5": "5bb6e86c2ea5165118e3dbc27d1ccded",
+        "sha1": "9a8ff387220f1cf5762ccf89a02d9ae0861c83fb",
+        "sha256": "cb580530d29819e8b44d412ca16252b9f2e721cef9938aa306a354faa69f09ce",
+        "sha512": "20cad307b403390f75065c7bca48d7d9ca9ece3717f32abb139c22b596d5854fc857744e03141f8aebc7f9cb1b4fdee8e2a0f7bd066c7bc639b393f9e125736c"
+      },
+      {
+        "id": 15489599,
+        "Size": 566,
+        "name": "pnetlab-core-assets-6.8.71resolute1.tar.zst.sig",
+        "md5": "51f17652590e5314cee269b8e726056b",
+        "sha1": "e3ad0e4d906ae8e68f326609f48dc87b9d09ba03",
+        "sha256": "94f5da424c4af2d0d937a94300aadb2b09a86ff2113bdbc9b1a5de5aee4f07fb",
+        "sha512": "476541910f5cf067c1597cb4f67b690cf314f056beee33f8f83163b75bdd0abe5f2828132f68875627547379b6fdc2712e7a59075b3b51591c58bfa072567df7"
+      },
+      {
+        "id": 15489770,
+        "Size": 1274,
+        "name": "pnetlab-6.8.71resolute1-manifest.json",
+        "md5": "9a5b0a53244b8b90ab13dddd4b908c1c",
+        "sha1": "7667987584fc6ded731ae6bd9b5014b14f30a14f",
+        "sha256": "33029671c56046caf244a101b5cb42bb63a390c4710bdc3ae9b78e1d7f5c4c83",
+        "sha512": "80227ae00ed7205290848d566c6da6115d87a9c686ead7f939ab7b62db59f92b45dda5de9b667f9a5528fe9cb355d595e42702e73c5fa069bf37f2827d7d063a"
+      },
+      {
+        "id": 15489773,
+        "Size": 104,
+        "name": "pnetlab-6.8.71resolute1-manifest.json.sha256",
+        "md5": "2feecfccdda23fe5223393e4c24cb287",
+        "sha1": "eaf066cbbc53541d800ac0cf8c77b139339d7f0d",
+        "sha256": "2aeac53ea744cde64cadc64a03296f1e812f8397f8cdbf970c84860b0cff6430",
+        "sha512": "831703024511add6d9d94eae96ebbb89482d3db0f4fb35e2f9225cea9a9be8d791370c77b1e2576f963e879471a5da4ec5c73e2a0d712b2249ef02d049b83c31"
+      },
+      {
+        "id": 15489776,
+        "Size": 566,
+        "name": "pnetlab-6.8.71resolute1-manifest.json.sig",
+        "md5": "4d74ab9ca4083d80c918abc5e8fb06c9",
+        "sha1": "17f2db27d9344c2d2eb36bcc678fea416d67d259",
+        "sha256": "7927f7b8e0e76b1ca5c08d83a95e29b199ca4b38b57ae2cd513b7dc295c91a31",
+        "sha512": "839dc1d4550acbdd27da574dc2f1bcdf913eb9d4e42a16c092b61c4e6b2d281e9b2d8fd64c585dcbb9adf09e5a9b953ed3761f60369079180de79518f1c26e37"
+      },
+      {
+        "id": 15489779,
+        "Size": 166206,
+        "name": "pnetlab-network-install-6.8.71resolute1.sh",
+        "md5": "b50dcb9eb75824e878135b778d7dd6c5",
+        "sha1": "ae41b17caaca89caf971b137e737e3b6432e603f",
+        "sha256": "da1973311eff5991c3e63b059a75844233949b29bb05a023afcc3f55edacc7b2",
+        "sha512": "8716bed21b8d395c1d105ef032241309d6d9f332fe464eb56689dde5dadbe79f92e46ece754b602bb038e8212735d25e225ee5d5a4176bd28082e9aa64e486ed"
+      },
+      {
+        "id": 15489782,
+        "Size": 109,
+        "name": "pnetlab-network-install-6.8.71resolute1.sh.sha256",
+        "md5": "b20724251138d4ff885551a8e295c2b0",
+        "sha1": "7e3ca63d1bb093280d49e2e9dbcdee136ccb9548",
+        "sha256": "dd110695b844d3a4859c84b1cacbfde1a2419b52d8639ae21567357986fc6c53",
+        "sha512": "3f36a3ca7bd1f6ecc44aead9086498563d658eb5b54af0d30d9d9dd893f381c4cd4657c18bd5302282bb8ce478d953392115f21f69809fdd523f9cf7d922c4d9"
+      },
+      {
+        "id": 15489785,
+        "Size": 15185,
+        "name": "pnetlab-install-resolute-satellite-6.8.71resolute1.sh",
+        "md5": "b14d11b1dafec72b47707acca04054a0",
+        "sha1": "b9776e4984ecebde4f7d9edb12dcc84e05eca787",
+        "sha256": "6e6469593a7a42519939b076cfed55ea3017fc107e38db0d7080d96674e4c751",
+        "sha512": "85b34d428f3e55acf67b696414cd2a6fab7c69e1f9aeffb299fef7ac0e87ede64ad8d83b9a6a665234b4868794ae400f2c4b962a0a451e2b5a8c4ddc1b899cba"
+      },
+      {
+        "id": 15489788,
+        "Size": 120,
+        "name": "pnetlab-install-resolute-satellite-6.8.71resolute1.sh.sha256",
+        "md5": "70e326229a82b7d7e3c7ea778950bc49",
+        "sha1": "a63f69e32b7bea6c7adc5e3c86ba32157dfaa4fd",
+        "sha256": "857e6c5abd747de1a2a9c33404ad5b450ba399d0483b7e93778048c5ec9dc9d6",
+        "sha512": "27e515e74fcc28d66424723bb727bf23153a97e12308a1aa0566a1098c1749bd2de611a0d96cbbf60d892eca8d5df259f59766975f4544c6d3323c1644e807c6"
+      }
+    ]
+  },
+  {
+    "name": "pnetlab-core-assets",
+    "version": "6.8.70resolute1",
+    "type": "generic",
+    "files": [
+      {
+        "id": 15488630,
+        "Size": 75116436,
+        "name": "pnetlab-core-assets-6.8.70resolute1.tar.zst",
+        "md5": "82a4a48855ea69863c48b83f3d368953",
+        "sha1": "fd71bab0ec47d06670d0939b9e1ea321633dce44",
+        "sha256": "b36bc01d72c33e69d97122e37f25eaf58476ae7d1af442a9473c1f42a2a1ad9d",
+        "sha512": "26f1e54f4b1cf7a85c0234042eaa0c9a6888cb55e6663dd3a41669436326f2cfd06378fa59d05edf7314cf66f35f648f824d0e449be38d74c6fe185713a00d28"
+      },
+      {
+        "id": 15488654,
+        "Size": 110,
+        "name": "pnetlab-core-assets-6.8.70resolute1.tar.zst.sha256",
+        "md5": "bde1df981e1abc317c3e254367b745da",
+        "sha1": "650278963c03f3cd1b67871e5b3f762938454c81",
+        "sha256": "b9c30656f3e02cbab62b4e99ca66f8ea70c61f9628bb557672fdebc51549b371",
+        "sha512": "e8d3f77c48dc3eccb43d88c87b8588df890d983bef9e159e5434bbb9acb96958e7b95862e417c561393238cf10918b115529067e5a8e52c67a108cabb829855f"
+      },
+      {
+        "id": 15488657,
+        "Size": 566,
+        "name": "pnetlab-core-assets-6.8.70resolute1.tar.zst.sig",
+        "md5": "64ecb288ff7fad4cd4479c6b3d1ef980",
+        "sha1": "61cc52396acd0a04e8afe0561691070b035884f2",
+        "sha256": "4206cdc74d42d52a39edcf1bfb9608621445cc4c63e5ca811fac74e0a762bed4",
+        "sha512": "a39984c1a76c87a29f3a45c4f56c78e6e7854df9484c6b62ae58e1b8c55c4be129482f1d427782651f31b045c3365913e6326687733ee0142082524cfe1f48b0"
+      },
+      {
+        "id": 15488855,
+        "Size": 1274,
+        "name": "pnetlab-6.8.70resolute1-manifest.json",
+        "md5": "73471e431698e2acb955376840039ede",
+        "sha1": "a0b370891a1086dabbf0f97525557be4bdb446d3",
+        "sha256": "e381393476299b340e67bbc945452c68fa41a74b5459292c4554854a3380fe7e",
+        "sha512": "c8a9f6afa7e94d26e40e780f46299869f5addf659b81c33f147791a3d6c47f2e917cca4514031be2ebe194f519223a32a453c4382b094babdda8679b2d86296f"
+      },
+      {
+        "id": 15488858,
+        "Size": 104,
+        "name": "pnetlab-6.8.70resolute1-manifest.json.sha256",
+        "md5": "6d68f0261bf6f30d71ba319ae1f26914",
+        "sha1": "6ced479232fb5c3fea8a5459fa22a423834c313f",
+        "sha256": "bc99471f5cd103c9f19a99e6cdf3f75a1149c31eacd2412bcf50148eefc043e8",
+        "sha512": "f8de9959e4ceb0fc08a8d81c0c999962ef0f83bff736a2919e28ec85bd2d43c0d39f0094e8d5f5f0df4b6778c21871c1a19e921919ce92fecbd089849720c847"
+      },
+      {
+        "id": 15488861,
+        "Size": 566,
+        "name": "pnetlab-6.8.70resolute1-manifest.json.sig",
+        "md5": "3d1476c7019a11f1de6767a88f038c49",
+        "sha1": "fab922251a0e48c183451da4915fec3f9935a7c0",
+        "sha256": "7c228cc8921d1d358916bbecd04e8f4aaf85bcac132b07724cf5faabe71ea572",
+        "sha512": "e3b00dae0acfbed8511d8a4be9fcbe655359ca9076d3b78fe890afbe72a79cdade7937e654379fc321fe214fd20e8980e28097a6ee57d253db0096f0634c72c3"
+      },
+      {
+        "id": 15488876,
+        "Size": 166206,
+        "name": "pnetlab-network-install-6.8.70resolute1.sh",
+        "md5": "b50dcb9eb75824e878135b778d7dd6c5",
+        "sha1": "ae41b17caaca89caf971b137e737e3b6432e603f",
+        "sha256": "da1973311eff5991c3e63b059a75844233949b29bb05a023afcc3f55edacc7b2",
+        "sha512": "8716bed21b8d395c1d105ef032241309d6d9f332fe464eb56689dde5dadbe79f92e46ece754b602bb038e8212735d25e225ee5d5a4176bd28082e9aa64e486ed"
+      },
+      {
+        "id": 15488879,
+        "Size": 109,
+        "name": "pnetlab-network-install-6.8.70resolute1.sh.sha256",
+        "md5": "d7f2079d762a78d5b6ce51cad94d00ca",
+        "sha1": "fceb062b8757d3a9a9d64bb03d52f66cd746a61a",
+        "sha256": "f0453c081f138ee748297ff6a9d418bc072073080d18f41ba02a0bc9a8c00750",
+        "sha512": "66204fde6b8f3e82b1a467f2300ccb93fcf36afad822ce97a3cfc437983b9a817423e11f0fe36d023c60bc6034ae31327def91f14d68cb8f942172cc906b84e5"
+      },
+      {
+        "id": 15488882,
+        "Size": 15185,
+        "name": "pnetlab-install-resolute-satellite-6.8.70resolute1.sh",
+        "md5": "b14d11b1dafec72b47707acca04054a0",
+        "sha1": "b9776e4984ecebde4f7d9edb12dcc84e05eca787",
+        "sha256": "6e6469593a7a42519939b076cfed55ea3017fc107e38db0d7080d96674e4c751",
+        "sha512": "85b34d428f3e55acf67b696414cd2a6fab7c69e1f9aeffb299fef7ac0e87ede64ad8d83b9a6a665234b4868794ae400f2c4b962a0a451e2b5a8c4ddc1b899cba"
+      },
+      {
+        "id": 15488885,
+        "Size": 120,
+        "name": "pnetlab-install-resolute-satellite-6.8.70resolute1.sh.sha256",
+        "md5": "5ba5d48daa59452af922afd566ed8300",
+        "sha1": "4efbbfcae2969cf39de8e5fe88572ce69b10914e",
+        "sha256": "895ab5d83e8e3d52516e344bd6f88afd28f057e6a169d02bae6ee24a274c846e",
+        "sha512": "8811be3a7cb261a6c5ac6f9f097612d54c6c4233fdb3549c836c3d5e8a4242d9609c301d2d30895c7e2d6b32784cfc5ca3a007c29278d3aa9148ff05bbc707ab"
+      }
+    ]
+  },
+  {
+    "name": "pnetlab-core-assets",
+    "version": "0.channel",
+    "type": "generic",
+    "files": [
+      {
+        "id": 15532577,
+        "Size": 205,
+        "name": "pnetlab-latest.json",
+        "md5": "855ec6e9a290a2c78efdfc7b57977c07",
+        "sha1": "5d5561737d4cbfcdf843414f851a47fc488067ee",
+        "sha256": "068f9d178bc44e7d2fef1713d010ad471c5d9a3f497e99695599ebc93d389368",
+        "sha512": "649122718782a24533debc291b9ff5f81ad3e3c4cb54a70fde0043fa319958b693da5800547a6a78775ede5be00c645ecd6904c99c4be63b633d4f46b4af603e"
+      },
+      {
+        "id": 15532580,
+        "Size": 86,
+        "name": "pnetlab-latest.json.sha256",
+        "md5": "2d377e4cd1d4e29579d511ac07988677",
+        "sha1": "ba14ff3cbf95cc616eb8c69ba428255203b443db",
+        "sha256": "7ff3badd70046159d4f178fbce1efa6fe368db55cb741f27dcc7b0e5e575c586",
+        "sha512": "01a8cfea46afbd804cb7499bf4696d6f77c8ad9effb17debed6479dba0b07ed4c24910eb0acdf63568fe07b1f00457d76d6656a72343fab948280b9b006960c6"
+      },
+      {
+        "id": 15532583,
+        "Size": 566,
+        "name": "pnetlab-latest.json.sig",
+        "md5": "2607d6854ac6d8894fd49373d1c6f00d",
+        "sha1": "894fe6bae39054a20d62ce7cf75c63ef51e441bc",
+        "sha256": "fad3bdb7494b608d2b9655f9a58c241a9db2dfe635f0fe489e788091aba42987",
+        "sha512": "546b6743f95d543a1db8ea61b273896c049a0b212c370a9829bf780c17ce37d2a4be3a35a84556a783282673f90b81f2780ef1d3587cb5966ed689d54afc5016"
+      },
+      {
+        "id": 15532586,
+        "Size": 167549,
+        "name": "pnetlab-network-install-latest.sh",
+        "md5": "91f62d7b7181b881acc4d82f9f962fce",
+        "sha1": "4f32ad501f5ad90404332527cfc0204cc96f1b32",
+        "sha256": "be8fbad8be91a5a9694592244a67951a6de08eb3ca582c0b0a8683c46cc0c8e1",
+        "sha512": "bc8861a8b40d117bdf53d17a5c93c9e906a076d16bb62c94df1aa4f6d512de41453d6d75c5d96c1c1e2a51c38276f96250455679dee8cab668c6b46f1e218d51"
+      },
+      {
+        "id": 15532589,
+        "Size": 100,
+        "name": "pnetlab-network-install-latest.sh.sha256",
+        "md5": "d23a778c6f5bc4fc2d0802e4ac888a9a",
+        "sha1": "4b9feb667ac9f8dad882aff787ccf97b4ba3fb23",
+        "sha256": "0efe731e36f23c2c2a5d2db3457c968ddc309f4b46e09cca9db1b484156e4cfc",
+        "sha512": "ac786a08469cdc87aac84c11587c6169eabcf0a7e9948823a1625cd88573394a045a5dfcecfad18ef90cb62453929db1534a59850b7db05d64540a169bc00a6c"
+      }
+    ]
+  }
+]

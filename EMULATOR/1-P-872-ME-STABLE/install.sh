@@ -222,15 +222,21 @@ GRANT ALL PRIVILEGES ON guacdb.* TO 'guacuser'@'localhost';
 FLUSH PRIVILEGES;
 EOF
 
+# Ensure /opt/unetlab/schema directory exists and copy shipped schemas
+mkdir -p /opt/unetlab/schema
+if [ -d "${SCRIPT_DIR}/schema" ]; then
+    cp -f "${SCRIPT_DIR}/schema/"*.sql /opt/unetlab/schema/ 2>/dev/null || true
+fi
+
 # Import PNetLab Database Schema
-SCHEMA_FILE="$(find /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
+SCHEMA_FILE="$(find "${SCRIPT_DIR}/schema" /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
 if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
     echo "      -> Importing PNetLab schema from $SCHEMA_FILE..."
     mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true
 fi
 
 # Import Guacamole Database Schema
-GUAC_SCHEMA="$(find /opt/unetlab/schema /opt/unetlab -name '*guac*.sql' 2>/dev/null | head -n1)"
+GUAC_SCHEMA="$(find "${SCRIPT_DIR}/schema" /opt/unetlab/schema /opt/unetlab -name '*guac*.sql' 2>/dev/null | head -n1)"
 if [ -n "$GUAC_SCHEMA" ] && [ -f "$GUAC_SCHEMA" ]; then
     echo "      -> Importing Guacamole schema from $GUAC_SCHEMA..."
     mysql -u guacuser -ppnetlab guacdb < "$GUAC_SCHEMA" 2>/dev/null || mysql guacdb < "$GUAC_SCHEMA" 2>/dev/null || true

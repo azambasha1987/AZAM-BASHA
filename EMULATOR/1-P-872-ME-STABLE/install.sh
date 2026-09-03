@@ -198,7 +198,18 @@ fi
 
 # --- Step 4: Configure Database & Schemas ---
 echo "[4/8] Configuring MySQL database, schemas, and admin credentials..."
-systemctl enable --now mysql || systemctl start mysql
+systemctl enable mysql 2>/dev/null || true
+systemctl restart mysql 2>/dev/null || true
+
+# Wait for MySQL daemon socket to be responsive
+for i in {1..30}; do
+    if mysqladmin ping --silent 2>/dev/null || mysql -e "SELECT 1;" >/dev/null 2>&1; then
+        echo "      -> MySQL service is active and responsive."
+        break
+    fi
+    echo "      -> Waiting for MySQL daemon socket initialization... ($i/30)"
+    sleep 1
+done
 
 # Initialize database, users, and schemas with robust host grants
 mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
@@ -546,6 +557,12 @@ fi
 
 # --- Step 8: Apply Essential Fixes Suite ---
 echo "[8/8] Applying optimization, session fixes, and update freeze..."
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-database-and-system-deep-fix.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-database-and-system-deep-fix.sh" || true
+fi
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-export-and-apt.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-export-and-apt.sh" || true
+fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-disable-logout.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-disable-logout.sh" || true
 fi
@@ -568,11 +585,18 @@ if [ -n "${REAL_IFACE:-}" ]; then
     netplan apply 2>/dev/null || systemctl restart systemd-networkd 2>/dev/null || true
 fi
 
+# Final Service Refresh & Lockout Reset
+rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true
+systemctl restart "php${PHP_VER}-fpm" apache2 2>/dev/null || true
+
 # Get Primary IP Address
 HOST_IP="$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7}' | head -n1)"
 if [ -z "$HOST_IP" ]; then
     HOST_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || echo "127.0.0.1")"
 fi
+
+# Test Live Authentication
+AUTH_TEST="$(curl -k -s -X POST https://127.0.0.1/api/auth -H 'Content-Type: application/json' -d '{"username":"admin","password":"pnet"}' 2>/dev/null || echo "")"
 
 echo ""
 echo "============================================================"
@@ -583,6 +607,7 @@ echo "  HTTP Redirect   : http://${HOST_IP}/"
 echo "  Default User    : admin"
 echo "  Default Pass    : pnet"
 echo ""
+echo "  Live Auth Test  : ${AUTH_TEST}"
 echo "  Console SSH     : root@${HOST_IP} (Password: pnet)"
 echo "  Install Log     : $LOG_FILE"
 echo "============================================================"

@@ -49,13 +49,13 @@ jobs:
             EMULATOR/0-P-UNTOUCHED/changes_history.json
             EMULATOR/0-P-UNTOUCHED/state.json
 
-      - name: Commit & Push Changes (if any metadata / manifests updated)
+      - name: Commit & Push Changes (if any updates detected)
         working-directory: .
         run: |
-          git add EMULATOR/0-P-UNTOUCHED/VERIFICATION_REPORT.md EMULATOR/0-P-UNTOUCHED/sync.log EMULATOR/0-P-UNTOUCHED/changes_history.json EMULATOR/0-P-UNTOUCHED/state.json EMULATOR/0-P-UNTOUCHED/metadata/
+          git add EMULATOR/0-P-UNTOUCHED/VERIFICATION_REPORT.md EMULATOR/0-P-UNTOUCHED/sync.log EMULATOR/0-P-UNTOUCHED/changes_history.json EMULATOR/0-P-UNTOUCHED/state.json EMULATOR/0-P-UNTOUCHED/metadata/ 2>/dev/null || true
           if git diff --staged --quiet; then
-            echo "No changes to commit. All files up to date."
+            echo "No changes to commit. All files are up to date."
           else
-            git commit -m "chore: automated 24h sync update [skip ci]"
-            git push
+            git commit -m "chore: automated 24h sync update [skip ci]" || echo "Nothing to commit"
+            git push origin HEAD || echo "Push skipped: workflow permissions may be read-only"
           fi

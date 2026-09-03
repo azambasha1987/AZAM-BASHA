@@ -42,7 +42,21 @@ sudo git clone https://github.com/azambasha1987/AZAM-BASHA.git /opt/pnetlab && c
 
 ---
 
-### Web Dashboard & Login:
+### Option 3 — Cluster Satellite (Worker Node) Installation
+To provision a dedicated headless worker VM to scale out compute capacity for your Master PNETLab server:
+
+```bash
+cd /opt/pnetlab/EMULATOR/1-P-872-ME-STABLE && sudo bash install-satellite.sh
+```
+
+Join the worker to your master server:
+```bash
+sudo pnet-satellite-join --master <MASTER_IP> --id 1 --name "Satellite-1" --psk <GENERATED_PSK>
+```
+
+---
+
+### Web Dashboard & Login (Master Node):
 * **URL**: `https://<YOUR_UBUNTU_IP>/`
 * **Username**: `admin`
 * **Password**: `pnet`

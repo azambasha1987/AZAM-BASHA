@@ -14,5 +14,6 @@ track-1-git/
 # Windows OS artifacts
 Thumbs.db
 ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
+# Archives
+*.zip
+*.tar.gz

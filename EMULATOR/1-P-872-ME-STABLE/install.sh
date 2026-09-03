@@ -197,25 +197,27 @@ else
 fi
 
 # --- Step 4: Configure Database & Schemas ---
-echo "[4/8] Configuring MySQL database and user credentials..."
+echo "[4/8] Configuring MySQL database, schemas, and admin credentials..."
 systemctl enable --now mysql || systemctl start mysql
 
-# Ensure MySQL allows password authentication
-MYSQL_CONF="/etc/mysql/mysql.conf.d/zz-pnetlab-native-pw.cnf"
-if [ ! -f "$MYSQL_CONF" ]; then
-    printf "[mysqld]\nmysql_native_password=ON\n" > "$MYSQL_CONF"
-    systemctl restart mysql || true
-fi
-
-# Initialize database, users, and schemas
-mysql --defaults-file=/etc/mysql/debian.cnf <<'EOF' || mysql -u root <<'EOF'
+# Initialize database, users, and schemas with robust host grants
+mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
 CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8 COLLATE utf8_general_ci;
 CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8 COLLATE utf8_general_ci;
+
 CREATE USER IF NOT EXISTS 'pnetlab'@'localhost' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'pnetlab'@'127.0.0.1' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'pnetlab'@'%' IDENTIFIED BY 'pnetlab';
 CREATE USER IF NOT EXISTS 'guacuser'@'localhost' IDENTIFIED BY 'pnetlab';
+
 ALTER USER 'pnetlab'@'localhost' IDENTIFIED BY 'pnetlab';
+ALTER USER 'pnetlab'@'127.0.0.1' IDENTIFIED BY 'pnetlab';
+ALTER USER 'pnetlab'@'%' IDENTIFIED BY 'pnetlab';
 ALTER USER 'guacuser'@'localhost' IDENTIFIED BY 'pnetlab';
+
 GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'localhost';
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'%';
 GRANT ALL PRIVILEGES ON guacdb.* TO 'guacuser'@'localhost';
 FLUSH PRIVILEGES;
 EOF
@@ -224,35 +226,38 @@ EOF
 SCHEMA_FILE="$(find /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
 if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
     echo "      -> Importing PNetLab schema from $SCHEMA_FILE..."
-    mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true
+    mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true
 fi
 
 # Import Guacamole Database Schema
 GUAC_SCHEMA="$(find /opt/unetlab/schema /opt/unetlab -name '*guac*.sql' 2>/dev/null | head -n1)"
 if [ -n "$GUAC_SCHEMA" ] && [ -f "$GUAC_SCHEMA" ]; then
     echo "      -> Importing Guacamole schema from $GUAC_SCHEMA..."
-    mysql guacdb < "$GUAC_SCHEMA" 2>/dev/null || mysql -u guacuser -ppnetlab guacdb < "$GUAC_SCHEMA" 2>/dev/null || true
+    mysql -u guacuser -ppnetlab guacdb < "$GUAC_SCHEMA" 2>/dev/null || mysql guacdb < "$GUAC_SCHEMA" 2>/dev/null || true
 fi
 
-# Seed Default Admin User (admin / pnet)
-mysql -u pnetlab -ppnetlab pnetlab_db <<EOF || true
+# Seed Default Admin User & Enable Offline Mode
+mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || mysql pnetlab_db << 'EOF' 2>/dev/null || true
 INSERT INTO control (control_name, control_value) VALUES
   ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
   ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),
   ('ctrl_version','8.2.0')
 ON DUPLICATE KEY UPDATE control_value = VALUES(control_value);
-INSERT INTO users (username, password, role, offline, user_status, online_time, expired_time, active_time, pod)
-  VALUES ('admin', SHA2('pnet', 256), 0, 1, 1, UNIX_TIMESTAMP(), 0, 0, 0)
-ON DUPLICATE KEY UPDATE
-  password = SHA2('pnet', 256),
-  role = 0,
-  offline = 1,
-  user_status = 1,
-  online_time = UNIX_TIMESTAMP(),
-  expired_time = 0,
-  active_time = 0,
-  pod = 0;
+
+DELETE FROM users WHERE username = 'admin';
+INSERT INTO users (
+    pod, username, email, name, password, role,
+    user_status, active_time, expired_time, access_days,
+    offline, ext_auth, session, folder, ip
+) VALUES (
+    0, 'admin', 'root@localhost', 'Administrator', SHA2('pnet', 256), 'admin',
+    1, 0, 0, NULL,
+    1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
+);
 EOF
+
+# Clear any login rate-limit lockouts
+rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true
 
 # --- Step 5: Configure Apache & PHP-FPM ---
 echo "[5/8] Configuring Apache2 Web Server, SSL and PHP-FPM..."

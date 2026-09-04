@@ -115,7 +115,7 @@ sudo bash scripts/azambasha-link-impairment.sh clear all
 ## 5. Live Traffic Capture & Wireshark Streaming
 
 ### Method A: Stream Live Packets Directly to Windows Wireshark
-1. On the PNETLab VM, start streaming interface `vnet0_1_0` on TCP port `19001`:
+1. On the Azam Basha VM, start streaming interface `vnet0_1_0` on TCP port `19001`:
    ```bash
    sudo bash scripts/azambasha-capture-stream.sh stream vnet0_1_0 19001
    ```

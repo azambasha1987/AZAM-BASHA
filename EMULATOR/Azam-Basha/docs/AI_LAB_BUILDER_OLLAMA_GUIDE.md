@@ -18,19 +18,19 @@ This guide details the architecture, host preparation, automated virtual machine
 └──────────────────────────────────┼─────────────────────────────────────┘
                                    │ OpenAI-Compatible API (HTTP /v1)
 ┌──────────────────────────────────┼─────────────────────────────────────┐
-│ PNETLab VM (Linux Backend)       ▼                                     │
+│ Azam Basha VM (Linux Backend)       ▼                                     │
 │ ┌──────────────────────────────────────────────────────────────────┐   │
 │ │ AI Lab Agent Client (ai_lab_agent.py / Python Async Engine)      │   │
 │ └────────────────────────────────▲─────────────────────────────────┘   │
 │                                  │ Model Context Protocol (MCP)        │
 │                                  │ Streamable-HTTP / SSE Transport     │
 │ ┌────────────────────────────────▼─────────────────────────────────┐   │
-│ │ PNETLab MCP Server (pnetlab-mcp.service on 127.0.0.1:5701)       │   │
+│ │ Azam Basha MCP Server (azambasha-mcp.service on 127.0.0.1:5701)       │   │
 │ │ Tools: add_node, connect_nodes, start_node, provide_config, etc. │   │
 │ └────────────────────────────────▲─────────────────────────────────┘   │
 │                                  │ Internal Unix Sockets / Bridge      │
 │ ┌────────────────────────────────▼─────────────────────────────────┐   │
-│ │ PNETLab Web Server (Apache / PHP) & Canvas UI (AI Side-Panel)    │   │
+│ │ Azam Basha Web Server (Apache / PHP) & Canvas UI (AI Side-Panel)    │   │
 │ └──────────────────────────────────────────────────────────────────┘   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -78,7 +78,7 @@ ipconfig | Select-String "IPv4 Address"
 
 ---
 
-## 3. PNETLab VM Automated Deployment Script
+## 3. Azam Basha VM Automated Deployment Script
 
 Copy [`scripts/setup-ollama.sh`](../scripts/setup-ollama.sh) to the VM or execute:
 
@@ -92,11 +92,11 @@ sudo bash setup-ollama.sh 192.168.1.19 qwen2.5:14b-instruct
 ```
 
 This script will:
-1. Create the system user `pnetlab-mcp` and grant group access to `www-data`.
+1. Create the system user `azambasha-mcp` and grant group access to `www-data`.
 2. Install python dependencies: `mcp==1.29.1`, `openai>=1.12.0`, `httpx`.
 3. Create `/opt/unetlab/data/ai/progress` with correct permissions (`751`/`750`).
 4. Generate `/opt/unetlab/data/ai/config.json` and `bridge.secret`.
-5. Enable and start `pnetlab-mcp.service` and restart Apache.
+5. Enable and start `azambasha-mcp.service` and restart Apache.
 
 ---
 
@@ -106,19 +106,19 @@ This script will:
 | :--- | :--- | :--- |
 | `AttributeError: FastMCP object has no attribute 'streamable_http_app'` | Incompatible MCP library installed (e.g. `mcp <= 1.2.0` or `mcp >= 2.0.0`). | Run: `python3 -m pip install "mcp==1.29.1" --break-system-packages --ignore-installed` |
 | Connection refused / Timed out on port 11434 | 1. Ollama listening only on 127.0.0.1.<br>2. Windows Firewall blocking port 11434.<br>3. Wrong Host IP. | 1. Set `OLLAMA_HOST=0.0.0.0:11434` and restart Ollama.<br>2. Run `New-NetFirewallRule` on Windows.<br>3. Verify IP with `ipconfig`. |
-| 401 Unauthorized on MCP calls | Missing or mismatched SHA-256 Bearer token hash in `config.json`. | Re-run `/root/setup-ollama.sh <HOST_IP>` to refresh token hashes and restart `pnetlab-mcp`. |
-| Agent failure: unhandled errors in TaskGroup | 1. File permission denied on `config.json` for `pnetlab-mcp`.<br>2. Malformed Base URL (e.g., trailing slashes or Markdown brackets). | 1. `chmod 640 /opt/unetlab/data/ai/config.json`<br>2. `chown root:pnetlab-mcp /opt/unetlab/data/ai/config.json`<br>3. Clean URL to: `http://<HOST_IP>:11434/v1` |
-| Agent loops infinitely or fails schema validation | Configured LLM lacks structured OpenAI tool-calling capabilities. | Switch model in PNETLab AI settings to verified tool-calling model: `qwen2.5:14b-instruct` or `llama3.1:8b`. |
+| 401 Unauthorized on MCP calls | Missing or mismatched SHA-256 Bearer token hash in `config.json`. | Re-run `/root/setup-ollama.sh <HOST_IP>` to refresh token hashes and restart `azambasha-mcp`. |
+| Agent failure: unhandled errors in TaskGroup | 1. File permission denied on `config.json` for `azambasha-mcp`.<br>2. Malformed Base URL (e.g., trailing slashes or Markdown brackets). | 1. `chmod 640 /opt/unetlab/data/ai/config.json`<br>2. `chown root:azambasha-mcp /opt/unetlab/data/ai/config.json`<br>3. Clean URL to: `http://<HOST_IP>:11434/v1` |
+| Agent loops infinitely or fails schema validation | Configured LLM lacks structured OpenAI tool-calling capabilities. | Switch model in Azam Basha AI settings to verified tool-calling model: `qwen2.5:14b-instruct` or `llama3.1:8b`. |
 
 ---
 
 ## 5. Verification & Diagnostic Commands
 
-| Test Layer | Command (PNETLab CLI) | Expected Result |
+| Test Layer | Command (Azam Basha CLI) | Expected Result |
 | :--- | :--- | :--- |
 | **Ollama Reachability** | `curl -m 3 http://<HOST_IP>:11434/v1/models` | HTTP 200 with model JSON list |
-| **MCP Daemon State** | `systemctl status pnetlab-mcp` | `active (running)` |
-| **Live Agent Logs** | `journalctl -u pnetlab-mcp -f` | Real-time tool invocations |
+| **MCP Daemon State** | `systemctl status azambasha-mcp` | `active (running)` |
+| **Live Agent Logs** | `journalctl -u azambasha-mcp -f` | Real-time tool invocations |
 | **Broker API Calls** | `journalctl -e --no-pager -n 50 \| grep -i "verb="` | `verb_ai_lab_build` events |
 
 ---

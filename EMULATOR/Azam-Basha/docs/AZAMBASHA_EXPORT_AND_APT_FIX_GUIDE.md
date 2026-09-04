@@ -6,9 +6,9 @@
 
 ## 1. Overview & Issues Addressed
 
-This guide addresses two common administrative and functional issues in PNETLab deployments:
+This guide addresses two common administrative and functional issues in Azam Basha deployments:
 1. **APT Repository Conflicts / Duplicate Lists:**
-   - Error messages during `apt update` caused by stale or duplicate installer repository configurations in `/etc/apt/sources.list.d/pnetlab-netinstall-codeberg.list`.
+   - Error messages during `apt update` caused by stale or duplicate installer repository configurations in `/etc/apt/sources.list.d/azambasha-netinstall-codeberg.list`.
 2. **Lab Export Failures & Subfolder Support:**
    - Exporting labs fails when `zip` / `unzip` utilities are missing.
    - `/opt/unetlab/html/Exports` symlink or permission issues prevent downloading exported archive files.
@@ -18,7 +18,7 @@ This guide addresses two common administrative and functional issues in PNETLab 
 
 ## 2. Automated Fix Deployment
 
-Run [`scripts/azambasha-fix-export-and-apt.sh`](../scripts/azambasha-fix-export-and-apt.sh) on your PNETLab VM as root:
+Run [`scripts/azambasha-fix-export-and-apt.sh`](../scripts/azambasha-fix-export-and-apt.sh) on your Azam Basha VM as root:
 
 ```bash
 chmod +x azambasha-fix-export-and-apt.sh
@@ -32,7 +32,7 @@ sudo ./azambasha-fix-export-and-apt.sh
 ### Step 1: Remove Duplicate APT Source Entry
 Removes the conflicting installer list:
 ```bash
-rm -f /etc/apt/sources.list.d/pnetlab-netinstall-codeberg.list
+rm -f /etc/apt/sources.list.d/azambasha-netinstall-codeberg.list
 ```
 
 ### Step 2: Install Required Utilities (`zip` and `unzip`)
@@ -97,7 +97,7 @@ systemctl restart apache2
    ```
    *Expected result: Clean update without warnings or duplicate target errors.*
 
-2. **Test Lab Export in PNETLab Web UI:**
-   - Open PNETLab Web Interface.
+2. **Test Lab Export in Azam Basha Web UI:**
+   - Open Azam Basha Web Interface.
    - Navigate to any lab (including nested folders).
    - Click **Export** &rarr; Verify the `.zip` archive downloads successfully without errors.

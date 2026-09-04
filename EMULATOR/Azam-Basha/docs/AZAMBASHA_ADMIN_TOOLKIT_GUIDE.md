@@ -17,7 +17,7 @@ The Azam Basha Administration Toolkit provides automated, enterprise-grade maint
 | [`scripts/azambasha-fix-permissions.sh`](../scripts/azambasha-fix-permissions.sh) | **Permission & Node Recovery**: Fixes `/opt/unetlab` ownership, `/dev/kvm`, locks, and IOL license. | `sudo bash scripts/azambasha-fix-permissions.sh` |
 | [`scripts/azambasha-fix-export-and-apt.sh`](../scripts/azambasha-fix-export-and-apt.sh) | **Export & APT Fix**: Solves repository conflicts, installs zip/unzip, and enables nested lab exports. | `sudo bash scripts/azambasha-fix-export-and-apt.sh` |
 | [`scripts/azambasha-backup-restore.sh`](../scripts/azambasha-backup-restore.sh) | **Automated Backup/Restore**: Full snapshot archive of labs, users, database, and configurations. | `sudo bash scripts/azambasha-backup-restore.sh backup` |
-| [`scripts/setup-ollama.sh`](../scripts/setup-ollama.sh) | **AI Lab Builder VM Setup**: Connects PNETLab MCP service to local Ollama LLM on host. | `sudo bash scripts/setup-ollama.sh <HOST_IP>` |
+| [`scripts/setup-ollama.sh`](../scripts/setup-ollama.sh) | **AI Lab Builder VM Setup**: Connects Azam Basha MCP service to local Ollama LLM on host. | `sudo bash scripts/setup-ollama.sh <HOST_IP>` |
 | [`scripts/setup-ollama-host.ps1`](../scripts/setup-ollama-host.ps1) | **Windows Host Setup**: Binds Ollama to `0.0.0.0`, configures firewall, and pulls `qwen2.5:14b-instruct`. | `.\scripts\setup-ollama-host.ps1` |
 
 ---
@@ -38,7 +38,7 @@ sudo bash scripts/azambasha-backup-restore.sh backup
 
 ### Restoring from Backup
 ```bash
-sudo bash scripts/azambasha-backup-restore.sh restore /opt/unetlab/data/Backups/pnetlab_backup_YYYYMMDD_HHMMSS.tar.gz
+sudo bash scripts/azambasha-backup-restore.sh restore /opt/unetlab/data/Backups/azambasha_backup_YYYYMMDD_HHMMSS.tar.gz
 ```
 
 ### Fixing Node Startup Failures & Stale Locks

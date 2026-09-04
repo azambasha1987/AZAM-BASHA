@@ -30,7 +30,7 @@ and upgrade instructions.
 If you uploaded and extracted the package directory on your Ubuntu 26 server:
 
 ```bash
-cd /opt/pnetlab && sudo bash install.sh
+cd /opt/azambasha && sudo bash install.sh
 ```
 
 ---
@@ -39,23 +39,23 @@ cd /opt/pnetlab && sudo bash install.sh
 On a fresh or existing Ubuntu 26.04 server, run this single line in your terminal:
 
 ```bash
-sudo git clone https://github.com/azambasha1987/AZAM-BASHA.git /opt/pnetlab && cd /opt/pnetlab && sudo bash install.sh
+sudo git clone https://github.com/azambasha1987/AZAM-BASHA.git /opt/azambasha && cd /opt/azambasha && sudo bash install.sh
 ```
 
-*(If `/opt/pnetlab` already exists, update and run: `cd /opt/pnetlab && sudo git pull && sudo bash install.sh`)*
+*(If `/opt/azambasha` already exists, update and run: `cd /opt/azambasha && sudo git pull && sudo bash install.sh`)*
 
 ---
 
 ### Option 3 — Cluster Satellite (Worker Node) Installation
-To provision a dedicated headless worker VM to scale out compute capacity for your Master PNETLab server:
+To provision a dedicated headless worker VM to scale out compute capacity for your Master Azam Basha server:
 
 ```bash
-cd /opt/pnetlab && sudo bash install-satellite.sh
+cd /opt/azambasha && sudo bash install-satellite.sh
 ```
 
 Join the worker to your master server:
 ```bash
-sudo pnet-satellite-join --master <MASTER_IP> --id 1 --name "Satellite-1" --psk <GENERATED_PSK>
+sudo azam-satellite-join --master <MASTER_IP> --id 1 --name "Satellite-1" --psk <GENERATED_PSK>
 ```
 
 ---
@@ -68,29 +68,23 @@ sudo pnet-satellite-join --master <MASTER_IP> --id 1 --name "Satellite-1" --psk 
 
 ## Updating
 
-PNetLab v8 ships update packages through its built-in update mechanism.
+Azam Basha v8 includes built-in version freezing and offline update isolation to guarantee absolute stability.
 
 ```bash
-sudo pnetlab-update
+sudo azambasha-menu
 ```
 
-This checks the configured release channel, downloads the newest package, and
-applies it in place. Review the changelog before updating a production lab
-host.
+### Manual upgrade (if needed)
 
-### Manual upgrade (if `pnetlab-update` is unavailable)
-
-1. Back up `/opt/unetlab` (or your configured lab data path) and any custom
-  node images.
-2. Download the target release package (placeholder link above).
-3. Install it:
+1. Back up `/opt/unetlab` (or your configured lab data path) and any custom node images using `sudo azambasha-backup`.
+2. Apply offline update packages:
   
   ```bash
-  sudo dpkg -i pnetlab_<version>_amd64.deb
+  sudo dpkg -i debian/pool/resolute/main/pnetlab_*.deb
   sudo apt-get -f install
   ```
   
-4. Reboot and verify the web UI and running labs come back up correctly.
+3. Reboot and verify the web UI and running labs come back up correctly.
 
 ## Administration Scripts & Fixes
 

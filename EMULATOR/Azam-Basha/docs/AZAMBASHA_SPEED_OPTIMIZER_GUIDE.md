@@ -12,7 +12,7 @@ The **Azam Basha Speed Optimizer Suite** ([`scripts/azambasha-speed-optimizer.sh
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│ PNETLab High-Performance Tuning Matrix                                 │
+│ Azam Basha High-Performance Tuning Matrix                                 │
 ├─────────────────────────┬──────────────────────────────────────────────┤
 │ 1. KSM Deduplication    │ Merges identical RAM pages across nodes      │
 │                         │ (~30% to 50% RAM savings)                    │
@@ -33,7 +33,7 @@ The **Azam Basha Speed Optimizer Suite** ([`scripts/azambasha-speed-optimizer.sh
 ## 2. Quick Deployment
 
 ### One-Click Application
-Execute as root on your PNETLab VM:
+Execute as root on your Azam Basha VM:
 ```bash
 chmod +x scripts/azambasha-speed-optimizer.sh
 sudo bash scripts/azambasha-speed-optimizer.sh
@@ -59,11 +59,11 @@ sudo bash scripts/azambasha-speed-optimizer.sh --rollback
   - `sleep_millisecs = 20`
   - `pages_to_scan = 1000`
   - `use_zero_pages = 1`
-  - Persisted via `/etc/systemd/system/ksm-pnetlab.service`.
+  - Persisted via `/etc/systemd/system/ksm-azambasha.service`.
 - **Result**: **30% to 50% reduction in active RAM usage** for multi-node labs.
 
 ### 2. PHP OPcache & Realpath Cache (256MB Bytecode Cache)
-- **Mechanism**: PNETLab's web UI relies heavily on PHP for lab node status polling, canvas rendering, and REST API calls. OPcache stores precompiled PHP script bytecode directly in RAM, completely eliminating filesystem reading and script recompilation on every click.
+- **Mechanism**: Azam Basha's web UI relies heavily on PHP for lab node status polling, canvas rendering, and REST API calls. OPcache stores precompiled PHP script bytecode directly in RAM, completely eliminating filesystem reading and script recompilation on every click.
 - **Configuration**:
   - `opcache.memory_consumption = 256`
   - `opcache.max_accelerated_files = 20000`
@@ -73,12 +73,12 @@ sudo bash scripts/azambasha-speed-optimizer.sh --rollback
 
 ### 3. Apache Deflate (Gzip) & Browser Caching
 - **Mechanism**: Compresses dynamic JSON payloads and SVG device icons over HTTP, while caching static UI assets (fonts, icons, themes, JS bundles) in student browsers for 14 to 30 days.
-- **Configuration**: `/etc/apache2/conf-available/pnetlab-optimization.conf` with `mod_deflate`, `mod_expires`, and `mod_headers`.
+- **Configuration**: `/etc/apache2/conf-available/azambasha-optimization.conf` with `mod_deflate`, `mod_expires`, and `mod_headers`.
 - **Result**: Instantaneous canvas loading and reduced network bandwidth.
 
 ### 4. Linux Kernel Sysctl VM & Network Stack Tuning
 - **Mechanism**: Prevents Linux from prematurely swapping lab memory to disk and boosts internal network socket queues to eliminate packet drop under heavy simulation traffic.
-- **Configuration**: `/etc/sysctl.d/99-pnetlab-performance.conf`:
+- **Configuration**: `/etc/sysctl.d/99-azambasha-performance.conf`:
   - `vm.swappiness = 10`: Keeps active node memory in high-speed RAM.
   - `vm.vfs_cache_pressure = 50`: Prioritizes directory/inode cache retention.
   - `net.core.rmem_max = 16777216` & `wmem_max = 16777216`: 16MB socket buffers.

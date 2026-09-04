@@ -223,19 +223,19 @@
 
 <div class="header">
   <div class="header-left">
-    <div class="badge">PNETLab Administrator Guide</div>
-    <h1>PNETLab Permanent Session & Never-Logout Guide</h1>
+    <div class="badge">Azam Basha Administrator Guide</div>
+    <h1>Azam Basha Permanent Session & Never-Logout Guide</h1>
     <div class="subtitle">Complete Fix for Session Timeouts, Cookie Expiry, and Auto-Logout</div>
   </div>
   <div class="header-right">
-    <div><strong>Applicable:</strong> PNETLab v5, v6, v7, v8</div>
+    <div><strong>Applicable:</strong> Azam Basha v5, v6, v7, v8</div>
     <div><strong>Target OS:</strong> Ubuntu 18.04 - 26.04</div>
   </div>
 </div>
 
 <h2>1. Executive Summary & Root Cause Analysis</h2>
 <p>
-  By default, PNETLab implements strict idle and session timeout mechanisms designed for public lab environments. In personal or dedicated virtualization environments, this causes frustrating periodic logouts.
+  By default, Azam Basha implements strict idle and session timeout mechanisms designed for public lab environments. In personal or dedicated virtualization environments, this causes frustrating periodic logouts.
 </p>
 
 <table class="table">
@@ -286,7 +286,7 @@ sudo ./azambasha-disable-logout.sh</div>
   </div>
   <div class="card">
     <h4>Method B: Copy-Paste Nano Editor</h4>
-    <p>SSH into your PNETLab VM as root and paste the script directly:</p>
+    <p>SSH into your Azam Basha VM as root and paste the script directly:</p>
     <div class="code-block">nano /root/never_logout.sh
 # (Paste script content from Page 2)
 chmod +x /root/never_logout.sh && /root/never_logout.sh</div>
@@ -300,17 +300,17 @@ chmod +x /root/never_logout.sh && /root/never_logout.sh</div>
 <div class="page-break"></div>
 
 <h2>3. Automated Fix Script (azambasha-disable-logout.sh)</h2>
-<p>Save and run this script as <code>root</code> on any PNETLab appliance:</p>
+<p>Save and run this script as <code>root</code> on any Azam Basha appliance:</p>
 
 <div class="code-block">#!/usr/bin/env bash
 # ==============================================================================
-# PNETLab Never-Logout Script
+# Azam Basha Never-Logout Script
 # Sets infinite/10-year session timeout across PHP, Database, Cookies & Frontend
-# Compatibility: PNETLab v5, v6, v7, v8 (Ubuntu 18.04 / 20.04 / 22.04 / 24.04 / 26.04)
+# Compatibility: Azam Basha v5, v6, v7, v8 (Ubuntu 18.04 / 20.04 / 22.04 / 24.04 / 26.04)
 # ==============================================================================
 set -euo pipefail
 
-echo "=== Applying PNETLab Permanent Session Fix ==="
+echo "=== Applying Azam Basha Permanent Session Fix ==="
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "[ERROR] Please run this script as root (sudo bash $0)" >&2
@@ -334,14 +334,14 @@ EOF
 chown www-data:www-data "$CONFIG_FILE" || true
 chmod 644 "$CONFIG_FILE"
 
-# 2. Update MySQL database (pnetlab_db)
+# 2. Update MySQL database (azambasha_db)
 MYSQL_CMD="mysql"
-if mysql -u pnetlab -ppnetlab -e "USE pnetlab_db;" >/dev/null 2>&1; then
-    MYSQL_CMD="mysql -u pnetlab -ppnetlab pnetlab_db"
-elif mysql -u root -e "USE pnetlab_db;" >/dev/null 2>&1; then
-    MYSQL_CMD="mysql -u root pnetlab_db"
+if mysql -u azambasha -pazambasha -e "USE azambasha_db;" >/dev/null 2>&1; then
+    MYSQL_CMD="mysql -u azambasha -pazambasha azambasha_db"
+elif mysql -u root -e "USE azambasha_db;" >/dev/null 2>&1; then
+    MYSQL_CMD="mysql -u root azambasha_db"
 else
-    MYSQL_CMD="mysql pnetlab_db"
+    MYSQL_CMD="mysql azambasha_db"
 fi
 
 $MYSQL_CMD << SQL
@@ -383,7 +383,7 @@ for PHP_INI in /etc/php/*/apache2/php.ini /etc/php/*/fpm/php.ini /etc/php/*/cli/
 done
 
 # 6. Inject background keepalive heartbeat
-KEEPALIVE_JS="/opt/unetlab/html/themes/default/js/pnetlab-keepalive.js"
+KEEPALIVE_JS="/opt/unetlab/html/themes/default/js/azambasha-keepalive.js"
 mkdir -p "$(dirname "$KEEPALIVE_JS")"
 cat << 'EOF' > "$KEEPALIVE_JS"
 (function() {
@@ -398,8 +398,8 @@ chown www-data:www-data "$KEEPALIVE_JS" || true
 chmod 644 "$KEEPALIVE_JS"
 
 MAIN_HTML="/opt/unetlab/html/main/index.html"
-if [ -f "$MAIN_HTML" ] && ! grep -q "pnetlab-keepalive.js" "$MAIN_HTML"; then
-    sed -i 's|</body>|<script src="/themes/default/js/pnetlab-keepalive.js"></script></body>|' "$MAIN_HTML"
+if [ -f "$MAIN_HTML" ] && ! grep -q "azambasha-keepalive.js" "$MAIN_HTML"; then
+    sed -i 's|</body>|<script src="/themes/default/js/azambasha-keepalive.js"></script></body>|' "$MAIN_HTML"
 fi
 
 # 7. Restart services
@@ -413,20 +413,20 @@ echo "[SUCCESS] Session timeout set to 10 Years! Persistent logins active."</div
 <div class="page-break"></div>
 
 <h2>4. Verification & Validation Steps</h2>
-<p>Follow these steps to confirm the fix is working as expected on your PNETLab VM:</p>
+<p>Follow these steps to confirm the fix is working as expected on your Azam Basha VM:</p>
 
 <ol>
-  <li><strong>Log into PNETLab Web Interface:</strong> Open your browser, navigate to <code>https://&lt;pnetlab-ip&gt;/</code> and log in.</li>
+  <li><strong>Log into Azam Basha Web Interface:</strong> Open your browser, navigate to <code>https://&lt;azambasha-ip&gt;/</code> and log in.</li>
   <li><strong>Check Cookie Expiry:</strong>
     <ul>
       <li>Press <code>F12</code> to open Developer Tools.</li>
-      <li>Navigate to <strong>Application</strong> (Chrome/Edge) or <strong>Storage</strong> (Firefox) &rarr; <strong>Cookies</strong> &rarr; <code>https://&lt;pnetlab-ip&gt;</code>.</li>
+      <li>Navigate to <strong>Application</strong> (Chrome/Edge) or <strong>Storage</strong> (Firefox) &rarr; <strong>Cookies</strong> &rarr; <code>https://&lt;azambasha-ip&gt;</code>.</li>
       <li>Inspect the <code>token</code> cookie. Its <strong>Expires / Max-Age</strong> timestamp will now show a date <strong>10 years in the future</strong>.</li>
     </ul>
   </li>
   <li><strong>Check Database Values:</strong>
     Run this terminal command on the VM to verify the database:
-    <div class="code-block">mysql -u pnetlab -ppnetlab pnetlab_db -e "SELECT control_name, control_value FROM control WHERE control_name='ctrl_session_timeout'; SELECT username, FROM_UNIXTIME(session) AS session_expiry FROM users WHERE username='admin';"</div>
+    <div class="code-block">mysql -u azambasha -pazambasha azambasha_db -e "SELECT control_name, control_value FROM control WHERE control_name='ctrl_session_timeout'; SELECT username, FROM_UNIXTIME(session) AS session_expiry FROM users WHERE username='admin';"</div>
   </li>
   <li><strong>Long Inactivity Test:</strong> Leave the browser tab open overnight or sleep your laptop. On resume, refresh or click any lab node—you will remain authenticated with zero interruptions.</li>
 </ol>
@@ -436,7 +436,7 @@ echo "[SUCCESS] Session timeout set to 10 Years! Persistent logins active."</div
 <div class="card avoid-break">
   <h4>Note on Single-Session Concurrency (Multiple Devices)</h4>
   <p>
-    PNETLab stores a single active authentication token per user account in the <code>users.cookie</code> table column. If you log into the <strong>same user account</strong> (e.g. <code>admin</code>) from a different computer or private window, the previous device's token is rotated.
+    Azam Basha stores a single active authentication token per user account in the <code>users.cookie</code> table column. If you log into the <strong>same user account</strong> (e.g. <code>admin</code>) from a different computer or private window, the previous device's token is rotated.
   </p>
   <p style="margin-top:6px;">
     <strong>Best Practice:</strong> To keep multiple browser windows or devices open simultaneously without conflict, create separate sub-accounts in <em>System &rarr; User Management</em> (e.g. <code>admin2</code>, <code>laptop</code>, <code>desktop</code>) and grant them Admin roles.
@@ -448,7 +448,7 @@ echo "[SUCCESS] Session timeout set to 10 Years! Persistent logins active."</div
 </div>
 
 <div class="footer">
-  PNETLab Permanent Session Fix &bull; Generated for PNETLab Appliance Administration
+  Azam Basha Permanent Session Fix &bull; Generated for Azam Basha Appliance Administration
 </div>
 
 </body>

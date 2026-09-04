@@ -13,7 +13,7 @@ run_or_fetch() {
     local script_name="$1"
     local local_file="${SCRIPT_DIR}/${script_name}"
     local opt_file="/opt/unetlab/scripts/${script_name}"
-    local pnet_opt="/opt/pnetlab/scripts/${script_name}"
+    local pnet_opt="/opt/azambasha/scripts/${script_name}"
     local pnet_file="/PNET/pnetlab-v8-ubuntu26-installer/scripts/${script_name}"
     
     local target=""

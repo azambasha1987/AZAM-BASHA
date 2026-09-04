@@ -13,7 +13,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_FILE="/var/log/pnetlab-satellite-install.log"
+LOG_FILE="/var/log/azambasha-satellite-install.log"
+
+# Maintain root installation symlinks for /opt/azambasha and /opt/azambasha
+mkdir -p /opt/azambasha /opt/azambasha 2>/dev/null || true
+if [ "$SCRIPT_DIR" != "/opt/azambasha" ]; then
+    ln -sfn "$SCRIPT_DIR" /opt/azambasha 2>/dev/null || true
+fi
+if [ "$SCRIPT_DIR" != "/opt/azambasha" ]; then
+    ln -sfn "$SCRIPT_DIR" /opt/azambasha 2>/dev/null || true
+fi
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "[ERROR] Please run this script as root (sudo bash $0)" >&2

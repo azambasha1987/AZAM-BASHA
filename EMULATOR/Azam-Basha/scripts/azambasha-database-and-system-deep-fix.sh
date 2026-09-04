@@ -203,7 +203,7 @@ if [ -f "${SCRIPT_DIR}/azambasha-fix-database-schema.sh" ]; then
 elif [ -f "${SCRIPT_DIR}/pnetlab-fix-database-schema.sh" ]; then
     bash "${SCRIPT_DIR}/pnetlab-fix-database-schema.sh"
 else
-    SCHEMA_FILE="$(find /opt/pnetlab/schema /opt/unetlab/schema /opt/unetlab -name '*azambasha_db*.sql' -o -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
+    SCHEMA_FILE="$(find /opt/azambasha/schema /opt/unetlab/schema /opt/unetlab -name '*azambasha_db*.sql' -o -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
     if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
         echo "  -> Applying full Azam Basha schema from $SCHEMA_FILE..."
         mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true

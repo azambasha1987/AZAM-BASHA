@@ -49,8 +49,8 @@ for path in \
     "${PARENT_DIR}/schema/pnetlab_db.sql" \
     "${SCRIPT_DIR}/schema/azambasha_db.sql" \
     "${SCRIPT_DIR}/schema/pnetlab_db.sql" \
-    "/opt/pnetlab/schema/azambasha_db.sql" \
-    "/opt/pnetlab/schema/pnetlab_db.sql" \
+    "/opt/azambasha/schema/azambasha_db.sql" \
+    "/opt/azambasha/schema/pnetlab_db.sql" \
     "/opt/unetlab/schema/azambasha_db.sql" \
     "/opt/unetlab/schema/pnetlab_db.sql"; do
     if [ -f "$path" ]; then
@@ -63,7 +63,7 @@ done
 for path in \
     "${PARENT_DIR}/schema/guacdb.sql" \
     "${SCRIPT_DIR}/schema/guacdb.sql" \
-    "/opt/pnetlab/schema/guacdb.sql" \
+    "/opt/azambasha/schema/guacdb.sql" \
     "/opt/unetlab/schema/guacdb.sql"; do
     if [ -f "$path" ]; then
         echo "[2/4] Importing Guacamole schema from ${path}..."

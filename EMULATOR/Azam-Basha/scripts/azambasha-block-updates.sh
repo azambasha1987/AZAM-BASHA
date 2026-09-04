@@ -14,9 +14,9 @@
 # 7. DNS Blackhole: Directs update and phone-home endpoints to loopback in /etc/hosts.
 #
 # Usage:
-#   sudo bash scripts/pnetlab-block-updates.sh            # Block all future updates
-#   sudo bash scripts/pnetlab-block-updates.sh --check    # Check lock status
-#   sudo bash scripts/pnetlab-block-updates.sh --unblock  # Restore update capabilities
+#   sudo bash scripts/azambasha-block-updates.sh            # Block all future updates
+#   sudo bash scripts/azambasha-block-updates.sh --check    # Check lock status
+#   sudo bash scripts/azambasha-block-updates.sh --unblock  # Restore update capabilities
 # ==============================================================================
 set -euo pipefail
 
@@ -240,7 +240,7 @@ echo " version to prevent breaking changes, database conflicts,  "
 echo " and package overwrites."
 echo ""
 echo " If you intentionally wish to restore updates, run:"
-echo "   sudo bash /opt/pnetlab/scripts/pnetlab-block-updates.sh --unblock"
+echo "   sudo bash /opt/azambasha/scripts/azambasha-block-updates.sh --unblock"
 echo "============================================================"
 exit 0
 EOF
@@ -282,7 +282,7 @@ fi
 
 echo ""
 echo "============================================================"
-echo "    [SUCCESS] PNETLab Version Successfully Frozen!          "
+echo "    [SUCCESS] Azam Basha Version Successfully Frozen!       "
 echo "============================================================"
 echo "  - APT Package Hold        : ENABLED (All packages locked)"
 echo "  - APT Pin-Priority -1     : ENABLED (/etc/apt/preferences.d)"
@@ -292,9 +292,9 @@ echo "  - Offline Mode Database   : ENFORCED"
 echo "  - Telemetry / DNS Blackhole: CONFIGURED"
 echo ""
 echo "  To verify the lock status anytime:"
-echo "    sudo bash scripts/pnetlab-block-updates.sh --check"
+echo "    sudo bash scripts/azambasha-block-updates.sh --check"
 echo ""
 echo "  To restore/unblock updates in the future if desired:"
-echo "    sudo bash scripts/pnetlab-block-updates.sh --unblock"
+echo "    sudo bash scripts/azambasha-block-updates.sh --unblock"
 echo "============================================================"
 exit 0

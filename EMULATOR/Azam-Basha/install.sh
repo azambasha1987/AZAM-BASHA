@@ -8,15 +8,34 @@
 # ==============================================================================
 set -Eeuo pipefail
 
+# Parse help early for non-root users
+if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
+    echo "Usage: sudo bash $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --static, -s <IP/CIDR>    Configure static management IP (e.g. 192.168.1.50/24)"
+    echo "  --gateway, -g <IP>        Configure default gateway (e.g. 192.168.1.1)"
+    echo "  --dns, -d <IP>            Configure primary DNS server (Default: 8.8.8.8)"
+    echo "  --help, -h                Show this help menu"
+    exit 0
+fi
+
 # Check for root privileges
 if [ "$(id -u)" -ne 0 ]; then
     echo "[ERROR] This installer must be run as root. Please run: sudo bash $0" >&2
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_FILE="/var/log/pnetlab-install.log"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "/opt/azambasha")"
+LOG_FILE="/var/log/azambasha-install.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
+
+# Maintain root installation symlinks for /opt/azambasha and /opt/pnetlab
+mkdir -p /opt/azambasha /opt/pnetlab 2>/dev/null || true
+if [ -d "$SCRIPT_DIR" ] && [ "$SCRIPT_DIR" != "/opt/azambasha" ] && [ "$SCRIPT_DIR" != "/dev/fd" ]; then
+    ln -sfn "$SCRIPT_DIR" /opt/azambasha 2>/dev/null || true
+fi
+ln -sfn /opt/azambasha /opt/pnetlab 2>/dev/null || true
 
 # Parse Command-Line Options for Unattended or Static IP Installation
 STATIC_IP=""
@@ -231,11 +250,20 @@ else
     echo "none" > /opt/unetlab/hypervisor
 fi
 
-# --- Step 3: Install PNetLab Debian Packages ---
-echo "[3/8] Installing PNetLab v8 packages..."
+# --- Step 3: Install Azam Basha Debian Packages ---
+echo "[3/8] Installing Azam Basha v8 packages..."
 DEB_POOL_DIR="${SCRIPT_DIR}/debian/pool/resolute/main"
 if [ ! -d "$DEB_POOL_DIR" ] || ! compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; then
-    DEB_POOL_DIR="$(find "${SCRIPT_DIR}/debian/pool" -type d -name "main" 2>/dev/null | head -n1 || echo "")"
+    if [ -d "/opt/azambasha/debian/pool/resolute/main" ]; then
+        SCRIPT_DIR="/opt/azambasha"
+        DEB_POOL_DIR="/opt/azambasha/debian/pool/resolute/main"
+    else
+        echo "      -> Fetching full Azam Basha repository and packages to /opt/azambasha..."
+        mkdir -p /opt/azambasha
+        git clone https://github.com/azambasha1987/AZAM-BASHA.git /opt/azambasha 2>/dev/null || true
+        SCRIPT_DIR="/opt/azambasha"
+        DEB_POOL_DIR="/opt/azambasha/debian/pool/resolute/main"
+    fi
 fi
 
 if [ -n "$DEB_POOL_DIR" ] && [ -d "$DEB_POOL_DIR" ] && compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; then
@@ -295,8 +323,8 @@ if [ -d "${SCRIPT_DIR}/schema" ]; then
 fi
 
 # Run authoritative schema configuration & repair
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-database-schema.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-database-schema.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-fix-database-schema.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-fix-database-schema.sh" || true
 else
     mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
 CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

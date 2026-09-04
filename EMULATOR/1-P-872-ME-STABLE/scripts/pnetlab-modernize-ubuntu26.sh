@@ -12,29 +12,36 @@ GITHUB_RAW="https://raw.githubusercontent.com/azambasha1987/AZAM-BASHA/main/EMUL
 run_or_fetch() {
     local script_name="$1"
     local local_file="${SCRIPT_DIR}/${script_name}"
+    local opt_file="/opt/unetlab/scripts/${script_name}"
     local pnet_file="/PNET/pnetlab-v8-ubuntu26-installer/scripts/${script_name}"
     
-    if [[ "$script_name" == *.py ]]; then
-        if [ -f "$local_file" ]; then
-            python3 "$local_file" || true
-        elif [ -f "$pnet_file" ]; then
-            python3 "$pnet_file" || true
+    local target=""
+    if [ -f "$local_file" ]; then
+        target="$local_file"
+    elif [ -f "$opt_file" ]; then
+        target="$opt_file"
+    elif [ -f "$pnet_file" ]; then
+        target="$pnet_file"
+    fi
+
+    if [ -n "$target" ]; then
+        if [[ "$script_name" == *.py ]]; then
+            python3 "$target" || true
         else
-            echo "      -> Fetching ${script_name} from GitHub..."
-            local tmp_file="/tmp/${script_name}"
-            curl -fsSL "${GITHUB_RAW}/${script_name}" -o "$tmp_file" 2>/dev/null && python3 "$tmp_file" || true
-            rm -f "$tmp_file" 2>/dev/null || true
+            bash "$target" || true
         fi
     else
-        if [ -f "$local_file" ]; then
-            bash "$local_file" || true
-        elif [ -f "$pnet_file" ]; then
-            bash "$pnet_file" || true
-        else
-            echo "      -> Fetching ${script_name} from GitHub..."
-            local tmp_file="/tmp/${script_name}"
-            curl -fsSL "${GITHUB_RAW}/${script_name}" -o "$tmp_file" 2>/dev/null && bash "$tmp_file" || true
+        echo "      -> Fetching ${script_name} from GitHub..."
+        local tmp_file="/tmp/${script_name}"
+        if curl -fsSL --connect-timeout 5 "${GITHUB_RAW}/${script_name}" -o "$tmp_file" 2>/dev/null; then
+            if [[ "$script_name" == *.py ]]; then
+                python3 "$tmp_file" || true
+            else
+                bash "$tmp_file" || true
+            fi
             rm -f "$tmp_file" 2>/dev/null || true
+        else
+            echo "      [WARN] Could not locate or download ${script_name}."
         fi
     fi
 }

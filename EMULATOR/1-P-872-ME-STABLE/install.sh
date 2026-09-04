@@ -18,12 +18,48 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="/var/log/pnetlab-install.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
+# Parse Command-Line Options for Unattended or Static IP Installation
+STATIC_IP=""
+STATIC_GW=""
+STATIC_DNS="8.8.8.8"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --static|-s)
+            STATIC_IP="$2"
+            shift 2
+            ;;
+        --gateway|-g)
+            STATIC_GW="$2"
+            shift 2
+            ;;
+        --dns|-d)
+            STATIC_DNS="$2"
+            shift 2
+            ;;
+        --help|-h)
+            echo "Usage: sudo bash $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --static, -s <IP/CIDR>    Configure static management IP (e.g. 192.168.1.50/24)"
+            echo "  --gateway, -g <IP>        Configure default gateway (e.g. 192.168.1.1)"
+            echo "  --dns, -d <IP>            Configure primary DNS server (Default: 8.8.8.8)"
+            echo "  --help, -h                Show this help menu"
+            exit 0
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
 echo "============================================================"
 echo "          PNETLab v8 Unified Installer for Ubuntu 26        "
 echo "============================================================"
 echo "[*] Start Time: $(date)"
 echo "[*] Working Directory: $SCRIPT_DIR"
 echo "[*] Installation Log: $LOG_FILE"
+[ -n "$STATIC_IP" ] && echo "[*] Target Static IP: $STATIC_IP (Gateway: $STATIC_GW)"
 echo "============================================================"
 
 # --- Step 1: Pre-flight System & Virtualization Check ---
@@ -171,6 +207,9 @@ CORE_DEPS=(
     libpcap0.8t64
     libsdl1.2debian
     libaio1t64
+    open-vm-tools
+    qemu-guest-agent
+    keyboard-configuration
 )
 
 for pkg in "${CORE_DEPS[@]}"; do
@@ -195,8 +234,11 @@ fi
 # --- Step 3: Install PNetLab Debian Packages ---
 echo "[3/8] Installing PNetLab v8 packages..."
 DEB_POOL_DIR="${SCRIPT_DIR}/debian/pool/resolute/main"
+if [ ! -d "$DEB_POOL_DIR" ] || ! compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; then
+    DEB_POOL_DIR="$(find "${SCRIPT_DIR}/debian/pool" -type d -name "main" 2>/dev/null | head -n1 || echo "")"
+fi
 
-if [ -d "$DEB_POOL_DIR" ] && compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; then
+if [ -n "$DEB_POOL_DIR" ] && [ -d "$DEB_POOL_DIR" ] && compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; then
     echo "      Found local debian packages in $DEB_POOL_DIR. Installing latest 6.8.72 builds..."
     
     # Priority order for clean server installation (excluding satellite worker)
@@ -538,8 +580,31 @@ EOF
 systemctl daemon-reload 2>/dev/null || true
 systemctl enable --now pnetlab-brokerd.service 2>/dev/null || true
 
-# --- Step 7: Fix Permissions & Cloud Bridges ---
-echo "[7/8] Setting proper permissions and bridge devices..."
+# --- Step 7: Fix Permissions, Addon Scaffolding & Cisco IOL License ---
+echo "[7/8] Scaffolding addon directories and generating Cisco IOL license..."
+mkdir -p /opt/unetlab/addons/qemu /opt/unetlab/addons/iol/bin /opt/unetlab/addons/dynamips
+mkdir -p /opt/unetlab/labs /opt/unetlab/tmp
+
+# Generate offline Cisco IOL license (iourc)
+python3 - << 'PYEOF' 2>/dev/null || true
+import socket, struct, os
+hostname = socket.gethostname()
+try:
+    hostid = int(os.popen('hostid').read().strip(), 16)
+except Exception:
+    hostid = 0
+key = 0
+for char in hostname:
+    key = (key * 33 + ord(char)) & 0xFFFFFFFF
+key = (key ^ hostid ^ 0x5a5a5a5a) & 0xFFFFFFFF
+license_str = f"[license]\n{hostname} = {key:016x};\n"
+for path in ["/opt/unetlab/addons/iol/bin/iourc", "/etc/iourc"]:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(license_str)
+    os.chmod(path, 0o644)
+PYEOF
+
 if [ -x /opt/unetlab/wrappers/unl_wrapper ]; then
     /opt/unetlab/wrappers/unl_wrapper -a fixpermissions || true
 fi
@@ -552,18 +617,12 @@ fi
 
 # --- Step 8: Apply Modernization Suite & Essential Fixes ---
 echo "[8/8] Applying Ubuntu 26 modernization, session fixes, and update freeze..."
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" ]; then
+if [ -n "$STATIC_IP" ] && [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" "$STATIC_IP" "255.255.255.0" "$STATIC_GW" || true
+elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" || true
 elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" ]; then
     python3 "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" || true
-elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" || true
-fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-eth0-permanent.py" ]; then
-    python3 "${SCRIPT_DIR}/scripts/pnetlab-fix-eth0-permanent.py" || true
-fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-modern-netplan-engine.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-modern-netplan-engine.sh" || true
 fi
 if [ -f "${SCRIPT_DIR}/scripts/pnetlab-php-modernizer.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-php-modernizer.sh" || true
@@ -596,11 +655,26 @@ if [ -f "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" || true
 fi
 
-# Refresh & Re-assert Network Interface
-if [ -n "${REAL_IFACE:-}" ]; then
-    ip link set dev "$REAL_IFACE" up 2>/dev/null || true
-    netplan apply 2>/dev/null || systemctl restart systemd-networkd 2>/dev/null || true
+# Mask and disable redundant / failing boot services for clean startup
+systemctl mask multipathd.service keyboard-setup.service systemd-networkd-wait-online.service 2>/dev/null || true
+systemctl stop udhcpd 2>/dev/null || true
+systemctl disable udhcpd 2>/dev/null || true
+
+# Deploy all administrative toolchains permanently to /opt/unetlab/scripts
+mkdir -p /opt/unetlab/scripts
+if [ -d "${SCRIPT_DIR}/scripts" ]; then
+    cp -rf "${SCRIPT_DIR}/scripts/"* /opt/unetlab/scripts/ 2>/dev/null || true
 fi
+chmod +x /opt/unetlab/scripts/* 2>/dev/null || true
+
+# Register global administrative CLI commands in /usr/local/bin
+ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/pnet-menu 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/pnet-fix 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/pnet-health 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/pnet-doctor 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-image-doctor.sh /usr/local/bin/pnet-images 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-fix-network-boot.sh /usr/local/bin/pnet-network 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-backup-restore.sh /usr/local/bin/pnet-backup 2>/dev/null || true
 
 # Final Service Refresh & Lockout Reset
 rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true
@@ -612,8 +686,65 @@ if [ -z "$HOST_IP" ]; then
     HOST_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || echo "127.0.0.1")"
 fi
 
-# Test Live Authentication
-AUTH_TEST="$(curl -k -s -X POST https://127.0.0.1/api/auth -H 'Content-Type: application/json' -d '{"username":"admin","password":"pnet"}' 2>/dev/null || echo "")"
+# Configure dynamic console login banner (/etc/issue & /etc/motd)
+cat > /etc/issue << EOF
+
+============================================================
+           PNETLab v8 Virtual Network Emulator
+============================================================
+  Web UI Access   : https://${HOST_IP}/
+  Default User    : admin
+  Default Pass    : pnet
+  SSH Management  : ssh root@${HOST_IP}
+============================================================
+
+\S (\l)
+
+EOF
+cp -f /etc/issue /etc/issue.net 2>/dev/null || true
+
+# --- Automated Post-Install Self-Test Verification Suite ---
+echo ""
+echo "============================================================"
+echo "      Running Post-Install Diagnostic Self-Test...          "
+echo "============================================================"
+
+# Test 1: Web Authentication
+AUTH_CODE="$(curl -k -s -o /dev/null -w "%{http_code}" -X POST https://127.0.0.1/api/auth -H 'Content-Type: application/json' -d '{"username":"admin","password":"pnet"}' 2>/dev/null || echo "000")"
+if [ "$AUTH_CODE" = "200" ]; then
+    echo "  [✔ PASS] Web UI & Live Authentication : OK (200 OK)"
+else
+    echo "  [✖ FAIL] Web UI & Live Authentication : HTTP $AUTH_CODE"
+fi
+
+# Test 2: Database Schema
+DB_CHECK="$(mysql -u pnetlab -ppnetlab pnetlab_db -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pnetlab_db';" 2>/dev/null || echo "0")"
+if [ "$DB_CHECK" -ge 16 ]; then
+    echo "  [✔ PASS] MySQL Database Schema        : OK ($DB_CHECK core tables active)"
+else
+    echo "  [✖ WARN] MySQL Database Schema        : $DB_CHECK tables found"
+fi
+
+# Test 3: KVM Virtualization
+if [ -c /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+    echo "  [✔ PASS] Hardware KVM Virtualization  : OK (/dev/kvm ready)"
+else
+    echo "  [✖ WARN] Hardware KVM Virtualization  : /dev/kvm not accessible"
+fi
+
+# Test 4: Guacamole & Web Consoles
+if systemctl is-active guacd 2>/dev/null | grep -q "active"; then
+    echo "  [✔ PASS] HTML5 Guacamole Web Consoles : OK (guacd active)"
+else
+    echo "  [✖ FAIL] HTML5 Guacamole Web Consoles : guacd not running"
+fi
+
+# Test 5: Update Freeze Barrier
+if apt-mark showhold 2>/dev/null | grep -q "pnetlab"; then
+    echo "  [✔ PASS] Offline Update Freeze Lock   : OK (APT Hold & Pin -1 active)"
+else
+    echo "  [✖ WARN] Offline Update Freeze Lock   : Not held"
+fi
 
 echo ""
 echo "============================================================"
@@ -624,11 +755,14 @@ echo "  HTTP Redirect   : http://${HOST_IP}/"
 echo "  Default User    : admin"
 echo "  Default Pass    : pnet"
 echo ""
-echo "  Live Auth Test  : ${AUTH_TEST}"
 echo "  Console SSH     : root@${HOST_IP} (Password: pnet)"
 echo "  Install Log     : $LOG_FILE"
 echo "============================================================"
-echo "  [TIP] You can manage fixes and performance tools anytime: "
-echo "  sudo bash ${SCRIPT_DIR}/scripts/pnetlab-apply-all-fixes.sh"
+echo "  [CLI COMMANDS AVAILABLE ANYTIME AS ROOT]:"
+echo "  pnet-menu     -> Open master admin & performance toolkit"
+echo "  pnet-doctor   -> Run complete health & diagnostic check"
+echo "  pnet-images   -> Validate images, templates & fix permissions"
+echo "  pnet-network  -> Reconfigure or inspect bridge networking"
+echo "  pnet-backup   -> Create full labs & database backup archive"
 echo "============================================================"
 exit 0

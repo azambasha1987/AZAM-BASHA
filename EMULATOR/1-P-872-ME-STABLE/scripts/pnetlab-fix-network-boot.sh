@@ -8,10 +8,31 @@ echo "============================================================"
 echo "    PNetLab Guaranteed Persistent Static IP & Bridge Fix    "
 echo "============================================================"
 
-# Default Parameters
-IP_ADDR="${1:-192.168.1.23}"
+# 1. Detect Real Uplink NIC (eth0 / ens33 / enp0s3)
+REAL_IFACE=""
+for iface in $(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | cut -d'@' -f1); do
+    case "$iface" in
+        lo|pnet*|docker*|veth*|virbr*|tun*|tap*|br-*) continue ;;
+        eth*|ens*|enp*|eno*)
+            REAL_IFACE="$iface"
+            break
+            ;;
+    esac
+done
+[ -z "$REAL_IFACE" ] && REAL_IFACE="eth0"
+
+# Auto-detect dynamic or current live IP & Gateway if not passed as CLI args
+DETECTED_IP="$(ip -4 addr show dev "$REAL_IFACE" 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1 | head -n1 || true)"
+[ -z "$DETECTED_IP" ] && DETECTED_IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{print $7}' | head -n1 || true)"
+[ -z "$DETECTED_IP" ] && DETECTED_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || echo "192.168.1.23")"
+
+DETECTED_GW="$(ip -4 route show default 2>/dev/null | awk '{print $3}' | head -n1 || true)"
+[ -z "$DETECTED_GW" ] && DETECTED_GW="$(echo "$DETECTED_IP" | sed 's/\.[0-9]*$/.1/')"
+
+# Parameters (Inherit CLI args or use detected values)
+IP_ADDR="${1:-$DETECTED_IP}"
 NETMASK="${2:-255.255.255.0}"
-GATEWAY="${3:-192.168.1.1}"
+GATEWAY="${3:-$DETECTED_GW}"
 DNS1="${4:-8.8.8.8}"
 DNS2="${5:-1.1.1.1}"
 
@@ -30,18 +51,6 @@ case "$NETMASK" in
     *) CIDR="24" ;;
 esac
 
-# 1. Detect Real Uplink NIC (eth0 / ens33)
-REAL_IFACE=""
-for iface in $(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | cut -d'@' -f1); do
-    case "$iface" in
-        lo|pnet*|docker*|veth*|virbr*|tun*|tap*|br-*) continue ;;
-        eth*|ens*|enp*|eno*)
-            REAL_IFACE="$iface"
-            break
-            ;;
-    esac
-done
-[ -z "$REAL_IFACE" ] && REAL_IFACE="eth0"
 echo "[1/5] Physical Uplink Interface : ${REAL_IFACE}"
 echo "      Configuring Static IP     : ${IP_ADDR}/${CIDR} via ${GATEWAY}"
 

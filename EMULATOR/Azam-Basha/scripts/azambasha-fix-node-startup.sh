@@ -128,19 +128,45 @@ ln -sfn /usr/bin/qemu-system-x86_64 /opt/qemu/bin/qemu-system-x86_64 2>/dev/null
 ln -sfn /usr/bin/qemu-img /opt/qemu/bin/qemu-img 2>/dev/null || true
 
 # --- 3. Hardware Acceleration & Kernel Modules ---
-echo "[3/7] Activating Kernel Virtualization & Loopback Drivers..."
+echo "[3/7] Activating Kernel Virtualization, vhost-net & Loopback Drivers..."
+ln -sfn /usr/lib/modules /lib/modules 2>/dev/null || true
+cat << 'EOF' > /etc/modules-load.d/pnetlab.conf
+kvm
+kvm_intel
+kvm_amd
+vhost
+vhost_net
+tun
+loop
+EOF
+
+cat << 'EOF' > /etc/udev/rules.d/99-pnetlab-kvm.rules
+KERNEL=="kvm", GROUP="kvm", MODE="0666"
+KERNEL=="vhost-net", GROUP="kvm", MODE="0666"
+KERNEL=="tun", MODE="0666"
+EOF
+udevadm control --reload-rules 2>/dev/null || true
+udevadm trigger 2>/dev/null || true
+
 modprobe loop 2>/dev/null || true
 modprobe tun 2>/dev/null || true
 modprobe bridge 2>/dev/null || true
 modprobe kvm 2>/dev/null || true
 modprobe kvm_intel 2>/dev/null || true
 modprobe kvm_amd 2>/dev/null || true
+modprobe vhost 2>/dev/null || true
+modprobe vhost_net 2>/dev/null || true
 
 if [ -e /dev/kvm ]; then
     chmod 666 /dev/kvm 2>/dev/null || true
     echo "  [✔] Hardware Acceleration /dev/kvm is ACTIVE (chmod 666)"
 else
     echo "  [✖ WARNING] /dev/kvm was not detected! Enable Nested Virtualization in VM CPU settings."
+fi
+
+if [ -e /dev/vhost-net ]; then
+    chmod 666 /dev/vhost-net 2>/dev/null || true
+    echo "  [✔] vhost-net Accelerator /dev/vhost-net is ACTIVE (chmod 666)"
 fi
 
 # --- 4. Modernize IOSv DOS Config Disk Creation (mcopy) ---

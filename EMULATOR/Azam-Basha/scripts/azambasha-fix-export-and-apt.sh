@@ -55,9 +55,15 @@ echo "=== Applying PNETLab Export & APT Sources Fix ==="
 echo "[1/5] Removing duplicate/conflicting installer repository entry..."
 rm -f /etc/apt/sources.list.d/pnetlab-netinstall-codeberg.list
 
-# 2. Update APT and install zip / unzip
-echo "[2/5] Updating APT package cache and installing zip & unzip..."
-apt-get update && apt-get install -y zip unzip
+# 2. Update APT and install zip / unzip if missing
+echo "[2/5] Ensuring zip & unzip utilities are present..."
+if ! command -v zip &>/dev/null || ! command -v unzip &>/dev/null; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq 2>/dev/null || true
+    apt-get install -y --no-install-recommends zip unzip 2>/dev/null || true
+else
+    echo "      -> zip and unzip are already installed."
+fi
 
 # 3. Create the Exports directory and link it directly into Apache DocumentRoot
 echo "[3/5] Setting up /opt/unetlab/data/Exports directory and symlink..."

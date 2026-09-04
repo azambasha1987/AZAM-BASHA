@@ -167,9 +167,10 @@ case "$COMMAND" in
         if command -v nc &>/dev/null || command -v ncat &>/dev/null; then
             NC_CMD=$(command -v nc || command -v ncat)
             tcpdump -i "$IFACE" -s 0 -B 4096 -U -w - 2>/dev/null | $NC_CMD -l -p "$PORT"
-        else
             echo "Installing netcat for TCP streaming..."
-            apt-get update && apt-get install -y netcat-openbsd
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq 2>/dev/null || true
+            apt-get install -y --no-install-recommends netcat-openbsd 2>/dev/null || true
             tcpdump -i "$IFACE" -s 0 -B 4096 -U -w - 2>/dev/null | nc -l -p "$PORT"
         fi
         ;;

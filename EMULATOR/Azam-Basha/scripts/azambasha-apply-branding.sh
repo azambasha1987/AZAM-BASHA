@@ -119,12 +119,18 @@ if [ -f "$LABS_JS" ]; then
     echo "  [✔] Export dialog natural sort patched in labs.js"
 fi
 
-# 11. Refresh Web Server & PHP Cache
+# 11. Execute Node Startup & IOSv Repair Engine
+if [ -f "${SCRIPT_DIR}/azambasha-fix-node-startup.sh" ]; then
+    bash "${SCRIPT_DIR}/azambasha-fix-node-startup.sh" || true
+fi
+
+# 12. Refresh Web Server & PHP Cache
 if command -v systemctl >/dev/null 2>&1; then
     systemctl reload apache2 2>/dev/null || true
     systemctl reload php*-fpm 2>/dev/null || true
 fi
 
 echo "============================================================"
-echo "  [SUCCESS] Version 1.0.0, Password & Natural Sort Active!   "
+echo "  [SUCCESS] Version 1.0.0, Password & Node Engine Active!   "
 echo "============================================================"
+

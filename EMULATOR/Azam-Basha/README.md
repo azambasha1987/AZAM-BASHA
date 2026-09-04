@@ -39,10 +39,10 @@ cd /opt/azambasha && sudo bash install.sh
 On a fresh or existing Ubuntu 26.04 server, run this single line in your terminal:
 
 ```bash
-sudo git clone https://github.com/azambasha1987/AZAM-BASHA.git /opt/azambasha && cd /opt/azambasha && sudo bash install.sh
+sudo apt update && sudo apt install -y git && sudo rm -rf /tmp/AZAM-BASHA /opt/azambasha && sudo git clone https://github.com/azambasha1987/AZAM-BASHA.git /tmp/AZAM-BASHA && sudo cp -r /tmp/AZAM-BASHA/EMULATOR/Azam-Basha /opt/azambasha && cd /opt/azambasha && sudo bash install.sh
 ```
 
-*(If `/opt/azambasha` already exists, update and run: `cd /opt/azambasha && sudo git pull && sudo bash install.sh`)*
+*(If you already have `/opt/azambasha`, you can run `cd /opt/azambasha && sudo bash install.sh`)*
 
 ---
 

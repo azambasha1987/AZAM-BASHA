@@ -66,11 +66,8 @@ for f in /etc/netplan/*.yaml /etc/netplan/*.yml; do
 done
 rm -f /etc/systemd/network/*.network 2>/dev/null || true
 
-# Install 10-second timeout drop-in to permanently eliminate 5-minute boot stalls from networking.service
-cat > /etc/systemd/system/networking.service.d/10-timeout.conf << 'EOF'
-[Service]
-TimeoutStartSec=10sec
-EOF
+# Mask legacy networking.service and plymouth (systemd-networkd + netplan handle network natively)
+systemctl mask networking.service plymouth-start.service plymouth-read-write.service plymouth-quit.service plymouth-quit-wait.service 2>/dev/null || true
 
 # Ensure kernel bridge, 8021q, tun, and br_netfilter modules load at early boot
 cat > /etc/modules-load.d/pnetlab.conf << 'EOF'

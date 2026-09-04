@@ -122,11 +122,8 @@ net.ipv4.ip_forward = 1
 EOF
     sysctl --system 2>/dev/null || true
 
-    # Install 10-second timeout drop-in to prevent any 5-minute boot stalls from networking.service
-    cat > /etc/systemd/system/networking.service.d/10-timeout.conf << 'EOF'
-[Service]
-TimeoutStartSec=10sec
-EOF
+    # Mask legacy networking.service and plymouth (systemd-networkd + netplan handle network natively)
+    systemctl mask networking.service plymouth-start.service plymouth-read-write.service plymouth-quit.service plymouth-quit-wait.service 2>/dev/null || true
 
     # Purge conflicting Netplan and systemd-networkd files
     mkdir -p /etc/netplan

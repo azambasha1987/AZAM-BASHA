@@ -229,7 +229,7 @@ net.ipv4.ip_forward = 1
 EOF
 sysctl --system 2>/dev/null || true
 
-systemctl mask multipathd.service multipathd.socket keyboard-setup.service console-setup.service systemd-networkd-wait-online.service 2>/dev/null || true
+systemctl mask multipathd.service multipathd.socket keyboard-setup.service console-setup.service systemd-networkd-wait-online.service networking.service plymouth-start.service plymouth-read-write.service plymouth-quit.service plymouth-quit-wait.service 2>/dev/null || true
 systemctl disable --now udhcpd.service kdump-tools.service multipathd.service 2>/dev/null || true
 systemctl reset-failed 2>/dev/null || true
 

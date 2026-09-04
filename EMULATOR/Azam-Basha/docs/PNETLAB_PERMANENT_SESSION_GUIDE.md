@@ -1,14 +1,14 @@
-# PNETLab Permanent Session & Never-Logout Guide
+# Azam Basha Permanent Session & Never-Logout Guide
 
 **Complete Fix for Session Timeouts, Cookie Expiry, and Auto-Logout**
-- **Applicable:** PNETLab v5, v6, v7, v8
+- **Applicable:** Azam Basha Virtual Appliances
 - **Target OS:** Ubuntu 18.04 - 26.04
 
 ---
 
 ## 1. Executive Summary & Root Cause Analysis
 
-By default, PNETLab implements strict idle and session timeout mechanisms designed for public lab environments. In personal or dedicated virtualization environments, this causes frequent, frustrating logouts.
+By default, strict idle and session timeout mechanisms can cause frequent logouts. In personal or dedicated virtualization environments, this fix ensures uninterrupted sessions.
 
 | Layer / Component | Default Constraint | Applied Permanent Fix |
 | :--- | :--- | :--- |

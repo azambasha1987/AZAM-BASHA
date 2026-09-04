@@ -1,12 +1,12 @@
-# PNETLab Appliance Master Administration Toolkit
+# Azam Basha Appliance Master Administration Toolkit
 
-**Complete Reference & Operational Manual for PNETLab Virtual Appliances (v5, v6, v7, v8)**
+**Complete Reference & Operational Manual for Azam Basha Virtual Appliances**
 
 ---
 
 ## 1. Toolkit Overview
 
-The PNETLab Administration Toolkit provides automated, enterprise-grade maintenance and optimization utilities located in [`scripts/`](../scripts/):
+The Azam Basha Administration Toolkit provides automated, enterprise-grade maintenance and optimization utilities located in [`scripts/`](../scripts/):
 
 | Utility Script | Purpose | Quick Command |
 | :--- | :--- | :--- |

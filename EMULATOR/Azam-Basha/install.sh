@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "============================================================"
-echo "          PNETLab v8 Unified Installer for Ubuntu 26        "
+echo "          Azam Basha v8 Unified Installer for Ubuntu 26     "
 echo "============================================================"
 echo "[*] Start Time: $(date)"
 echo "[*] Working Directory: $SCRIPT_DIR"
@@ -715,7 +715,29 @@ if [ -d "${SCRIPT_DIR}/scripts" ]; then
 fi
 chmod +x /opt/unetlab/scripts/* 2>/dev/null || true
 
+# Deploy Azam Basha Logo Assets & Pure Black Dark Mode to Web UI
+mkdir -p /opt/unetlab/html/images /opt/unetlab/html/themes/default/images 2>/dev/null || true
+if [ -d "${SCRIPT_DIR}/assets" ]; then
+    cp -f "${SCRIPT_DIR}/assets/logo.png" /opt/unetlab/html/images/logo.png 2>/dev/null || true
+    cp -f "${SCRIPT_DIR}/assets/logo.png" /opt/unetlab/html/themes/default/images/logo.png 2>/dev/null || true
+    cp -f "${SCRIPT_DIR}/assets/favicon.png" /opt/unetlab/html/images/favicon.png 2>/dev/null || true
+    cp -f "${SCRIPT_DIR}/assets/favicon.png" /opt/unetlab/html/themes/default/images/favicon.ico 2>/dev/null || true
+fi
+
+# Apply Pure Black Dark Mode theme
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-dark-theme.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-dark-theme.sh" || true
+fi
+
 # Register global administrative CLI commands in /usr/local/bin
+ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/azam-menu 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/azam-fix 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/azam-health 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/azam-doctor 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-image-doctor.sh /usr/local/bin/azam-images 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-backup-restore.sh /usr/local/bin/azam-backup 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/pnetlab-dark-theme.sh /usr/local/bin/azam-dark 2>/dev/null || true
+
 ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/pnet-menu 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/pnet-fix 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/pnet-health 2>/dev/null || true
@@ -738,7 +760,7 @@ fi
 cat > /etc/issue << EOF
 
 ============================================================
-           PNETLab v8 Virtual Network Emulator
+           Azam Basha v8 Virtual Network Emulator
 ============================================================
   Web UI Access   : https://${HOST_IP}/
   Default User    : admin
@@ -796,7 +818,7 @@ fi
 
 echo ""
 echo "============================================================"
-echo "      PNETLab v8 Installation Completed Successfully!       "
+echo "    Azam Basha v8 Installation Completed Successfully!      "
 echo "============================================================"
 echo "  Web UI URL      : https://${HOST_IP}/"
 echo "  HTTP Redirect   : http://${HOST_IP}/"
@@ -804,13 +826,14 @@ echo "  Default User    : admin"
 echo "  Default Pass    : pnet"
 echo ""
 echo "  Console SSH     : root@${HOST_IP} (Password: pnet)"
+echo "  Theme Mode      : Pure Black Dark Mode (Active)"
 echo "  Install Log     : $LOG_FILE"
 echo "============================================================"
 echo "  [CLI COMMANDS AVAILABLE ANYTIME AS ROOT]:"
-echo "  pnet-menu     -> Open master admin & performance toolkit"
-echo "  pnet-doctor   -> Run complete health & diagnostic check"
-echo "  pnet-images   -> Validate images, templates & fix permissions"
-echo "  pnet-network  -> Reconfigure or inspect bridge networking"
-echo "  pnet-backup   -> Create full labs & database backup archive"
+echo "  azam-menu     -> Open master admin & performance toolkit"
+echo "  azam-doctor   -> Run complete health & diagnostic check"
+echo "  azam-images   -> Validate images, templates & fix permissions"
+echo "  azam-dark     -> Re-apply pure black dark mode theme"
+echo "  azam-backup   -> Create full labs & database backup archive"
 echo "============================================================"
 exit 0

@@ -1,12 +1,12 @@
-# PNETLab Next-Generation High-Performance Dataplane Architecture Guide
+# Azam Basha Next-Generation High-Performance Dataplane Architecture Guide
 
-**Comprehensive Technical Reference for High-Throughput, Low-Latency Virtual Networking in PNETLab v8.72+**
+**Comprehensive Technical Reference for High-Throughput, Low-Latency Virtual Networking in Azam Basha**
 
 ---
 
 ## 1. Executive Summary & Architectural Goals
 
-The Next-Generation PNETLab Dataplane Architecture modernizes packet movement across virtual network devices (Cisco IOL, QEMU KVM, Dynamips, Docker) by eliminating kernel bridge spinlocks, MAC learning delays, and netfilter firewall traversal on internal simulation links.
+The Next-Generation Azam Basha Dataplane Architecture modernizes packet movement across virtual network devices (Cisco IOL, QEMU KVM, Dynamips, Docker) by eliminating kernel bridge spinlocks, MAC learning delays, and netfilter firewall traversal on internal simulation links.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    1-Click PNETLab v8 Golden Master OVA Appliance Exporter
+    1-Click Azam Basha v8 Golden Master OVA Appliance Exporter
 .DESCRIPTION
     Cleans temporary caches on the running VM and exports the VMware VM
     to a compressed, portable Open Virtual Appliance (.ova) file.
@@ -8,11 +8,11 @@
 
 param (
     [string]$VmxPath = "C:\Users\azamb\Documents\Virtual Machines\R9-PNET\R9-PNET.vmx",
-    [string]$OutputOva = "$([Environment]::GetFolderPath('Desktop'))\PNETLab-v8-Ubuntu26-Master.ova"
+    [string]$OutputOva = "$([Environment]::GetFolderPath('Desktop'))\AzamBasha-v8-Ubuntu26-Master.ova"
 )
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "    PNETLab v8 Master OVA Appliance Exporter (VMware)       " -ForegroundColor Cyan
+Write-Host "   Azam Basha v8 Master OVA Appliance Exporter (VMware)     " -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
 # 1. Check if ovftool is available

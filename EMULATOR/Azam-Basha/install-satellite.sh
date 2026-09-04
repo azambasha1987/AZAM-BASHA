@@ -21,7 +21,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 echo "============================================================"
-echo "      PNETLab v8 Cluster Satellite (Worker) Installer       "
+echo "    Azam Basha v8 Cluster Satellite (Worker) Installer      "
 echo "============================================================"
 
 # --- Pre-flight Checks ---

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNETLab High-Performance & Lightweight Speed Optimizer Suite
+# Azam Basha High-Performance & Lightweight Speed Optimizer Suite
 # Optimizes:
 # 1. Kernel Samepage Merging (KSM) - 30% to 50% RAM savings for QEMU/IOL/Docker
 # 2. PHP OPcache & Realpath Cache - 300% to 500% faster request execution
 # 3. Apache mod_deflate (Gzip) & mod_expires Browser Caching
 # 4. Linux Kernel Sysctl VM & Network Stack Tuning (swappiness=10, 16MB socket buffers)
 #
-# Compatibility: PNETLab v5, v6, v7, v8 (Ubuntu 18.04 / 20.04 / 22.04 / 24.04 / 26.04)
+# Compatibility: Azam Basha v5, v6, v7, v8 (Ubuntu 18.04 / 20.04 / 22.04 / 24.04 / 26.04)
 # ==============================================================================
 set -euo pipefail
 
@@ -24,7 +24,7 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
 fi
 
 if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
-    echo "=== PNETLab Performance Diagnostic Audit ==="
+    echo "=== Azam Basha Performance Diagnostic Audit ==="
     echo -n "[*] KSM (Kernel Samepage Merging): "
     if [ -f /sys/kernel/mm/ksm/run ] && [ "$(cat /sys/kernel/mm/ksm/run)" -eq 1 ]; then
         PAGES_SHARING=$(cat /sys/kernel/mm/ksm/pages_sharing 2>/dev/null || echo 0)

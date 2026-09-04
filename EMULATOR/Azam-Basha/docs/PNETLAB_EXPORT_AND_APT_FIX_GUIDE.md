@@ -1,6 +1,6 @@
-# PNETLab Lab Export & APT Sources Fix Guide
+# Azam Basha Lab Export & APT Sources Fix Guide
 
-**Troubleshooting & Resolution Guide for PNETLab Appliance Administration**
+**Troubleshooting & Resolution Guide for Azam Basha Appliance Administration**
 
 ---
 

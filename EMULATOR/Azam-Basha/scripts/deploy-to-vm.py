@@ -56,6 +56,21 @@ def deploy(host, user="root", password=None):
             print(f"    -> Uploading {f}...")
             sftp.put(src, dst)
 
+    # 3. Upload assets folder
+    local_assets = os.path.join(BASE_DIR, "assets")
+    remote_assets = f"{remote_tmp}/assets"
+    if os.path.exists(local_assets):
+        try:
+            sftp.mkdir(remote_assets)
+        except Exception:
+            pass
+        for f in os.listdir(local_assets):
+            if f.endswith((".png", ".ico", ".svg")):
+                src = os.path.join(local_assets, f)
+                dst = f"{remote_assets}/{f}"
+                print(f"    -> Uploading asset {f}...")
+                sftp.put(src, dst)
+
     sftp.close()
 
     # 3. Execute remote updates
@@ -121,11 +136,20 @@ EOF
     cp -f "$CA_CERT" /opt/unetlab/html/ca.crt 2>/dev/null || true
     chmod 0644 /opt/unetlab/html/pnetlab-ca.crt /opt/unetlab/html/ca.crt 2>/dev/null || true
 
+    # 4. Deploy Azam Basha Logo Assets
+    mkdir -p /opt/unetlab/html/images /opt/unetlab/html/themes/default/images 2>/dev/null || true
+    if [ -d "{remote_assets}" ]; then
+        cp -f "{remote_assets}/logo.png" /opt/unetlab/html/images/logo.png 2>/dev/null || true
+        cp -f "{remote_assets}/logo.png" /opt/unetlab/html/themes/default/images/logo.png 2>/dev/null || true
+        cp -f "{remote_assets}/favicon.png" /opt/unetlab/html/images/favicon.png 2>/dev/null || true
+        cp -f "{remote_assets}/favicon.png" /opt/unetlab/html/themes/default/images/favicon.ico 2>/dev/null || true
+    fi
+
     cp -f "$SSL_CERT" /etc/ssl/certs/apache-selfsigned.crt 2>/dev/null || true
     cp -f "$SSL_KEY" /etc/ssl/private/apache-selfsigned.key 2>/dev/null || true
 
     systemctl reload apache2
-    echo "SUCCESS: 2-Tier Root CA active and Apache reloaded! Active SAN IPs: ${{IP_SAN}}"
+    echo "SUCCESS: 2-Tier Root CA & Azam Basha Logo active! Active SAN IPs: ${{IP_SAN}}"
     """
 
     stdin, stdout, stderr = client.exec_command(cmd)

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNETLab Master Administration, Fix & Performance Toolkit
-# Unified launcher for all PNETLab maintenance, optimization, and AI tools.
+# Azam Basha Master Administration, Fix & Performance Toolkit
+# Unified launcher for all Azam Basha maintenance, optimization, and AI tools.
 #
 # Supports piped execution: curl -fsSL https://.../pnetlab-apply-all-fixes.sh | sudo bash
 # ==============================================================================
@@ -29,7 +29,9 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
     echo "  13   System Health & Diagnostic Dashboard"
     echo "  14   Create Full Lab & Database Backup"
     echo "  15   Configure AI Lab Builder & Ollama Integration"
-    echo "  16   Apply ALL Essential Fixes & Dataplane Suite (Recommended)"
+    echo "  16   Freeze Version & Block Future Updates (Anti-Conflict Lock)"
+    echo "  17   Azam Basha Pure Black Dark Mode Theme Engine"
+    echo "  18   Apply ALL Essential Fixes & Dark Mode Suite (Recommended)"
     echo "  --check  Run non-destructive diagnostic health check"
     exit 0
 fi
@@ -49,7 +51,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 echo "============================================================"
-echo "      PNETLab Master Administration & Deployment Tool       "
+echo "    Azam Basha Master Administration & Deployment Tool      "
 echo "============================================================"
 echo "1) Permanent Session Fix (Never-Logout, 10-Year Session)"
 echo "2) Lab Export & APT Sources Fix (zip/unzip, nested labs)"
@@ -67,19 +69,20 @@ echo "13) System Health & Diagnostic Dashboard"
 echo "14) Create Full Lab & Database Backup Archive"
 echo "15) AI Lab Builder & Ollama MCP Integration"
 echo "16) Freeze Version & Block Future Updates (Anti-Conflict Lock)"
-echo "17) Apply ALL Essential Fixes & Performance Suite (Recommended)"
-echo "18) Exit"
+echo "17) Azam Basha Pure Black Dark Mode Theme Engine"
+echo "18) Apply ALL Essential Fixes & Dark Mode Suite (Recommended)"
+echo "19) Exit"
 echo "============================================================"
 
 # Handle interactive /dev/tty or non-interactive argument/fallback
 CHOICE=""
-if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-8])$ ]]; then
+if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-9])$ ]]; then
     CHOICE="$1"
 elif [ -e /dev/tty ]; then
-    read -rp "Select an option [1-18, default: 17]: " USER_INPUT < /dev/tty || true
-    CHOICE="${USER_INPUT:-17}"
+    read -rp "Select an option [1-19, default: 18]: " USER_INPUT < /dev/tty || true
+    CHOICE="${USER_INPUT:-18}"
 else
-    CHOICE="17"
+    CHOICE="18"
 fi
 
 case "$CHOICE" in
@@ -139,38 +142,48 @@ case "$CHOICE" in
         bash "${SCRIPT_DIR}/pnetlab-block-updates.sh"
         ;;
     17)
-        echo "--> [1/9] Applying Permanent Session Fix..."
+        if [ -f "${SCRIPT_DIR}/pnetlab-dark-theme.sh" ]; then
+            bash "${SCRIPT_DIR}/pnetlab-dark-theme.sh"
+        fi
+        ;;
+    18)
+        echo "--> [1/10] Applying Permanent Session Fix..."
         bash "${SCRIPT_DIR}/pnetlab-disable-logout.sh"
         echo ""
-        echo "--> [2/9] Applying Lab Export & APT Fix..."
+        echo "--> [2/10] Applying Lab Export & APT Fix..."
         bash "${SCRIPT_DIR}/pnetlab-fix-export-and-apt.sh"
         echo ""
-        echo "--> [3/9] Applying 512MB Upload Limits & Docker Routing..."
+        echo "--> [3/10] Applying 512MB Upload Limits & Docker Routing..."
         bash "${SCRIPT_DIR}/pnetlab-upload-and-docker-fix.sh"
         echo ""
-        echo "--> [4/9] Applying SSL IP-SAN, Console & Cloud Bridge Fix..."
+        echo "--> [4/10] Applying SSL IP-SAN, Console & Cloud Bridge Fix..."
         bash "${SCRIPT_DIR}/pnetlab-system-and-console-fix.sh"
         echo ""
-        echo "--> [5/9] Applying Database SQL Mode, 1M Limits & Logrotate..."
+        echo "--> [5/10] Applying Database SQL Mode, 1M Limits & Logrotate..."
         bash "${SCRIPT_DIR}/pnetlab-database-and-system-deep-fix.sh"
         echo ""
-        echo "--> [6/9] Fixing File Permissions & Sockets..."
+        echo "--> [6/10] Fixing File Permissions & Sockets..."
         bash "${SCRIPT_DIR}/pnetlab-fix-permissions.sh"
         echo ""
-        echo "--> [7/9] Applying High-Performance Speed Optimizer..."
+        echo "--> [7/10] Applying High-Performance Speed Optimizer..."
         bash "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh"
         echo ""
-        echo "--> [8/9] Activating Dataplane Fast-Path Accelerator..."
+        echo "--> [8/10] Activating Dataplane Fast-Path Accelerator..."
         bash "${SCRIPT_DIR}/pnetlab-dataplane-engine.sh"
         echo ""
-        echo "--> [9/9] Freezing Version & Blocking Future Updates..."
+        echo "--> [9/10] Freezing Version & Blocking Future Updates..."
         bash "${SCRIPT_DIR}/pnetlab-block-updates.sh"
+        echo ""
+        echo "--> [10/10] Applying Azam Basha Pure Black Dark Mode Theme..."
+        if [ -f "${SCRIPT_DIR}/pnetlab-dark-theme.sh" ]; then
+            bash "${SCRIPT_DIR}/pnetlab-dark-theme.sh" || true
+        fi
         echo ""
         echo "============================================================"
         echo "  [SUCCESS] ALL ESSENTIAL ENHANCEMENTS APPLIED SUCCESSFULLY! "
         echo "============================================================"
         ;;
-    18)
+    19)
         echo "Exiting."
         exit 0
         ;;

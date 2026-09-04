@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNETLab Appliance Comprehensive Health & Diagnostic Dashboard
+# Azam Basha Appliance Comprehensive Health & Diagnostic Dashboard
 # Audits:
 # 1. CPU Virtualization & KVM support
 # 2. Memory (RAM, Swap, KSM Deduplication)
 # 3. Disk Space on / and /opt/unetlab
 # 4. Web Stack (Apache, PHP-FPM, MySQL/MariaDB)
-# 5. PNETLab Core Services & MCP AI Daemon
+# 5. Azam Basha Core Services & MCP AI Daemon
 # 6. Session Timeout & Optimizer Status
 # 7. Device Image Library Inventory (QEMU, IOL, Dynamips, Docker)
 # ==============================================================================
@@ -21,7 +21,7 @@ CYAN="\033[0;36m"
 NC="\033[0m"
 
 echo -e "${BOLD}${CYAN}============================================================${NC}"
-echo -e "${BOLD}${CYAN}         PNETLab Appliance System Health Dashboard          ${NC}"
+echo -e "${BOLD}${CYAN}        Azam Basha Appliance System Health Dashboard        ${NC}"
 echo -e "${BOLD}${CYAN}============================================================${NC}"
 
 # 1. Host & CPU Virtualization

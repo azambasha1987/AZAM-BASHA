@@ -1,5 +1,5 @@
-# PowerShell Script to register Windows Task Scheduler job for 24-Hour PNetLab Differential Sync
-$TaskName = "PNetLab-24h-Sync"
+# PowerShell Script to register Windows Task Scheduler job for 24-Hour Azam Basha Differential Sync
+$TaskName = "AzamBasha-24h-Sync"
 
 # Check Administrator privileges
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)

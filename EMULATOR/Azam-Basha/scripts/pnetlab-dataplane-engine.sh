@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNETLab Next-Generation High-Performance Dataplane Engine
+# Azam Basha Next-Generation High-Performance Dataplane Engine
 #
 # Performance Goals:
 # • ~2× Packet Throughput across virtual routers, switches, and nodes

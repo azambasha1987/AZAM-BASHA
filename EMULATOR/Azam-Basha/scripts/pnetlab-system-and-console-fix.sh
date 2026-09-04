@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNETLab System, SSL & HTML5 Console Fix Utility
+# Azam Basha System, SSL & HTML5 Console Fix Utility
 #
 # Fixes 4 Major Appliance Edge Cases:
 # 1. SSL/HTTPS & IP-SAN Certificate: Generates a 10-year Subject Alternative Name
@@ -25,7 +25,7 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
 fi
 
 if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
-    echo "=== PNETLab System & Console Diagnostic Check ==="
+    echo "=== Azam Basha System & Console Diagnostic Check ==="
     echo -n "[*] Apache SSL Module: "
     if apache2ctl -M 2>/dev/null | grep -q "ssl_module"; then
         echo "ENABLED"
@@ -64,7 +64,7 @@ fi
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 echo "============================================================"
-echo "    PNETLab System, SSL & HTML5 Console Repair Utility      "
+echo "   Azam Basha System, SSL & HTML5 Console Repair Utility    "
 echo "============================================================"
 
 # 1. Generate Modern 10-Year IP-SAN SSL Certificate
@@ -72,7 +72,7 @@ echo "[1/4] Generating 10-Year Subject Alternative Name (IP-SAN) SSL Certificate
 SSL_DIR="/etc/ssl/pnetlab"
 mkdir -p "$SSL_DIR"
 
-# 1. Generate PNETLab Internal Root CA (20-Year Validity)
+# 1. Generate Azam Basha Internal Root CA (20-Year Validity)
 CA_CERT="/etc/ssl/certs/pnetlab-ca.crt"
 CA_KEY="/etc/ssl/private/pnetlab-ca.key"
 mkdir -p /etc/ssl/certs /etc/ssl/private "${SSL_DIR}"
@@ -81,7 +81,7 @@ if [ ! -f "$CA_CERT" ] || [ ! -f "$CA_KEY" ]; then
     openssl req -x509 -new -nodes -newkey rsa:2048 -days 7300 \
         -keyout "$CA_KEY" \
         -out "$CA_CERT" \
-        -subj '/CN=PNETLab Enterprise Root CA/O=PNETLab Virtual Appliance/OU=Security' \
+        -subj '/CN=Azam Basha Enterprise Root CA/O=Azam Basha Virtual Appliance/OU=Security' \
         -addext 'basicConstraints=critical,CA:TRUE' \
         -addext 'keyUsage=critical,keyCertSign,cRLSign' 2>/dev/null || true
     chmod 0600 "$CA_KEY"
@@ -110,7 +110,7 @@ EOF
 openssl req -new -nodes -newkey rsa:2048 \
     -keyout "${SSL_DIR}/pnetlab.key" \
     -out "$CSR_FILE" \
-    -subj '/CN=pnetlab.local/O=PNETLab Virtual Appliance/OU=Web Engine' 2>/dev/null || true
+    -subj '/CN=pnetlab.local/O=Azam Basha Virtual Appliance/OU=Web Engine' 2>/dev/null || true
 
 openssl x509 -req -in "$CSR_FILE" \
     -CA "$CA_CERT" -CAkey "$CA_KEY" -CAcreateserial \

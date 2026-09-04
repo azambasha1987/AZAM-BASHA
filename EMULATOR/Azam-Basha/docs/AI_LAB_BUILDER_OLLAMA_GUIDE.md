@@ -1,8 +1,8 @@
-# PNETLab AI Lab Builder & Local Ollama Integration
+# Azam Basha AI Lab Builder & Local Ollama Integration
 
-**Technical Reference & Deployment Guide | PNETLab v8.72+**
+**Technical Reference & Deployment Guide | Azam Basha**
 
-This guide details the architecture, host preparation, automated virtual machine provisioning, troubleshooting matrix, and diagnostic procedures required to integrate **PNETLab (v8.72+)** with a local **Ollama LLM engine**.
+This guide details the architecture, host preparation, automated virtual machine provisioning, troubleshooting matrix, and diagnostic procedures required to integrate **Azam Basha** with a local **Ollama LLM engine**.
 
 ---
 

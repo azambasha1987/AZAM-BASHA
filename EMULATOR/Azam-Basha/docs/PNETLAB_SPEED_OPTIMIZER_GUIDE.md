@@ -1,6 +1,6 @@
-# PNETLab High-Performance Speed & Resource Optimizer Guide
+# Azam Basha High-Performance Speed & Resource Optimizer Guide
 
-**Comprehensive Performance Tuning for PNETLab Virtual Appliances (v5, v6, v7, v8)**
+**Comprehensive Performance Tuning for Azam Basha Virtual Appliances**
 
 ---
 
@@ -8,7 +8,7 @@
 
 As lab complexity grows to dozens of virtual nodes (Cisco IOL, Dynamips, QEMU, Docker), system resources—specifically **RAM allocation**, **PHP processing latency**, **network socket queues**, and **web UI asset delivery**—become primary bottlenecks.
 
-The **PNETLab Speed Optimizer Suite** ([`scripts/pnetlab-speed-optimizer.sh`](../scripts/pnetlab-speed-optimizer.sh)) applies four layers of low-overhead system tuning:
+The **Azam Basha Speed Optimizer Suite** ([`scripts/pnetlab-speed-optimizer.sh`](../scripts/pnetlab-speed-optimizer.sh)) applies four layers of low-overhead system tuning:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐

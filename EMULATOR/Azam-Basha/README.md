@@ -1,18 +1,22 @@
-# PNetLab v8
+<p align="center">
+  <img src="assets/logo.png" alt="Azam Basha Logo" width="180">
+</p>
 
-PNetLab is a self-hosted network emulation platform for building and running
+# Azam Basha
+
+Azam Basha is a self-hosted network emulation platform for building and running
 virtual labs (routers, switches, firewalls, servers, and more) in your browser.
 
-This repository is a landing page for **PNetLab v8** downloads and upgrade
-instructions. It does not host the application source.
+This repository is a landing page for **Azam Basha** downloads, deployment scripts,
+and upgrade instructions.
 
 ## Downloads
 
 | Artifact | Description | Link |
 | --- | --- | --- |
-| Network Install Script | Hands-off installer for a fresh Ubuntu 26.04 (27H1 "Resolute") host — pulls and installs the latest PNetLab v8 release over the network. | [download](https://codeberg.org/api/packages/netkillui/generic/pnetlab-core-assets/0.channel/pnetlab-network-install-latest.sh) |
-| OVA (autoinstaller) | Minimal Ubuntu 26.04 image with an unattended autoinstaller — boots and installs PNetLab v8 itself. | [download](https://mega.nz/file/uNAz3JDb#CQA93KkaU3XrCs6EIosChOjYonn1W4ELgnLm7NcZ2Wg) |
-| Desktop Install Bundle | Installs PNetLab v8 on Ubuntu Desktop workstation environment on bare metal. Tested on Ubuntu 26.04 Desktop and Xubuntu 26.04 Desktop — Xubuntu is recommended for its lighter resource footprint. Dual boot alongside Windows or external SSD setup works. | [download](https://mega.nz/file/rRZzXSRa#fsAL-CGdLPf0gCjBVoeIeMuo-A1Fsdm3nCx2Ea3u_a4) |
+| Network Install Script | Hands-off installer for a fresh Ubuntu 26.04 (27H1 "Resolute") host — pulls and installs the latest release over the network. | [download](https://codeberg.org/api/packages/netkillui/generic/pnetlab-core-assets/0.channel/pnetlab-network-install-latest.sh) |
+| OVA (autoinstaller) | Minimal Ubuntu 26.04 image with an unattended autoinstaller — boots and installs Azam Basha itself. | [download](https://mega.nz/file/uNAz3JDb#CQA93KkaU3XrCs6EIosChOjYonn1W4ELgnLm7NcZ2Wg) |
+| Desktop Install Bundle | Installs on Ubuntu Desktop workstation environment on bare metal. Tested on Ubuntu 26.04 Desktop and Xubuntu 26.04 Desktop — Xubuntu is recommended for its lighter resource footprint. Dual boot alongside Windows or external SSD setup works. | [download](https://mega.nz/file/rRZzXSRa#fsAL-CGdLPf0gCjBVoeIeMuo-A1Fsdm3nCx2Ea3u_a4) |
 
 ## Requirements
 

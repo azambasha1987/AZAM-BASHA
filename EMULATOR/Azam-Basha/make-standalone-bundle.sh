@@ -5,10 +5,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OUTPUT_FILE="${1:-${SCRIPT_DIR}/pnetlab-v8-standalone-offline.tar.gz}"
+OUTPUT_FILE="${1:-${SCRIPT_DIR}/azambasha-v8-standalone-offline.tar.gz}"
 
 echo "============================================================"
-echo "    PNETLab v8 Standalone Offline Bundle Packager           "
+echo "    Azam Basha v8 Standalone Offline Bundle Packager        "
 echo "============================================================"
 echo "Packaging directory: $SCRIPT_DIR"
 echo "Target output file : $OUTPUT_FILE"

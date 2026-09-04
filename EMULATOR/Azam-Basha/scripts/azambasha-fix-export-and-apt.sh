@@ -104,8 +104,25 @@ exit 0
 EOF
 chmod +x "$UUID_SCRIPT"
 
-# 5. Restart Apache
-echo "[5/5] Restarting Apache service..."
+# 5. Patch Natural Ascending Sequence for Export Lists
+echo "[5/6] Patching natural ascending sequence (0..9, A..Z) for export and folder lists..."
+
+API_FOLDERS="/opt/unetlab/html/includes/api_folders.php"
+if [ -f "$API_FOLDERS" ]; then
+    sed -i "s/return strnatcasecmp(\$b\['name'\], \$a\['name'\]);/return strnatcasecmp(\$a\['name'\], \$b\['name'\]);/g" "$API_FOLDERS"
+    sed -i "s/return strnatcasecmp(\$b\['file'\], \$a\['file'\]);/return strnatcasecmp(\$a\['file'\], \$b\['file'\]);/g" "$API_FOLDERS"
+    echo "  [✔] Sorter patched in api_folders.php (Ascending 0..9, A..Z)"
+fi
+
+LABS_JS="/opt/unetlab/html/main/js/labs.js"
+if [ -f "$LABS_JS" ]; then
+    sed -i "s/var folders = (data\.folders || \[\])\.filter(function (f) { return f\.name !== '\.\.'; });/var folders = (data.folders || []).filter(function (f) { return f.name !== '..'; }).sort(function (a, b) { return cmpName(a.name, b.name); });/g" "$LABS_JS"
+    sed -i "s/var labs = data\.labs || \[\];/var labs = (data.labs || []).slice().sort(function (a, b) { return cmpName(a.file || a.name, b.file || b.name); });/g" "$LABS_JS"
+    echo "  [✔] Export dialog natural sort patched in labs.js"
+fi
+
+# 6. Restart Apache
+echo "[6/6] Restarting Apache service..."
 systemctl restart apache2 || service apache2 restart || true
 
 echo "=== [SUCCESS] Lab Export and APT sources fixed successfully! ==="

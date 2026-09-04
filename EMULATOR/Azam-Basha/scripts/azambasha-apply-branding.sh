@@ -104,12 +104,27 @@ chown -R www-data:www-data "$BRAND_DIR" 2>/dev/null || true
 chmod 0755 "$BRAND_DIR" 2>/dev/null || true
 chmod 0644 "${BRAND_DIR}"/* 2>/dev/null || true
 
-# 10. Refresh Web Server & PHP Cache
+# 10. Patch Natural Ascending Sequence for Export Lists & Folders (0..9, A..Z)
+API_FOLDERS="/opt/unetlab/html/includes/api_folders.php"
+if [ -f "$API_FOLDERS" ]; then
+    sed -i "s/return strnatcasecmp(\$b\['name'\], \$a\['name'\]);/return strnatcasecmp(\$a\['name'\], \$b\['name'\]);/g" "$API_FOLDERS"
+    sed -i "s/return strnatcasecmp(\$b\['file'\], \$a\['file'\]);/return strnatcasecmp(\$a\['file'\], \$b\['file'\]);/g" "$API_FOLDERS"
+    echo "  [✔] Natural ascending sort (0..9) patched in api_folders.php"
+fi
+
+LABS_JS="/opt/unetlab/html/main/js/labs.js"
+if [ -f "$LABS_JS" ]; then
+    sed -i "s/var folders = (data\.folders || \[\])\.filter(function (f) { return f\.name !== '\.\.'; });/var folders = (data.folders || []).filter(function (f) { return f.name !== '..'; }).sort(function (a, b) { return cmpName(a.name, b.name); });/g" "$LABS_JS"
+    sed -i "s/var labs = data\.labs || \[\];/var labs = (data.labs || []).slice().sort(function (a, b) { return cmpName(a.file || a.name, b.file || b.name); });/g" "$LABS_JS"
+    echo "  [✔] Export dialog natural sort patched in labs.js"
+fi
+
+# 11. Refresh Web Server & PHP Cache
 if command -v systemctl >/dev/null 2>&1; then
     systemctl reload apache2 2>/dev/null || true
     systemctl reload php*-fpm 2>/dev/null || true
 fi
 
 echo "============================================================"
-echo "  [SUCCESS] Version 1.0.0 & Password 'azam' Active Globally! "
+echo "  [SUCCESS] Version 1.0.0, Password & Natural Sort Active!   "
 echo "============================================================"

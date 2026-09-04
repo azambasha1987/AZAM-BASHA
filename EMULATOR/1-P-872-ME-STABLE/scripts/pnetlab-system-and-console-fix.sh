@@ -72,58 +72,68 @@ echo "[1/4] Generating 10-Year Subject Alternative Name (IP-SAN) SSL Certificate
 SSL_DIR="/etc/ssl/pnetlab"
 mkdir -p "$SSL_DIR"
 
-# Collect all local IPv4 addresses
-IP_LIST=""
-IP_COUNT=1
+# 1. Generate PNETLab Internal Root CA (20-Year Validity)
+CA_CERT="/etc/ssl/certs/pnetlab-ca.crt"
+CA_KEY="/etc/ssl/private/pnetlab-ca.key"
+mkdir -p /etc/ssl/certs /etc/ssl/private "${SSL_DIR}"
+
+if [ ! -f "$CA_CERT" ] || [ ! -f "$CA_KEY" ]; then
+    openssl req -x509 -new -nodes -newkey rsa:2048 -days 7300 \
+        -keyout "$CA_KEY" \
+        -out "$CA_CERT" \
+        -subj '/CN=PNETLab Enterprise Root CA/O=PNETLab Virtual Appliance/OU=Security' \
+        -addext 'basicConstraints=critical,CA:TRUE' \
+        -addext 'keyUsage=critical,keyCertSign,cRLSign' 2>/dev/null || true
+    chmod 0600 "$CA_KEY"
+    chmod 0644 "$CA_CERT"
+fi
+
+# 2. Collect all local IPv4 addresses and build SAN extension
+IP_SAN="IP:127.0.0.1"
 for ip in $(hostname -I 2>/dev/null || ip -4 addr show | awk '/inet /{print $2}' | cut -d/ -f1); do
-    IP_LIST="${IP_LIST}IP.${IP_COUNT} = ${ip}\n"
-    IP_COUNT=$((IP_COUNT + 1))
+    if [ -n "$ip" ] && [ "$ip" != "127.0.0.1" ]; then
+        IP_SAN="${IP_SAN},IP:${ip}"
+    fi
 done
 
-SAN_CONF="${SSL_DIR}/openssl_san.cnf"
-cat << EOF > "$SAN_CONF"
-[req]
-default_bits = 2048
-prompt = no
-default_md = sha256
-distinguished_name = dn
-x509_extensions = v3_req
+CSR_FILE="/tmp/pnetlab_server.csr"
+EXT_FILE="/tmp/pnetlab_san.ext"
 
-[dn]
-C = US
-ST = State
-L = City
-O = PNETLab Virtual Appliance
-CN = pnetlab.local
-
-[v3_req]
-subjectAltName = @alt_names
-basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage = serverAuth
-
-[alt_names]
-DNS.1 = localhost
-DNS.2 = pnetlab.local
-IP.1 = 127.0.0.1
-$(echo -e "$IP_LIST")
+cat << EOF > "$EXT_FILE"
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage=digitalSignature,nonRepudiation,keyEncipherment,dataEncipherment
+extendedKeyUsage=serverAuth
+subjectAltName=DNS:pnetlab,DNS:pnetlab.local,DNS:localhost,${IP_SAN}
 EOF
 
-openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+openssl req -new -nodes -newkey rsa:2048 \
     -keyout "${SSL_DIR}/pnetlab.key" \
-    -out "${SSL_DIR}/pnetlab.crt" \
-    -config "$SAN_CONF" 2>/dev/null || true
+    -out "$CSR_FILE" \
+    -subj '/CN=pnetlab.local/O=PNETLab Virtual Appliance/OU=Web Engine' 2>/dev/null || true
 
+openssl x509 -req -in "$CSR_FILE" \
+    -CA "$CA_CERT" -CAkey "$CA_KEY" -CAcreateserial \
+    -out "${SSL_DIR}/pnetlab.crt" \
+    -days 3650 \
+    -extfile "$EXT_FILE" 2>/dev/null || true
+
+rm -f "$CSR_FILE" "$EXT_FILE" 2>/dev/null || true
 chmod 600 "${SSL_DIR}/pnetlab.key"
 chmod 644 "${SSL_DIR}/pnetlab.crt"
 
 # Mirror to standard paths expected by Ubuntu Apache configurations
-mkdir -p /etc/ssl/certs /etc/ssl/private
 cp -f "${SSL_DIR}/pnetlab.crt" /etc/ssl/certs/pnetlab-selfsigned.crt 2>/dev/null || true
 cp -f "${SSL_DIR}/pnetlab.crt" /etc/ssl/certs/apache-selfsigned.crt 2>/dev/null || true
 cp -f "${SSL_DIR}/pnetlab.key" /etc/ssl/private/pnetlab-selfsigned.key 2>/dev/null || true
 cp -f "${SSL_DIR}/pnetlab.key" /etc/ssl/private/apache-selfsigned.key 2>/dev/null || true
 chmod 600 /etc/ssl/private/* 2>/dev/null || true
+
+# Publish Root CA to web download endpoints for 1-click client trust
+mkdir -p /opt/unetlab/html
+cp -f "$CA_CERT" /opt/unetlab/html/pnetlab-ca.crt 2>/dev/null || true
+cp -f "$CA_CERT" /opt/unetlab/html/ca.crt 2>/dev/null || true
+chmod 0644 /opt/unetlab/html/pnetlab-ca.crt /opt/unetlab/html/ca.crt 2>/dev/null || true
 
 # Configure Apache SSL Site
 if [ -d /etc/apache2 ]; then

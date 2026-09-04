@@ -17,3 +17,11 @@ ehthumbs.db
 # Archives
 *.zip
 *.tar.gz
+
+# Local certificates and keys
+*.crt
+*.cer
+*.key
+*.pem
+*.csr
+*.ext

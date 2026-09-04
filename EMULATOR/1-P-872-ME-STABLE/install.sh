@@ -356,18 +356,68 @@ echo "[5/8] Configuring Apache2 Web Server, SSL and PHP-FPM..."
 PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "8.5")"
 PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
 
-# SSL Certificate Generation (10-Year Self-Signed IP-SAN)
+# 2-Tier Enterprise Root CA & Multi-IP Server Certificate Generation
+CA_CERT="/etc/ssl/certs/pnetlab-ca.crt"
+CA_KEY="/etc/ssl/private/pnetlab-ca.key"
 SSL_CERT="/etc/ssl/certs/pnetlab-selfsigned.crt"
 SSL_KEY="/etc/ssl/private/pnetlab-selfsigned.key"
 mkdir -p /etc/ssl/certs /etc/ssl/private
-if [ ! -f "$SSL_CERT" ] || [ ! -f "$SSL_KEY" ]; then
-    openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
-        -keyout "$SSL_KEY" \
-        -out "$SSL_CERT" \
-        -subj '/CN=pnetlab' \
-        -addext 'subjectAltName=DNS:pnetlab,DNS:localhost,IP:127.0.0.1' 2>/dev/null || true
-    chmod 0600 "$SSL_KEY"
+
+# 1. Generate PNETLab Internal Root CA (20-Year Validity)
+if [ ! -f "$CA_CERT" ] || [ ! -f "$CA_KEY" ]; then
+    openssl req -x509 -new -nodes -newkey rsa:2048 -days 7300 \
+        -keyout "$CA_KEY" \
+        -out "$CA_CERT" \
+        -subj '/CN=PNETLab Enterprise Root CA/O=PNETLab Virtual Appliance/OU=Security' \
+        -addext 'basicConstraints=critical,CA:TRUE' \
+        -addext 'keyUsage=critical,keyCertSign,cRLSign' 2>/dev/null || true
+    chmod 0600 "$CA_KEY"
+    chmod 0644 "$CA_CERT"
 fi
+
+# 2. Generate and Sign Multi-IP Server Certificate using Internal Root CA (10-Year Validity)
+if [ ! -f "$SSL_CERT" ] || [ ! -f "$SSL_KEY" ]; then
+    # Collect all local loopback and LAN IPv4 addresses for SAN extension
+    IP_SAN="IP:127.0.0.1"
+    for ip in $(hostname -I 2>/dev/null || ip -4 addr show | awk '/inet /{print $2}' | cut -d/ -f1); do
+        if [ -n "$ip" ] && [ "$ip" != "127.0.0.1" ]; then
+            IP_SAN="${IP_SAN},IP:${ip}"
+        fi
+    done
+
+    CSR_FILE="/tmp/pnetlab_server.csr"
+    EXT_FILE="/tmp/pnetlab_san.ext"
+
+    cat << EOF > "$EXT_FILE"
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage=digitalSignature,nonRepudiation,keyEncipherment,dataEncipherment
+extendedKeyUsage=serverAuth
+subjectAltName=DNS:pnetlab,DNS:pnetlab.local,DNS:localhost,${IP_SAN}
+EOF
+
+    openssl req -new -nodes -newkey rsa:2048 \
+        -keyout "$SSL_KEY" \
+        -out "$CSR_FILE" \
+        -subj '/CN=pnetlab.local/O=PNETLab Virtual Appliance/OU=Web Engine' 2>/dev/null || true
+
+    openssl x509 -req -in "$CSR_FILE" \
+        -CA "$CA_CERT" -CAkey "$CA_KEY" -CAcreateserial \
+        -out "$SSL_CERT" \
+        -days 3650 \
+        -extfile "$EXT_FILE" 2>/dev/null || true
+
+    rm -f "$CSR_FILE" "$EXT_FILE" 2>/dev/null || true
+    chmod 0600 "$SSL_KEY"
+    chmod 0644 "$SSL_CERT"
+fi
+
+# 3. Publish Root CA to web download endpoints for 1-click client trust
+mkdir -p /opt/unetlab/html
+cp -f "$CA_CERT" /opt/unetlab/html/pnetlab-ca.crt 2>/dev/null || true
+cp -f "$CA_CERT" /opt/unetlab/html/ca.crt 2>/dev/null || true
+chmod 0644 /opt/unetlab/html/pnetlab-ca.crt /opt/unetlab/html/ca.crt 2>/dev/null || true
+
 cp -f "$SSL_CERT" /etc/ssl/certs/apache-selfsigned.crt 2>/dev/null || true
 cp -f "$SSL_KEY" /etc/ssl/private/apache-selfsigned.key 2>/dev/null || true
 
@@ -430,10 +480,8 @@ chmod +x /opt/unetlab/scripts/remove_uuid.sh /opt/unetlab/scripts/* 2>/dev/null 
 cat > /etc/apache2/sites-available/pnetlab.conf << 'EOF'
 <VirtualHost *:80>
     DocumentRoot /opt/unetlab/html
-    RewriteEngine On
-    RewriteCond %{REMOTE_ADDR} !^127\.
-    RewriteCond %{REMOTE_ADDR} !^::1$
-    RewriteRule ^/?(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+    Alias /legacy /opt/unetlab/html/themes/default
+    Alias /themes /opt/unetlab/html/themes
 
     Alias /Exports /opt/unetlab/data/Exports
     Alias /exports /opt/unetlab/data/Exports

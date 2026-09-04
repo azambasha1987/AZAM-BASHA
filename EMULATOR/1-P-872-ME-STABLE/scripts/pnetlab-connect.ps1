@@ -69,23 +69,30 @@ if ($sshPort.TcpTestSucceeded) {
 Write-Host "`n============================================================" -ForegroundColor Cyan
 Write-Host " Select an Action:" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host " 1) Open PNETLab Web UI in Default Browser"
-Write-Host " 2) Scan Active Lab Node Console Ports (Ports 30001-30050)"
-Write-Host " 3) Launch SSH Session (ssh root@$VmIp)"
-Write-Host " 4) Setup 1-Click Wireshark Protocol Handler (pnetlab://)"
-Write-Host " 5) Exit"
+Write-Host " 1) Open PNETLab Web UI (Direct HTTP - Zero Warnings / Instant)"
+Write-Host " 2) Open PNETLab Web UI (Secure HTTPS)"
+Write-Host " 3) Scan Active Lab Node Console Ports (Ports 30001-30050)"
+Write-Host " 4) Launch SSH Session (ssh root@$VmIp)"
+Write-Host " 5) Setup 1-Click Wireshark Protocol Handler (pnetlab://)"
+Write-Host " 6) Trust PNETLab Root CA Certificate on Windows & Firefox"
+Write-Host " 7) Exit"
 Write-Host "============================================================" -ForegroundColor Cyan
 
-$action = Read-Host "Select option [1-5, Default: 1]"
+$action = Read-Host "Select option [1-7, Default: 1]"
 if (-not $action) { $action = "1" }
 
 switch ($action) {
     "1" {
-        $url = if ($webHttps.TcpTestSucceeded) { "https://$VmIp/" } else { "http://$VmIp/" }
-        Write-Host "Opening $url in browser..." -ForegroundColor Green
+        $url = "http://$VmIp/"
+        Write-Host "Opening $url in browser (Direct HTTP)..." -ForegroundColor Green
         Start-Process $url
     }
     "2" {
+        $url = "https://$VmIp/"
+        Write-Host "Opening $url in browser (Secure HTTPS)..." -ForegroundColor Green
+        Start-Process $url
+    }
+    "3" {
         Write-Host "`nScanning active node console ports on $VmIp (30001-30050)..." -ForegroundColor Yellow
         $activeNodes = [System.Collections.Generic.List[PSCustomObject]]::new()
         $tasks = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -119,11 +126,11 @@ switch ($action) {
             Write-Host "  -> No active node console ports found in range 30001-30050." -ForegroundColor DarkGray
         }
     }
-    "3" {
+    "4" {
         Write-Host "Launching SSH to root@$VmIp..." -ForegroundColor Green
         Start-Process "ssh" -ArgumentList "root@$VmIp"
     }
-    "4" {
+    "5" {
         $wiresharkScript = "$PSScriptRoot\setup-windows-wireshark.ps1"
         if (Test-Path $wiresharkScript) {
             & $wiresharkScript
@@ -131,7 +138,15 @@ switch ($action) {
             Write-Warning "setup-windows-wireshark.ps1 not found in scripts directory."
         }
     }
-    "5" {
+    "6" {
+        $sslTrustScript = "$PSScriptRoot\setup-windows-ssl-trust.ps1"
+        if (Test-Path $sslTrustScript) {
+            & $sslTrustScript -VmIp $VmIp
+        } else {
+            Write-Warning "setup-windows-ssl-trust.ps1 not found in scripts directory."
+        }
+    }
+    "7" {
         Write-Host "Exiting."
     }
 }

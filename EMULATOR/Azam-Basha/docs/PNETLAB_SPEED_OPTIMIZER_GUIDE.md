@@ -8,7 +8,7 @@
 
 As lab complexity grows to dozens of virtual nodes (Cisco IOL, Dynamips, QEMU, Docker), system resources—specifically **RAM allocation**, **PHP processing latency**, **network socket queues**, and **web UI asset delivery**—become primary bottlenecks.
 
-The **PNETLab Speed Optimizer Suite** ([`scripts/pnetlab-speed-optimizer.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/pnetlab-speed-optimizer.sh)) applies four layers of low-overhead system tuning:
+The **PNETLab Speed Optimizer Suite** ([`scripts/pnetlab-speed-optimizer.sh`](../scripts/pnetlab-speed-optimizer.sh)) applies four layers of low-overhead system tuning:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐

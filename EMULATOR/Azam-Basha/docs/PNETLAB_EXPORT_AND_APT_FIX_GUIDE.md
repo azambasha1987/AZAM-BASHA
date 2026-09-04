@@ -18,7 +18,7 @@ This guide addresses two common administrative and functional issues in PNETLab 
 
 ## 2. Automated Fix Deployment
 
-Run [`scripts/pnetlab-fix-export-and-apt.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/pnetlab-fix-export-and-apt.sh) on your PNETLab VM as root:
+Run [`scripts/pnetlab-fix-export-and-apt.sh`](../scripts/pnetlab-fix-export-and-apt.sh) on your PNETLab VM as root:
 
 ```bash
 chmod +x pnetlab-fix-export-and-apt.sh

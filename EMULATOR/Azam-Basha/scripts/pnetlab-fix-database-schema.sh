@@ -47,8 +47,8 @@ rm -f "$INIT_SQL"
 for path in \
     "${PARENT_DIR}/schema/pnetlab_db.sql" \
     "${SCRIPT_DIR}/schema/pnetlab_db.sql" \
-    "/opt/unetlab/schema/pnetlab_db.sql" \
-    "/opt/pnetlab/EMULATOR/1-P-872-ME-STABLE/schema/pnetlab_db.sql"; do
+    "/opt/pnetlab/schema/pnetlab_db.sql" \
+    "/opt/unetlab/schema/pnetlab_db.sql"; do
     if [ -f "$path" ]; then
         echo "[1/4] Importing PNetLab schema from ${path}..."
         mysql -u pnetlab -ppnetlab pnetlab_db < "$path" 2>/dev/null || mysql pnetlab_db < "$path" 2>/dev/null || true
@@ -59,8 +59,8 @@ done
 for path in \
     "${PARENT_DIR}/schema/guacdb.sql" \
     "${SCRIPT_DIR}/schema/guacdb.sql" \
-    "/opt/unetlab/schema/guacdb.sql" \
-    "/opt/pnetlab/EMULATOR/1-P-872-ME-STABLE/schema/guacdb.sql"; do
+    "/opt/pnetlab/schema/guacdb.sql" \
+    "/opt/unetlab/schema/guacdb.sql"; do
     if [ -f "$path" ]; then
         echo "[2/4] Importing Guacamole schema from ${path}..."
         mysql -u guacuser -ppnetlab guacdb < "$path" 2>/dev/null || mysql guacdb < "$path" 2>/dev/null || true

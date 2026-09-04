@@ -201,7 +201,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "${SCRIPT_DIR}/pnetlab-fix-database-schema.sh" ]; then
     bash "${SCRIPT_DIR}/pnetlab-fix-database-schema.sh"
 else
-    SCHEMA_FILE="$(find /opt/unetlab/schema /opt/pnetlab/EMULATOR/1-P-872-ME-STABLE/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
+    SCHEMA_FILE="$(find /opt/pnetlab/schema /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
     if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
         echo "  -> Applying full PNetLab schema from $SCHEMA_FILE..."
         mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true

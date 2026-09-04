@@ -45,7 +45,7 @@ This guide details the architecture, host preparation, automated virtual machine
 
 ## 2. Host Machine Setup (Windows & Ollama)
 
-You can use the automated script [`scripts/setup-ollama-host.ps1`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/setup-ollama-host.ps1) or follow the manual steps below:
+You can use the automated script [`scripts/setup-ollama-host.ps1`](../scripts/setup-ollama-host.ps1) or follow the manual steps below:
 
 ### Step 1: Bind Ollama to External Interfaces
 Open PowerShell as Administrator:
@@ -80,7 +80,7 @@ ipconfig | Select-String "IPv4 Address"
 
 ## 3. PNETLab VM Automated Deployment Script
 
-Copy [`scripts/setup-ollama.sh`](file:///e:/Git/EMULATOR/1-P-872-ME-STABLE/scripts/setup-ollama.sh) to the VM or execute:
+Copy [`scripts/setup-ollama.sh`](../scripts/setup-ollama.sh) to the VM or execute:
 
 ```bash
 sudo bash setup-ollama.sh <YOUR_WINDOWS_HOST_IP> [OLLAMA_MODEL]

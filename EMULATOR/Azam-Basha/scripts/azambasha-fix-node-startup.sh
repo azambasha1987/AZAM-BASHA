@@ -134,7 +134,13 @@ ln -sfn /opt/unetlab/scripts/OVMF.fd /usr/share/qemu/OVMF.fd 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/OVMF.fd /opt/qemu/share/qemu/OVMF.fd 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/OVMF_CODE.fd /usr/share/OVMF/OVMF_CODE.fd 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/OVMF_VARS-1024x768.fd /usr/share/OVMF/OVMF_VARS.fd 2>/dev/null || true
-echo "  [✔] UEFI BIOS firmware (OVMF-sata.fd, OVMF.fd) linked for NX-OS & appliances"
+
+# Deploy Windows VirtIO driver floppy image and SPICE ISO symlinks
+ln -sfn /opt/unetlab/scripts/virtio-win-drivers.img /usr/share/qemu/virtio-win-drivers.img 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/virtio-win-drivers.img /opt/qemu/share/qemu/virtio-win-drivers.img 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/virtio-win-drivers-for-spice.iso /usr/share/qemu/virtio-win-drivers-for-spice.iso 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/virtio-win-drivers-for-spice.iso /opt/qemu/share/qemu/virtio-win-drivers-for-spice.iso 2>/dev/null || true
+echo "  [✔] UEFI firmware & Windows VirtIO drivers linked to QEMU share directory"
 
 # --- 3. Hardware Acceleration & Kernel Modules ---
 echo "[3/7] Activating Kernel Virtualization, vhost-net & Loopback Drivers..."

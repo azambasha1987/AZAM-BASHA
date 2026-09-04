@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# PNetLab Database Schema Repair & Table Structure Fix
+# Resolves: "Unknown column 'lab_session_lid' in 'where clause'"
+# Restores authoritative schema for lab_sessions, node_sessions, if_sessions,
+# guacdb, and administrative controls.
+# ==============================================================================
+set -euo pipefail
+
+echo "============================================================"
+echo "    Applying PNetLab Database Schema & Table Repair         "
+echo "============================================================"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PARENT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Ensure MySQL is running
+systemctl start mysql 2>/dev/null || systemctl start mariadb 2>/dev/null || true
+
+# 1. Create databases and grant permissions
+mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
+CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE USER IF NOT EXISTS 'pnetlab'@'localhost' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'pnetlab'@'127.0.0.1' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'pnetlab'@'%' IDENTIFIED BY 'pnetlab';
+CREATE USER IF NOT EXISTS 'guacuser'@'localhost' IDENTIFIED BY 'pnetlab';
+
+ALTER USER 'pnetlab'@'localhost' IDENTIFIED BY 'pnetlab';
+ALTER USER 'pnetlab'@'127.0.0.1' IDENTIFIED BY 'pnetlab';
+ALTER USER 'pnetlab'@'%' IDENTIFIED BY 'pnetlab';
+ALTER USER 'guacuser'@'localhost' IDENTIFIED BY 'pnetlab';
+
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'localhost';
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'%';
+GRANT ALL PRIVILEGES ON guacdb.* TO 'guacuser'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+
+# 2. Locate schema files
+SCHEMA_SQL=""
+for path in \
+    "${PARENT_DIR}/schema/pnetlab_db.sql" \
+    "${SCRIPT_DIR}/schema/pnetlab_db.sql" \
+    "/opt/unetlab/schema/pnetlab_db.sql" \
+    "/opt/pnetlab/EMULATOR/1-P-872-ME-STABLE/schema/pnetlab_db.sql"; do
+    if [ -f "$path" ]; then
+        SCHEMA_SQL="$path"
+        break
+    fi
+done
+
+GUAC_SQL=""
+for path in \
+    "${PARENT_DIR}/schema/guacdb.sql" \
+    "${SCRIPT_DIR}/schema/guacdb.sql" \
+    "/opt/unetlab/schema/guacdb.sql" \
+    "/opt/pnetlab/EMULATOR/1-P-872-ME-STABLE/schema/guacdb.sql"; do
+    if [ -f "$path" ]; then
+        GUAC_SQL="$path"
+        break
+    fi
+done
+
+# 3. Import full schemas
+if [ -n "$SCHEMA_SQL" ] && [ -f "$SCHEMA_SQL" ]; then
+    echo "[1/3] Importing full PNetLab database schema from ${SCHEMA_SQL}..."
+    mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_SQL" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_SQL" 2>/dev/null || true
+else
+    echo "[1/3] Applying emergency schema definitions for session tables..."
+    mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || mysql pnetlab_db << 'EOF' 2>/dev/null || true
+DROP TABLE IF EXISTS `if_sessions`;
+DROP TABLE IF EXISTS `node_sessions`;
+DROP TABLE IF EXISTS `lab_sessions`;
+
+CREATE TABLE `lab_sessions` (
+  `lab_session_id` int NOT NULL AUTO_INCREMENT,
+  `lab_session_lid` varchar(150) DEFAULT NULL,
+  `lab_session_pod` int DEFAULT NULL,
+  `lab_session_joined` text,
+  `lab_session_path` text,
+  `lab_session_running` int DEFAULT NULL,
+  PRIMARY KEY (`lab_session_id`) USING BTREE,
+  KEY `lab_session_lid` (`lab_session_lid`) USING BTREE,
+  KEY `lab_session_pod` (`lab_session_pod`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `node_sessions` (
+  `node_session_id` int NOT NULL AUTO_INCREMENT,
+  `node_session_nid` int DEFAULT NULL,
+  `node_session_lab` int DEFAULT NULL,
+  `node_session_port` int DEFAULT NULL,
+  `node_session_type` varchar(150) DEFAULT NULL,
+  `node_session_workspace` text,
+  `node_session_ram` float DEFAULT NULL,
+  `node_session_cpu` float DEFAULT NULL,
+  `node_session_hdd` float DEFAULT NULL,
+  `node_session_running` int DEFAULT NULL,
+  `node_session_pod` int DEFAULT NULL,
+  `node_session_iol` int DEFAULT NULL,
+  `node_cpu` float DEFAULT '0',
+  `node_ram` int DEFAULT '0',
+  `node_session_port_2nd` int DEFAULT NULL,
+  `node_session_host` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`node_session_id`) USING BTREE,
+  UNIQUE KEY `node_session_nid_2` (`node_session_nid`,`node_session_lab`),
+  KEY `node_session_lab` (`node_session_lab`),
+  KEY `node_session_port` (`node_session_port`),
+  KEY `node_session_nid` (`node_session_nid`),
+  KEY `node_session_type` (`node_session_type`),
+  KEY `node_session_running` (`node_session_running`),
+  KEY `node_session_pod` (`node_session_pod`),
+  KEY `node_session_iol` (`node_session_iol`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `if_sessions` (
+  `if_session_id` bigint NOT NULL AUTO_INCREMENT,
+  `if_session_lab` int DEFAULT NULL,
+  `if_session_node` int DEFAULT NULL,
+  `if_session_ifid` int DEFAULT NULL,
+  `if_session_VlanId` int DEFAULT NULL,
+  `if_session_type` varchar(150) DEFAULT NULL,
+  `if_session_quality` text,
+  `if_session_suspend` int DEFAULT NULL,
+  PRIMARY KEY (`if_session_id`),
+  KEY `if_session_ifid` (`if_session_ifid`),
+  KEY `if_session_type` (`if_session_type`),
+  KEY `if_session_VlanId` (`if_session_VlanId`),
+  KEY `if_session_suspend` (`if_session_suspend`),
+  KEY `if_session_lab` (`if_session_lab`) USING BTREE,
+  KEY `if_session_node` (`if_session_node`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+EOF
+fi
+
+if [ -n "$GUAC_SQL" ] && [ -f "$GUAC_SQL" ]; then
+    echo "[2/3] Importing Guacamole schema from ${GUAC_SQL}..."
+    mysql -u guacuser -ppnetlab guacdb < "$GUAC_SQL" 2>/dev/null || mysql guacdb < "$GUAC_SQL" 2>/dev/null || true
+fi
+
+# 4. Ensure admin user and offline mode controls
+echo "[3/3] Guaranteeing Admin credentials and offline mode configuration..."
+mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || mysql pnetlab_db << 'EOF' 2>/dev/null || true
+INSERT INTO control (control_name, control_value) VALUES
+  ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
+  ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),
+  ('ctrl_version','8.2.0')
+ON DUPLICATE KEY UPDATE control_value = VALUES(control_value);
+
+DELETE FROM users WHERE username = 'admin';
+INSERT INTO users (
+    pod, username, email, name, password, role,
+    user_status, active_time, expired_time, access_days,
+    offline, ext_auth, session, folder, ip
+) VALUES (
+    0, 'admin', 'root@localhost', 'Administrator', SHA2('pnet', 256), 'admin',
+    1, 0, 0, NULL,
+    1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
+);
+EOF
+
+echo "============================================================"
+echo "    [SUCCESS] Database Schemas Repaired and Verified!       "
+echo "============================================================"

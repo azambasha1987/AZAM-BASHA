@@ -211,9 +211,17 @@ for i in {1..30}; do
     sleep 1
 done
 
-# Initialize database, users, tables, and admin credentials via temp SQL script
-SQL_INIT=$(mktemp --suffix=_pnetlab.sql)
-cat > "$SQL_INIT" << 'EOF'
+# Ensure /opt/unetlab/schema directory exists and copy shipped schemas
+mkdir -p /opt/unetlab/schema
+if [ -d "${SCRIPT_DIR}/schema" ]; then
+    cp -f "${SCRIPT_DIR}/schema/"*.sql /opt/unetlab/schema/ 2>/dev/null || true
+fi
+
+# Run authoritative schema configuration & repair
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-database-schema.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-database-schema.sh" || true
+else
+    mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
 CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
@@ -232,85 +240,16 @@ GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'127.0.0.1';
 GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'%';
 GRANT ALL PRIVILEGES ON guacdb.* TO 'guacuser'@'localhost';
 FLUSH PRIVILEGES;
+EOF
 
-USE pnetlab_db;
+    if [ -f "${SCRIPT_DIR}/schema/pnetlab_db.sql" ]; then
+        mysql -u pnetlab -ppnetlab pnetlab_db < "${SCRIPT_DIR}/schema/pnetlab_db.sql" 2>/dev/null || mysql pnetlab_db < "${SCRIPT_DIR}/schema/pnetlab_db.sql" 2>/dev/null || true
+    fi
+    if [ -f "${SCRIPT_DIR}/schema/guacdb.sql" ]; then
+        mysql -u guacuser -ppnetlab guacdb < "${SCRIPT_DIR}/schema/guacdb.sql" 2>/dev/null || mysql guacdb < "${SCRIPT_DIR}/schema/guacdb.sql" 2>/dev/null || true
+    fi
 
-CREATE TABLE IF NOT EXISTS control (
-  control_name varchar(150) NOT NULL,
-  control_value text,
-  PRIMARY KEY (control_name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS schema_version (
-  version int NOT NULL,
-  applied_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  description text,
-  PRIMARY KEY (version)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS users (
-  pod int NOT NULL AUTO_INCREMENT,
-  username text,
-  cookie text,
-  email varchar(150) DEFAULT NULL,
-  expiration int DEFAULT -1,
-  name text,
-  password text,
-  session int DEFAULT NULL,
-  ip text,
-  role text,
-  folder text,
-  lab_session int DEFAULT NULL,
-  html5 tinyint(1) DEFAULT NULL,
-  license text,
-  online_time int DEFAULT NULL,
-  note text,
-  offline int DEFAULT NULL,
-  active_time int DEFAULT NULL,
-  expired_time int DEFAULT NULL,
-  user_status int DEFAULT 1,
-  user_workspace text,
-  max_node int DEFAULT NULL,
-  max_node_lab int DEFAULT NULL,
-  user_max_cpu int DEFAULT NULL,
-  user_max_ram int DEFAULT NULL,
-  access_days varchar(16) DEFAULT NULL,
-  ext_auth varchar(8) DEFAULT NULL,
-  PRIMARY KEY (pod),
-  UNIQUE KEY email (email)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS html5 (
-  username text,
-  pod int DEFAULT NULL,
-  token text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS lab_sessions (
-  id int NOT NULL AUTO_INCREMENT,
-  lab_id text,
-  pod int DEFAULT NULL,
-  PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS node_sessions (
-  id int NOT NULL AUTO_INCREMENT,
-  lab_session int DEFAULT NULL,
-  node_id int DEFAULT NULL,
-  node_session_port int DEFAULT NULL,
-  PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS if_sessions (
-  if_session_id bigint NOT NULL AUTO_INCREMENT,
-  if_session_lab int DEFAULT NULL,
-  if_session_node int DEFAULT NULL,
-  if_session_ifid int DEFAULT NULL,
-  if_session_name text,
-  if_session_type text,
-  PRIMARY KEY (if_session_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+    mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || mysql pnetlab_db << 'EOF' 2>/dev/null || true
 INSERT INTO control (control_name, control_value) VALUES
   ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
   ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),
@@ -328,14 +267,6 @@ INSERT INTO users (
     1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
 );
 EOF
-
-mysql < "$SQL_INIT" 2>/dev/null || mysql -u root < "$SQL_INIT" 2>/dev/null || true
-rm -f "$SQL_INIT"
-
-# Ensure /opt/unetlab/schema directory exists and copy shipped schemas
-mkdir -p /opt/unetlab/schema
-if [ -d "${SCRIPT_DIR}/schema" ]; then
-    cp -f "${SCRIPT_DIR}/schema/"*.sql /opt/unetlab/schema/ 2>/dev/null || true
 fi
 
 # Clear any login rate-limit lockouts

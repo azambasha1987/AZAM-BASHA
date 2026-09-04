@@ -196,12 +196,14 @@ FLUSH PRIVILEGES;
 USE pnetlab_db;
 EOF
 
-# Import schema if tables are missing
-SCHEMA_FILE="$(find /opt/unetlab/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
-if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
-    TABLE_COUNT=$(mysql -u pnetlab -ppnetlab -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='pnetlab_db';" 2>/dev/null || echo "0")
-    if [ "${TABLE_COUNT:-0}" -eq 0 ]; then
-        echo "  -> Importing missing PNetLab schema from $SCHEMA_FILE..."
+# Import or repair schema
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "${SCRIPT_DIR}/pnetlab-fix-database-schema.sh" ]; then
+    bash "${SCRIPT_DIR}/pnetlab-fix-database-schema.sh"
+else
+    SCHEMA_FILE="$(find /opt/unetlab/schema /opt/pnetlab/EMULATOR/1-P-872-ME-STABLE/schema /opt/unetlab -name '*pnetlab_db*.sql' -o -name 'pnetlab*.sql' 2>/dev/null | head -n1)"
+    if [ -n "$SCHEMA_FILE" ] && [ -f "$SCHEMA_FILE" ]; then
+        echo "  -> Applying full PNetLab schema from $SCHEMA_FILE..."
         mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_FILE" 2>/dev/null || true
     fi
 fi
@@ -220,7 +222,7 @@ INSERT INTO users (
     user_status, active_time, expired_time, access_days,
     offline, ext_auth, session, folder, ip
 ) VALUES (
-    0, 'admin', 'root@localhost', 'Administrator', SHA2('pnet', 256), 0,
+    0, 'admin', 'root@localhost', 'Administrator', SHA2('pnet', 256), 'admin',
     1, 0, 0, NULL,
     1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
 );

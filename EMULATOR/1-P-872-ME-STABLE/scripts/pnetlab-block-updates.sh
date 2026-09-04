@@ -74,8 +74,8 @@ if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
     fi
 
     echo -n "[*] Systemd Services/Timers: "
-    if systemctl is-enabled pnetlab-update.service 2>/dev/null | grep -q "masked"; then
-        echo "MASKED"
+    if systemctl is-enabled pnetlab-update.service 2>/dev/null | grep -q "masked" || [ ! -f /etc/systemd/system/pnetlab-update.service ]; then
+        echo "MASKED / INACTIVE"
     else
         echo "UNMASKED / ACTIVE"
     fi

@@ -766,6 +766,7 @@ ln -sfn /opt/unetlab/scripts/azambasha-dark-theme.sh /usr/local/bin/azambasha-da
 ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azam-menu 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azam-fix 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-apply-branding.sh /usr/local/bin/azam-branding 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-fix-node-startup.sh /usr/local/bin/azam-nodes 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azam-health 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azam-doctor 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-image-doctor.sh /usr/local/bin/azam-images 2>/dev/null || true

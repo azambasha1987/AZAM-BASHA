@@ -743,13 +743,9 @@ if [ -d "${SCRIPT_DIR}/scripts" ]; then
 fi
 chmod +x /opt/unetlab/scripts/* 2>/dev/null || true
 
-# Deploy Azam Basha Logo Assets & Pure Black Dark Mode to Web UI
-mkdir -p /opt/unetlab/html/images /opt/unetlab/html/themes/default/images 2>/dev/null || true
-if [ -d "${SCRIPT_DIR}/assets" ]; then
-    cp -f "${SCRIPT_DIR}/assets/logo.png" /opt/unetlab/html/images/logo.png 2>/dev/null || true
-    cp -f "${SCRIPT_DIR}/assets/logo.png" /opt/unetlab/html/themes/default/images/logo.png 2>/dev/null || true
-    cp -f "${SCRIPT_DIR}/assets/favicon.png" /opt/unetlab/html/images/favicon.png 2>/dev/null || true
-    cp -f "${SCRIPT_DIR}/assets/favicon.png" /opt/unetlab/html/themes/default/images/favicon.ico 2>/dev/null || true
+# Deploy Azam Basha Logo Assets & Enterprise UI Branding
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-apply-branding.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-apply-branding.sh" || true
 fi
 
 # Apply Pure Black Dark Mode theme
@@ -760,6 +756,7 @@ fi
 # Register global administrative CLI commands in /usr/local/bin
 ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azambasha-menu 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azambasha-fix 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-apply-branding.sh /usr/local/bin/azambasha-branding 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azambasha-health 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azambasha-doctor 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-image-doctor.sh /usr/local/bin/azambasha-images 2>/dev/null || true
@@ -768,6 +765,7 @@ ln -sfn /opt/unetlab/scripts/azambasha-dark-theme.sh /usr/local/bin/azambasha-da
 
 ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azam-menu 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azam-fix 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-apply-branding.sh /usr/local/bin/azam-branding 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azam-health 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azam-doctor 2>/dev/null || true
 ln -sfn /opt/unetlab/scripts/azambasha-image-doctor.sh /usr/local/bin/azam-images 2>/dev/null || true

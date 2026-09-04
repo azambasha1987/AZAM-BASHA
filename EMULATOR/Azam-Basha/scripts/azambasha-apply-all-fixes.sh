@@ -174,7 +174,12 @@ case "$CHOICE" in
         echo "--> [9/10] Freezing Version & Blocking Future Updates..."
         bash "${SCRIPT_DIR}/azambasha-block-updates.sh"
         echo ""
-        echo "--> [10/10] Applying Azam Basha Pure Black Dark Mode Theme..."
+        echo "--> [10/11] Applying Azam Basha Enterprise Branding & Logo Assets..."
+        if [ -f "${SCRIPT_DIR}/azambasha-apply-branding.sh" ]; then
+            bash "${SCRIPT_DIR}/azambasha-apply-branding.sh" || true
+        fi
+        echo ""
+        echo "--> [11/11] Applying Azam Basha Pure Black Dark Mode Theme..."
         if [ -f "${SCRIPT_DIR}/azambasha-dark-theme.sh" ]; then
             bash "${SCRIPT_DIR}/azambasha-dark-theme.sh" || true
         fi

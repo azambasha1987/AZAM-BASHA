@@ -219,8 +219,10 @@ for html_file in \
     fi
 done
 
-# 3. Deploy Logo Assets
-if [ -d "${PARENT_DIR}/assets" ]; then
+# 3. Deploy Logo & UI Branding Assets
+if [ -f "${SCRIPT_DIR}/azambasha-apply-branding.sh" ]; then
+    bash "${SCRIPT_DIR}/azambasha-apply-branding.sh" || true
+elif [ -d "${PARENT_DIR}/assets" ]; then
     cp -f "${PARENT_DIR}/assets/logo.png" "${IMG_DIR}/logo.png" 2>/dev/null || true
     cp -f "${PARENT_DIR}/assets/logo.png" "/opt/unetlab/html/images/logo.png" 2>/dev/null || true
     cp -f "${PARENT_DIR}/assets/favicon.png" "${IMG_DIR}/favicon.ico" 2>/dev/null || true

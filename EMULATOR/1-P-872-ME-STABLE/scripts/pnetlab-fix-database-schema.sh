@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNetLab Database Schema Repair & Table Structure Fix
-# Resolves: "Unknown column 'lab_session_lid' in 'where clause'"
-# Restores authoritative schema for lab_sessions, node_sessions, if_sessions,
-# guacdb, and administrative controls.
+# PNetLab Database Schema Repair & Topology Workbench Fix
+# Resolves: 
+# 1. "Unknown column 'lab_session_lid' in 'where clause'" (MySQL Schema)
+# 2. Lab open routing (/legacy/topology -> /themes/default/index.html)
 # ==============================================================================
 set -euo pipefail
 
 echo "============================================================"
-echo "    Applying PNetLab Database Schema & Table Repair         "
+echo "    Applying PNetLab Database Schema & Workbench Repair     "
 echo "============================================================"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -70,12 +70,13 @@ done
 
 # 3. Import full schemas
 if [ -n "$SCHEMA_SQL" ] && [ -f "$SCHEMA_SQL" ]; then
-    echo "[1/3] Importing full PNetLab database schema from ${SCHEMA_SQL}..."
+    echo "[1/4] Importing full PNetLab database schema from ${SCHEMA_SQL}..."
     mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_SQL" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_SQL" 2>/dev/null || true
-else
-    echo "[1/3] Applying authoritative schema definitions for session tables..."
-    EMERG_SQL=$(mktemp --suffix=_emerg.sql)
-    cat > "$EMERG_SQL" << 'EOF'
+fi
+
+# Apply authoritative schema definitions for session tables to guarantee column names
+EMERG_SQL=$(mktemp --suffix=_emerg.sql)
+cat > "$EMERG_SQL" << 'EOF'
 USE pnetlab_db;
 
 DROP TABLE IF EXISTS `if_sessions`;
@@ -140,17 +141,16 @@ CREATE TABLE `if_sessions` (
   KEY `if_session_node` (`if_session_node`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 EOF
-    mysql -u pnetlab -ppnetlab pnetlab_db < "$EMERG_SQL" 2>/dev/null || mysql pnetlab_db < "$EMERG_SQL" 2>/dev/null || true
-    rm -f "$EMERG_SQL"
-fi
+mysql -u pnetlab -ppnetlab pnetlab_db < "$EMERG_SQL" 2>/dev/null || mysql pnetlab_db < "$EMERG_SQL" 2>/dev/null || true
+rm -f "$EMERG_SQL"
 
 if [ -n "$GUAC_SQL" ] && [ -f "$GUAC_SQL" ]; then
-    echo "[2/3] Importing Guacamole schema from ${GUAC_SQL}..."
+    echo "[2/4] Importing Guacamole schema from ${GUAC_SQL}..."
     mysql -u guacuser -ppnetlab guacdb < "$GUAC_SQL" 2>/dev/null || mysql guacdb < "$GUAC_SQL" 2>/dev/null || true
 fi
 
 # 4. Ensure admin user and offline mode controls
-echo "[3/3] Guaranteeing Admin credentials and offline mode configuration..."
+echo "[3/4] Guaranteeing Admin credentials and offline mode configuration..."
 ADMIN_SQL=$(mktemp --suffix=_admin.sql)
 cat > "$ADMIN_SQL" << 'EOF'
 USE pnetlab_db;
@@ -176,6 +176,43 @@ EOF
 mysql -u pnetlab -ppnetlab pnetlab_db < "$ADMIN_SQL" 2>/dev/null || mysql pnetlab_db < "$ADMIN_SQL" 2>/dev/null || true
 rm -f "$ADMIN_SQL"
 
+# 5. Fix Apache .htaccess and /legacy/ Topology Workbench Routing
+echo "[4/4] Configuring Apache .htaccess & Topology Workbench routing..."
+mkdir -p /opt/unetlab/html
+cat > /opt/unetlab/html/.htaccess << 'EOF'
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteBase /
+
+	RewriteCond %{REQUEST_URI} ^/api/
+	RewriteRule ^(.*)$ /api.php [B,L,QSA]
+
+	RewriteCond %{REQUEST_URI} ^/auth/
+	RewriteRule ^(.*)$ /auth.php [B,L,QSA]
+	
+	RewriteCond %{REQUEST_URI} ^/legacy/
+	RewriteRule ^(.*)$ /themes/default/ [B,L,QSA]
+
+	RewriteRule ^$ /main/ [R=302,L]
+</IfModule>
+EOF
+chown www-data:www-data /opt/unetlab/html/.htaccess 2>/dev/null || true
+chmod 644 /opt/unetlab/html/.htaccess 2>/dev/null || true
+
+# Add Alias /legacy to Apache virtualhosts if not already present
+for conf in /etc/apache2/sites-available/pnetlab.conf /etc/apache2/sites-available/pnetlab-ssl.conf; do
+    if [ -f "$conf" ] && ! grep -q "Alias /legacy" "$conf"; then
+        sed -i '/DocumentRoot/a \    Alias /legacy /opt/unetlab/html/themes/default\n    Alias /themes /opt/unetlab/html/themes' "$conf" 2>/dev/null || true
+    fi
+done
+
+# Fix file permissions across /opt/unetlab/html
+chown -R www-data:www-data /opt/unetlab/html 2>/dev/null || true
+chmod -R 755 /opt/unetlab/html/themes /opt/unetlab/html/main 2>/dev/null || true
+
+# Reload Apache
+systemctl reload apache2 2>/dev/null || systemctl restart apache2 2>/dev/null || true
+
 echo "============================================================"
-echo "    [SUCCESS] Database Schemas Repaired and Verified!       "
+echo "    [SUCCESS] Database & Topology Workbench Fully Repaired! "
 echo "============================================================"

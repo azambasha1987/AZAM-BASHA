@@ -38,8 +38,30 @@ if [ -n "$REAL_IFACE" ]; then
     # Ensure interface is up
     ip link set dev "$REAL_IFACE" up 2>/dev/null || true
     
+    # Disable cloud-init network configuration overwrite permanently
+    mkdir -p /etc/cloud/cloud.cfg.d
+    echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+
+    # Ensure kernel bridge and virtualization modules load at boot
+    mkdir -p /etc/modules-load.d
+    cat > /etc/modules-load.d/pnetlab.conf << 'MODEOF'
+bridge
+stp
+llc
+8021q
+tun
+dummy
+MODEOF
+    modprobe bridge 2>/dev/null || true
+    modprobe 8021q 2>/dev/null || true
+    modprobe tun 2>/dev/null || true
+
     # Preserve/Ensure Netplan configuration for the real interface
     mkdir -p /etc/netplan
+    for f in /etc/netplan/00-*.yaml /etc/netplan/50-*.yaml; do
+        [ -f "$f" ] && mv "$f" "${f}.bak" 2>/dev/null || true
+    done
+
     if [ ! -f /etc/netplan/01-pnetlab-netcfg.yaml ]; then
         cat << NETEOF > /etc/netplan/01-pnetlab-netcfg.yaml
 network:
@@ -50,17 +72,25 @@ network:
       dhcp4: true
       dhcp6: false
 NETEOF
+        chmod 600 /etc/netplan/01-pnetlab-netcfg.yaml
     fi
 
     # Ensure /etc/network/interfaces does not break on missing eth0
-    mkdir -p /etc/network
+    mkdir -p /etc/network /etc/network/interfaces.d
     cat << INTEOF > /etc/network/interfaces
+source /etc/network/interfaces.d/*
 auto lo
 iface lo inet loopback
 
-auto $REAL_IFACE
-iface $REAL_IFACE inet dhcp
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet dhcp
+    pre-up ip link set dev $REAL_IFACE up
+    bridge_ports $REAL_IFACE
+    bridge_stp off
+# END pnetlab-netcfg pnet0
 INTEOF
+    chmod 644 /etc/network/interfaces
 fi
 
 if ! grep -Eq '(vmx|svm)' /proc/cpuinfo; then
@@ -517,7 +547,9 @@ fi
 
 # --- Step 8: Apply Modernization Suite & Essential Fixes ---
 echo "[8/8] Applying Ubuntu 26 modernization, session fixes, and update freeze..."
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" ]; then
+if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" || true
+elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" ]; then
     python3 "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" || true
 elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" ]; then
     bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-management.sh" || true

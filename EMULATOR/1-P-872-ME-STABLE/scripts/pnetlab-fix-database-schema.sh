@@ -18,7 +18,8 @@ PARENT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 systemctl start mysql 2>/dev/null || systemctl start mariadb 2>/dev/null || true
 
 # 1. Create databases and grant permissions
-mysql << 'EOF' 2>/dev/null || mysql -u root << 'EOF' 2>/dev/null || true
+INIT_SQL=$(mktemp --suffix=_init.sql)
+cat > "$INIT_SQL" << 'EOF'
 CREATE DATABASE IF NOT EXISTS pnetlab_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE DATABASE IF NOT EXISTS guacdb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
@@ -38,6 +39,9 @@ GRANT ALL PRIVILEGES ON pnetlab_db.* TO 'pnetlab'@'%';
 GRANT ALL PRIVILEGES ON guacdb.* TO 'guacuser'@'localhost';
 FLUSH PRIVILEGES;
 EOF
+
+mysql < "$INIT_SQL" 2>/dev/null || mysql -u root < "$INIT_SQL" 2>/dev/null || true
+rm -f "$INIT_SQL"
 
 # 2. Locate schema files
 SCHEMA_SQL=""
@@ -69,8 +73,11 @@ if [ -n "$SCHEMA_SQL" ] && [ -f "$SCHEMA_SQL" ]; then
     echo "[1/3] Importing full PNetLab database schema from ${SCHEMA_SQL}..."
     mysql -u pnetlab -ppnetlab pnetlab_db < "$SCHEMA_SQL" 2>/dev/null || mysql pnetlab_db < "$SCHEMA_SQL" 2>/dev/null || true
 else
-    echo "[1/3] Applying emergency schema definitions for session tables..."
-    mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || mysql pnetlab_db << 'EOF' 2>/dev/null || true
+    echo "[1/3] Applying authoritative schema definitions for session tables..."
+    EMERG_SQL=$(mktemp --suffix=_emerg.sql)
+    cat > "$EMERG_SQL" << 'EOF'
+USE pnetlab_db;
+
 DROP TABLE IF EXISTS `if_sessions`;
 DROP TABLE IF EXISTS `node_sessions`;
 DROP TABLE IF EXISTS `lab_sessions`;
@@ -133,6 +140,8 @@ CREATE TABLE `if_sessions` (
   KEY `if_session_node` (`if_session_node`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 EOF
+    mysql -u pnetlab -ppnetlab pnetlab_db < "$EMERG_SQL" 2>/dev/null || mysql pnetlab_db < "$EMERG_SQL" 2>/dev/null || true
+    rm -f "$EMERG_SQL"
 fi
 
 if [ -n "$GUAC_SQL" ] && [ -f "$GUAC_SQL" ]; then
@@ -142,7 +151,10 @@ fi
 
 # 4. Ensure admin user and offline mode controls
 echo "[3/3] Guaranteeing Admin credentials and offline mode configuration..."
-mysql -u pnetlab -ppnetlab pnetlab_db << 'EOF' 2>/dev/null || mysql pnetlab_db << 'EOF' 2>/dev/null || true
+ADMIN_SQL=$(mktemp --suffix=_admin.sql)
+cat > "$ADMIN_SQL" << 'EOF'
+USE pnetlab_db;
+
 INSERT INTO control (control_name, control_value) VALUES
   ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
   ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),
@@ -160,6 +172,9 @@ INSERT INTO users (
     1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
 );
 EOF
+
+mysql -u pnetlab -ppnetlab pnetlab_db < "$ADMIN_SQL" 2>/dev/null || mysql pnetlab_db < "$ADMIN_SQL" 2>/dev/null || true
+rm -f "$ADMIN_SQL"
 
 echo "============================================================"
 echo "    [SUCCESS] Database Schemas Repaired and Verified!       "

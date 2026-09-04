@@ -210,12 +210,12 @@ else
     fi
 fi
 
-# Seed Admin User (admin / pnet)
+# Seed Admin User (admin / azam)
 mysql -u pnetlab -ppnetlab pnetlab_db <<'EOF' 2>/dev/null || mysql pnetlab_db <<'EOF' 2>/dev/null || true
 INSERT INTO control (control_name, control_value) VALUES
   ('ctrl_offline_mode','1'), ('ctrl_online_mode','0'),
   ('ctrl_default_mode','offline'), ('ctrl_captcha','0'),
-  ('ctrl_version','8.2.0')
+  ('ctrl_version','1.0.0')
 ON DUPLICATE KEY UPDATE control_value = VALUES(control_value);
 
 DELETE FROM users WHERE username = 'admin';
@@ -224,7 +224,7 @@ INSERT INTO users (
     user_status, active_time, expired_time, access_days,
     offline, ext_auth, session, folder, ip
 ) VALUES (
-    0, 'admin', 'root@localhost', 'Administrator', SHA2('pnet', 256), 'admin',
+    0, 'admin', 'root@localhost', 'Administrator', SHA2('azam', 256), 'admin',
     1, 0, 0, NULL,
     1, NULL, UNIX_TIMESTAMP() + 315360000, '/', '127.0.0.1'
 );

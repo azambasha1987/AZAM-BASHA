@@ -63,7 +63,7 @@ sudo azam-satellite-join --master <MASTER_IP> --id 1 --name "Satellite-1" --psk 
 ### Web Dashboard & Login (Master Node):
 * **URL**: `https://<YOUR_UBUNTU_IP>/`
 * **Username**: `admin`
-* **Password**: `pnet`
+* **Password**: `azam`
 * **Console**: `Native` *(or HTML5)*
 
 ## Updating

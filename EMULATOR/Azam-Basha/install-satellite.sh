@@ -135,9 +135,9 @@ systemctl enable pnetlab-satd 2>/dev/null || true
 
 echo ""
 echo "============================================================"
-echo " [SUCCESS] PNETLab Cluster Satellite Installed Successfully!"
+echo " [SUCCESS] Azam Basha Cluster Satellite Installed Successfully!"
 echo "============================================================"
-echo "To join this worker to your Master PNETLab server:"
+echo "To join this worker to your Master Azam Basha server:"
 echo ""
 echo " 1. On your Master Web UI, go to: System -> Cluster"
 echo " 2. Click 'Generate PSK' and copy the 64-character key"

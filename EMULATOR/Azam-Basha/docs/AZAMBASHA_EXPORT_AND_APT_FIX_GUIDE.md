@@ -18,11 +18,11 @@ This guide addresses two common administrative and functional issues in PNETLab 
 
 ## 2. Automated Fix Deployment
 
-Run [`scripts/pnetlab-fix-export-and-apt.sh`](../scripts/pnetlab-fix-export-and-apt.sh) on your PNETLab VM as root:
+Run [`scripts/azambasha-fix-export-and-apt.sh`](../scripts/azambasha-fix-export-and-apt.sh) on your PNETLab VM as root:
 
 ```bash
-chmod +x pnetlab-fix-export-and-apt.sh
-sudo ./pnetlab-fix-export-and-apt.sh
+chmod +x azambasha-fix-export-and-apt.sh
+sudo ./azambasha-fix-export-and-apt.sh
 ```
 
 ---

@@ -1,6 +1,6 @@
 """
-PNetLab v8 24-Hour Autonomous Sync & Verification Engine
-=========================================================
+Azam Basha v8 24-Hour Autonomous Sync & Verification Engine
+===========================================================
 Automatically checks and fetches new files/releases from:
 - Track 1: https://codeberg.org/netkillui/Pnetlabv8.git
 - Track 2: https://codeberg.org/api/v1/packages/netkillui & Debian APT Pool

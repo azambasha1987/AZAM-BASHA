@@ -45,12 +45,16 @@ rm -f "$INIT_SQL"
 
 # 2. Locate and import full schema files if present
 for path in \
+    "${PARENT_DIR}/schema/azambasha_db.sql" \
     "${PARENT_DIR}/schema/pnetlab_db.sql" \
+    "${SCRIPT_DIR}/schema/azambasha_db.sql" \
     "${SCRIPT_DIR}/schema/pnetlab_db.sql" \
+    "/opt/pnetlab/schema/azambasha_db.sql" \
     "/opt/pnetlab/schema/pnetlab_db.sql" \
+    "/opt/unetlab/schema/azambasha_db.sql" \
     "/opt/unetlab/schema/pnetlab_db.sql"; do
     if [ -f "$path" ]; then
-        echo "[1/4] Importing PNetLab schema from ${path}..."
+        echo "[1/4] Importing Azam Basha schema from ${path}..."
         mysql -u pnetlab -ppnetlab pnetlab_db < "$path" 2>/dev/null || mysql pnetlab_db < "$path" 2>/dev/null || true
         break
     fi

@@ -1,6 +1,6 @@
 """
-PNetLab v8 24-Hour Differential Change-Detection & Sync Workflow
-================================================================
+Azam Basha v8 24-Hour Differential Change-Detection & Sync Workflow
+===================================================================
 Checks every 24 hours for remote updates and downloads ONLY files that have changed or are newly published.
 
 Source Tracks:

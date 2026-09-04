@@ -23,16 +23,16 @@ By default, strict idle and session timeout mechanisms can cause frequent logout
 ## 2. Quick Deployment
 
 ### Method A: Run Pre-Packaged Script (Recommended)
-Copy [`scripts/pnetlab-disable-logout.sh`](../scripts/pnetlab-disable-logout.sh) to the VM via SCP/SSH or git and run:
+Copy [`scripts/azambasha-disable-logout.sh`](../scripts/azambasha-disable-logout.sh) to the VM via SCP/SSH or git and run:
 
 ```bash
-chmod +x pnetlab-disable-logout.sh
-sudo ./pnetlab-disable-logout.sh
+chmod +x azambasha-disable-logout.sh
+sudo ./azambasha-disable-logout.sh
 ```
 
 ### Method B: Standalone Script Execution
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/.../scripts/pnetlab-disable-logout.sh || cat /opt/unetlab/scripts/pnetlab-disable-logout.sh)"
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/.../scripts/azambasha-disable-logout.sh || cat /opt/unetlab/scripts/azambasha-disable-logout.sh)"
 ```
 
 > [!NOTE]

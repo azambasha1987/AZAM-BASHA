@@ -13,6 +13,7 @@ run_or_fetch() {
     local script_name="$1"
     local local_file="${SCRIPT_DIR}/${script_name}"
     local opt_file="/opt/unetlab/scripts/${script_name}"
+    local pnet_opt="/opt/pnetlab/scripts/${script_name}"
     local pnet_file="/PNET/pnetlab-v8-ubuntu26-installer/scripts/${script_name}"
     
     local target=""
@@ -20,6 +21,8 @@ run_or_fetch() {
         target="$local_file"
     elif [ -f "$opt_file" ]; then
         target="$opt_file"
+    elif [ -f "$pnet_opt" ]; then
+        target="$pnet_opt"
     elif [ -f "$pnet_file" ]; then
         target="$pnet_file"
     fi
@@ -47,28 +50,28 @@ run_or_fetch() {
 }
 
 echo "============================================================"
-echo "    PNETLab Master Modernization for Ubuntu 26+ (Resolute) "
+echo "    Azam Basha Master Modernization for Ubuntu 26+ (Resolute) "
 echo "============================================================"
 
 # Phase 1: Network & Broker Datapath
-run_or_fetch "pnetlab-fix-network.py"
-run_or_fetch "pnetlab-fix-eth0-permanent.py"
-run_or_fetch "pnetlab-modern-netplan-engine.sh"
+run_or_fetch "azambasha-fix-network.py"
+run_or_fetch "azambasha-fix-eth0-permanent.py"
+run_or_fetch "azambasha-modern-netplan-engine.sh"
 
 # Phase 2: PHP 8.4/8.5 Engine & Session Tuning
-run_or_fetch "pnetlab-php-modernizer.sh"
+run_or_fetch "azambasha-php-modernizer.sh"
 
 # Phase 3: Cgroups v2 & Virtualization Throttling
-run_or_fetch "pnetlab-cgroups-v2-engine.sh"
+run_or_fetch "azambasha-cgroups-v2-engine.sh"
 
 # Phase 4: Python 3.14+ Ecosystem & Web Console Bridges
-run_or_fetch "pnetlab-python-environment-setup.sh"
+run_or_fetch "azambasha-python-environment-setup.sh"
 
 # Phase 5: Database & System Deep Fixes
-run_or_fetch "pnetlab-database-and-system-deep-fix.sh"
-run_or_fetch "pnetlab-fix-export-and-apt.sh"
-run_or_fetch "pnetlab-disable-logout.sh"
-run_or_fetch "pnetlab-block-updates.sh"
+run_or_fetch "azambasha-database-and-system-deep-fix.sh"
+run_or_fetch "azambasha-fix-export-and-apt.sh"
+run_or_fetch "azambasha-disable-logout.sh"
+run_or_fetch "azambasha-block-updates.sh"
 
 # Final Service Verification & Reload
 PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "8.5")"
@@ -76,5 +79,5 @@ rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true
 systemctl restart "php${PHP_VER}-fpm" apache2 pnetlab-brokerd.service 2>/dev/null || true
 
 echo "============================================================"
-echo "    [COMPLETE] PNETLab is 100% Fine-Tuned for Ubuntu 26+!  "
+echo "    [COMPLETE] Azam Basha is 100% Fine-Tuned for Ubuntu 26+!  "
 echo "============================================================"

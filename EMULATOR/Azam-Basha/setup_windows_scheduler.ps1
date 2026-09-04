@@ -13,7 +13,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 if (-not $ScriptDir) { $ScriptDir = $PSScriptRoot }
 if (-not $ScriptDir) { $ScriptDir = (Get-Location).Path }
 
-$ScriptPath = Join-Path $ScriptDir "pnetlab_daily_change_sync.py"
+$ScriptPath = Join-Path $ScriptDir "azambasha_daily_change_sync.py"
 $PythonExe = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
 if (-not $PythonExe) { $PythonExe = "python.exe" }
 

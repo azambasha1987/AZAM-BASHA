@@ -37,10 +37,10 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
 fi
 
 if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
-    if [ -f "${SCRIPT_DIR}/pnetlab-health-check.sh" ]; then
-        bash "${SCRIPT_DIR}/pnetlab-health-check.sh"
-    elif [ -f "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh" ]; then
-        bash "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh" --check || true
+    if [ -f "${SCRIPT_DIR}/azambasha-health-check.sh" ]; then
+        bash "${SCRIPT_DIR}/azambasha-health-check.sh"
+    elif [ -f "${SCRIPT_DIR}/azambasha-speed-optimizer.sh" ]; then
+        bash "${SCRIPT_DIR}/azambasha-speed-optimizer.sh" --check || true
     fi
     exit 0
 fi
@@ -87,46 +87,46 @@ fi
 
 case "$CHOICE" in
     1)
-        bash "${SCRIPT_DIR}/pnetlab-disable-logout.sh"
+        bash "${SCRIPT_DIR}/azambasha-disable-logout.sh"
         ;;
     2)
-        bash "${SCRIPT_DIR}/pnetlab-fix-export-and-apt.sh"
+        bash "${SCRIPT_DIR}/azambasha-fix-export-and-apt.sh"
         ;;
     3)
-        bash "${SCRIPT_DIR}/pnetlab-upload-and-docker-fix.sh"
+        bash "${SCRIPT_DIR}/azambasha-upload-and-docker-fix.sh"
         ;;
     4)
-        bash "${SCRIPT_DIR}/pnetlab-system-and-console-fix.sh"
+        bash "${SCRIPT_DIR}/azambasha-system-and-console-fix.sh"
         ;;
     5)
-        bash "${SCRIPT_DIR}/pnetlab-database-and-system-deep-fix.sh"
+        bash "${SCRIPT_DIR}/azambasha-database-and-system-deep-fix.sh"
         ;;
     6)
-        bash "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh"
+        bash "${SCRIPT_DIR}/azambasha-speed-optimizer.sh"
         ;;
     7)
-        bash "${SCRIPT_DIR}/pnetlab-dataplane-engine.sh"
+        bash "${SCRIPT_DIR}/azambasha-dataplane-engine.sh"
         ;;
     8)
-        bash "${SCRIPT_DIR}/pnetlab-image-doctor.sh" --fix
+        bash "${SCRIPT_DIR}/azambasha-image-doctor.sh" --fix
         ;;
     9)
-        bash "${SCRIPT_DIR}/pnetlab-link-impairment.sh" --help
+        bash "${SCRIPT_DIR}/azambasha-link-impairment.sh" --help
         ;;
     10)
-        bash "${SCRIPT_DIR}/pnetlab-capture-stream.sh" --help
+        bash "${SCRIPT_DIR}/azambasha-capture-stream.sh" --help
         ;;
     11)
-        python3 "${SCRIPT_DIR}/pnetlab-dataplane-stats.py"
+        python3 "${SCRIPT_DIR}/azambasha-dataplane-stats.py"
         ;;
     12)
-        bash "${SCRIPT_DIR}/pnetlab-fix-permissions.sh"
+        bash "${SCRIPT_DIR}/azambasha-fix-permissions.sh"
         ;;
     13)
-        bash "${SCRIPT_DIR}/pnetlab-health-check.sh"
+        bash "${SCRIPT_DIR}/azambasha-health-check.sh"
         ;;
     14)
-        bash "${SCRIPT_DIR}/pnetlab-backup-restore.sh" backup
+        bash "${SCRIPT_DIR}/azambasha-backup-restore.sh" backup
         ;;
     15)
         HOST_IP=""
@@ -139,44 +139,44 @@ case "$CHOICE" in
         bash "${SCRIPT_DIR}/setup-ollama.sh" "$HOST_IP" "$MODEL"
         ;;
     16)
-        bash "${SCRIPT_DIR}/pnetlab-block-updates.sh"
+        bash "${SCRIPT_DIR}/azambasha-block-updates.sh"
         ;;
     17)
-        if [ -f "${SCRIPT_DIR}/pnetlab-dark-theme.sh" ]; then
-            bash "${SCRIPT_DIR}/pnetlab-dark-theme.sh"
+        if [ -f "${SCRIPT_DIR}/azambasha-dark-theme.sh" ]; then
+            bash "${SCRIPT_DIR}/azambasha-dark-theme.sh"
         fi
         ;;
     18)
         echo "--> [1/10] Applying Permanent Session Fix..."
-        bash "${SCRIPT_DIR}/pnetlab-disable-logout.sh"
+        bash "${SCRIPT_DIR}/azambasha-disable-logout.sh"
         echo ""
         echo "--> [2/10] Applying Lab Export & APT Fix..."
-        bash "${SCRIPT_DIR}/pnetlab-fix-export-and-apt.sh"
+        bash "${SCRIPT_DIR}/azambasha-fix-export-and-apt.sh"
         echo ""
         echo "--> [3/10] Applying 512MB Upload Limits & Docker Routing..."
-        bash "${SCRIPT_DIR}/pnetlab-upload-and-docker-fix.sh"
+        bash "${SCRIPT_DIR}/azambasha-upload-and-docker-fix.sh"
         echo ""
         echo "--> [4/10] Applying SSL IP-SAN, Console & Cloud Bridge Fix..."
-        bash "${SCRIPT_DIR}/pnetlab-system-and-console-fix.sh"
+        bash "${SCRIPT_DIR}/azambasha-system-and-console-fix.sh"
         echo ""
         echo "--> [5/10] Applying Database SQL Mode, 1M Limits & Logrotate..."
-        bash "${SCRIPT_DIR}/pnetlab-database-and-system-deep-fix.sh"
+        bash "${SCRIPT_DIR}/azambasha-database-and-system-deep-fix.sh"
         echo ""
         echo "--> [6/10] Fixing File Permissions & Sockets..."
-        bash "${SCRIPT_DIR}/pnetlab-fix-permissions.sh"
+        bash "${SCRIPT_DIR}/azambasha-fix-permissions.sh"
         echo ""
         echo "--> [7/10] Applying High-Performance Speed Optimizer..."
-        bash "${SCRIPT_DIR}/pnetlab-speed-optimizer.sh"
+        bash "${SCRIPT_DIR}/azambasha-speed-optimizer.sh"
         echo ""
         echo "--> [8/10] Activating Dataplane Fast-Path Accelerator..."
-        bash "${SCRIPT_DIR}/pnetlab-dataplane-engine.sh"
+        bash "${SCRIPT_DIR}/azambasha-dataplane-engine.sh"
         echo ""
         echo "--> [9/10] Freezing Version & Blocking Future Updates..."
-        bash "${SCRIPT_DIR}/pnetlab-block-updates.sh"
+        bash "${SCRIPT_DIR}/azambasha-block-updates.sh"
         echo ""
         echo "--> [10/10] Applying Azam Basha Pure Black Dark Mode Theme..."
-        if [ -f "${SCRIPT_DIR}/pnetlab-dark-theme.sh" ]; then
-            bash "${SCRIPT_DIR}/pnetlab-dark-theme.sh" || true
+        if [ -f "${SCRIPT_DIR}/azambasha-dark-theme.sh" ]; then
+            bash "${SCRIPT_DIR}/azambasha-dark-theme.sh" || true
         fi
         echo ""
         echo "============================================================"

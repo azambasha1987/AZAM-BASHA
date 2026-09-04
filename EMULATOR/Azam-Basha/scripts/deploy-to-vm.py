@@ -84,12 +84,12 @@ def deploy(host, user="root", password=None):
     SSL_KEY="/etc/ssl/private/pnetlab-selfsigned.key"
     mkdir -p /etc/ssl/certs /etc/ssl/private
 
-    # 1. Generate PNETLab Internal Root CA (20-Year Validity)
+    # 1. Generate Azam Basha Internal Root CA (20-Year Validity)
     if [ ! -f "$CA_CERT" ] || [ ! -f "$CA_KEY" ]; then
         openssl req -x509 -new -nodes -newkey rsa:2048 -days 7300 \\
             -keyout "$CA_KEY" \\
             -out "$CA_CERT" \\
-            -subj '/CN=PNETLab Enterprise Root CA/O=PNETLab Virtual Appliance/OU=Security' \\
+            -subj '/CN=Azam Basha Enterprise Root CA/O=Azam Basha Virtual Appliance/OU=Security' \\
             -addext 'basicConstraints=critical,CA:TRUE' \\
             -addext 'keyUsage=critical,keyCertSign,cRLSign' 2>/dev/null || true
         chmod 0600 "$CA_KEY"
@@ -118,7 +118,7 @@ EOF
     openssl req -new -nodes -newkey rsa:2048 \\
         -keyout "$SSL_KEY" \\
         -out "$CSR_FILE" \\
-        -subj '/CN=pnetlab.local/O=PNETLab Virtual Appliance/OU=Web Engine' 2>/dev/null || true
+        -subj '/CN=pnetlab.local/O=Azam Basha Virtual Appliance/OU=Web Engine' 2>/dev/null || true
 
     openssl x509 -req -in "$CSR_FILE" \\
         -CA "$CA_CERT" -CAkey "$CA_KEY" -CAcreateserial \\

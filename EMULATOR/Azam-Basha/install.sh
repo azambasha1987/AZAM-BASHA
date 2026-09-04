@@ -665,42 +665,42 @@ fi
 
 # --- Step 8: Apply Modernization Suite & Essential Fixes ---
 echo "[8/8] Applying Ubuntu 26 modernization, session fixes, and update freeze..."
-if [ -n "$STATIC_IP" ] && [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" "$STATIC_IP" "255.255.255.0" "$STATIC_GW" || true
-elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-network-boot.sh" || true
-elif [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" ]; then
-    python3 "${SCRIPT_DIR}/scripts/pnetlab-fix-network.py" || true
+if [ -n "$STATIC_IP" ] && [ -f "${SCRIPT_DIR}/scripts/azambasha-fix-network-boot.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-fix-network-boot.sh" "$STATIC_IP" "255.255.255.0" "$STATIC_GW" || true
+elif [ -f "${SCRIPT_DIR}/scripts/azambasha-fix-network-boot.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-fix-network-boot.sh" || true
+elif [ -f "${SCRIPT_DIR}/scripts/azambasha-fix-network.py" ]; then
+    python3 "${SCRIPT_DIR}/scripts/azambasha-fix-network.py" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-php-modernizer.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-php-modernizer.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-php-modernizer.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-php-modernizer.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-cgroups-v2-engine.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-cgroups-v2-engine.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-cgroups-v2-engine.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-cgroups-v2-engine.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-python-environment-setup.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-python-environment-setup.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-python-environment-setup.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-python-environment-setup.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-database-and-system-deep-fix.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-database-and-system-deep-fix.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-database-and-system-deep-fix.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-database-and-system-deep-fix.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-fix-export-and-apt.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-fix-export-and-apt.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-fix-export-and-apt.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-fix-export-and-apt.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-disable-logout.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-disable-logout.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-disable-logout.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-disable-logout.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-upload-and-docker-fix.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-upload-and-docker-fix.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-upload-and-docker-fix.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-upload-and-docker-fix.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-system-and-console-fix.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-system-and-console-fix.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-system-and-console-fix.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-system-and-console-fix.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-speed-optimizer.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-speed-optimizer.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-speed-optimizer.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-speed-optimizer.sh" || true
 fi
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-block-updates.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-block-updates.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-block-updates.sh" || true
 fi
 
 # Mask and disable redundant / failing boot services for clean startup
@@ -725,26 +725,34 @@ if [ -d "${SCRIPT_DIR}/assets" ]; then
 fi
 
 # Apply Pure Black Dark Mode theme
-if [ -f "${SCRIPT_DIR}/scripts/pnetlab-dark-theme.sh" ]; then
-    bash "${SCRIPT_DIR}/scripts/pnetlab-dark-theme.sh" || true
+if [ -f "${SCRIPT_DIR}/scripts/azambasha-dark-theme.sh" ]; then
+    bash "${SCRIPT_DIR}/scripts/azambasha-dark-theme.sh" || true
 fi
 
 # Register global administrative CLI commands in /usr/local/bin
-ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/azam-menu 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/azam-fix 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/azam-health 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/azam-doctor 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-image-doctor.sh /usr/local/bin/azam-images 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-backup-restore.sh /usr/local/bin/azam-backup 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-dark-theme.sh /usr/local/bin/azam-dark 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azambasha-menu 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azambasha-fix 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azambasha-health 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azambasha-doctor 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-image-doctor.sh /usr/local/bin/azambasha-images 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-backup-restore.sh /usr/local/bin/azambasha-backup 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-dark-theme.sh /usr/local/bin/azambasha-dark 2>/dev/null || true
 
-ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/pnet-menu 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-apply-all-fixes.sh /usr/local/bin/pnet-fix 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/pnet-health 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-health-check.sh /usr/local/bin/pnet-doctor 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-image-doctor.sh /usr/local/bin/pnet-images 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-fix-network-boot.sh /usr/local/bin/pnet-network 2>/dev/null || true
-ln -sfn /opt/unetlab/scripts/pnetlab-backup-restore.sh /usr/local/bin/pnet-backup 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azam-menu 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/azam-fix 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azam-health 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/azam-doctor 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-image-doctor.sh /usr/local/bin/azam-images 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-backup-restore.sh /usr/local/bin/azam-backup 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-dark-theme.sh /usr/local/bin/azam-dark 2>/dev/null || true
+
+ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/pnet-menu 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-apply-all-fixes.sh /usr/local/bin/pnet-fix 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/pnet-health 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-health-check.sh /usr/local/bin/pnet-doctor 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-image-doctor.sh /usr/local/bin/pnet-images 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-fix-network-boot.sh /usr/local/bin/pnet-network 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/azambasha-backup-restore.sh /usr/local/bin/pnet-backup 2>/dev/null || true
 
 # Final Service Refresh & Lockout Reset
 rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true

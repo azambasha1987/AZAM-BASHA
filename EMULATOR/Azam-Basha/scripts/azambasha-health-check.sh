@@ -115,14 +115,22 @@ fi
 echo -e "\n${BOLD}[6] Web Dashboard & Authentication Status${NC}"
 AUTH_RESP=$(curl -k -s -m 5 -X POST https://127.0.0.1/api/auth \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"pnet"}' 2>/dev/null || echo "")
+  -d '{"username":"admin","password":"azam"}' 2>/dev/null || echo "")
+
+ACTIVE_USER="admin/azam"
+if ! echo "$AUTH_RESP" | grep -q '"code":200'; then
+    AUTH_RESP=$(curl -k -s -m 5 -X POST https://127.0.0.1/api/auth \
+      -H "Content-Type: application/json" \
+      -d '{"username":"admin","password":"pnet"}' 2>/dev/null || echo "")
+    ACTIVE_USER="admin/pnet"
+fi
 
 if echo "$AUTH_RESP" | grep -q '"code":200'; then
-    echo -e "  * Admin Auth (admin/pnet): ${GREEN}✔ ACTIVE (User authenticated successfully)${NC}"
+    echo -e "  * Admin Auth (${ACTIVE_USER}): ${GREEN}✔ ACTIVE (Authenticated successfully)${NC}"
 elif [ -z "$AUTH_RESP" ]; then
     echo -e "  * Web UI HTTPS Endpoint:  ${RED}✘ UNREACHABLE (Check Apache2 / SSL service)${NC}"
 else
-    echo -e "  * Admin Auth (admin/pnet): ${YELLOW}✘ FAILED (${AUTH_RESP:0:80})${NC}"
+    echo -e "  * Admin Auth:              ${YELLOW}✘ FAILED (${AUTH_RESP:0:80})${NC}"
 fi
 
 # Cisco IOL License Key

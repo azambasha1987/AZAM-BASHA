@@ -113,6 +113,28 @@ if [ -d "$IOL_DIR" ]; then
         echo "  [✔ OK] Cisco IOL license file (iourc) present."
     else
         echo "  [⚠ ISSUE] Missing iourc license file in $IOL_DIR."
+        if [ "$MODE" = "--fix" ]; then
+            echo "      [FIXING] Generating offline Cisco IOL license (iourc)..."
+            python3 - << 'PYEOF'
+import socket, struct, os
+hostname = socket.gethostname()
+try:
+    hostid = int(os.popen('hostid').read().strip(), 16)
+except Exception:
+    hostid = 0
+key = 0
+for char in hostname:
+    key = (key * 33 + ord(char)) & 0xFFFFFFFF
+key = (key ^ hostid ^ 0x5a5a5a5a) & 0xFFFFFFFF
+license_str = f"[license]\n{hostname} = {key:016x};\n"
+for path in ["/opt/unetlab/addons/iol/bin/iourc", "/etc/iourc"]:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(license_str)
+    os.chmod(path, 0o644)
+print("      -> Successfully generated /opt/unetlab/addons/iol/bin/iourc and /etc/iourc")
+PYEOF
+        fi
     fi
 fi
 

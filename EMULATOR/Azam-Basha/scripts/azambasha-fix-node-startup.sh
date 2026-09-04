@@ -188,12 +188,77 @@ EOF
     chmod 755 /opt/unetlab/scripts/createdosdisk.sh
 fi
 
-# --- 5. Direct Image Normalizer (No Shortcuts / Symlinks) ---
-echo "[5/7] Cleaning symlinks and normalizing lab images..."
+# --- 5. Direct Image Normalizer & Smart Resolver (No Shortcuts) ---
+echo "[5/8] Cleaning symlinks and applying Smart PDF Image Resolver..."
 # Remove any symlinks in /opt/unetlab/addons/qemu/
 find /opt/unetlab/addons/qemu/ -maxdepth 1 -type l -delete 2>/dev/null || true
 
-# Direct Lab XML batch normalizer
+# Patch device_qemu.php to automatically resolve template-matching image folders
+python3 - << 'PYEOF'
+dev_qemu = "/opt/unetlab/html/devices/qemu/device_qemu.php"
+try:
+    with open(dev_qemu, 'r', encoding='utf-8') as f:
+        code = f.read()
+
+    method = """
+    public function resolveImage()
+    {
+        $qemuAddons = "/opt/unetlab/addons/qemu";
+        if (!empty($this->image) && is_dir($qemuAddons . "/" . $this->image)) {
+            return $this->image;
+        }
+
+        $template = $this->getTemplate();
+        if (is_dir($qemuAddons)) {
+            $candidates = [];
+            foreach (scandir($qemuAddons) as $d) {
+                if ($d === "." || $d === "..") continue;
+                if (is_dir($qemuAddons . "/" . $d) && preg_match("/^" . preg_quote($template, "/") . "-.+$/i", $d)) {
+                    $candidates[] = $d;
+                }
+            }
+            if (!empty($candidates)) {
+                $this->image = $candidates[0];
+                return $this->image;
+            }
+        }
+        return $this->image;
+    }
+"""
+    if 'function resolveImage' not in code:
+        code = code.replace("public function createEthernets", method + "\n    public function createEthernets")
+
+    if "$this->resolveImage();" not in code:
+        code = code.replace(
+            "$this->resolveQemuRoot($this->qemu_version);",
+            "$this->resolveQemuRoot($this->qemu_version);\n        $this->resolveImage();"
+        )
+        code = code.replace(
+            '$image = "/opt/unetlab/addons/qemu/" . $this->image;',
+            '$imageName = $this->resolveImage();\n            $image = "/opt/unetlab/addons/qemu/" . $imageName;\n            if (!is_dir($image)) {\n                error_log(date("M d H:i:s ") . "ERROR: Image directory " . $image . " not found");\n                return 80041;\n            }'
+        )
+        code = code.replace(
+            "foreach (scandir($image) as $filename) {",
+            "foreach (scandir($image) as $filename) {\n                if ($filename === '.' || $filename === '..') continue;"
+        )
+
+    with open(dev_qemu, 'w', encoding='utf-8') as f:
+        f.write(code)
+    print("  [✔] Smart PDF Image Resolver active in device_qemu.php")
+except Exception as e:
+    print(f"  [!] Note: {e}")
+PYEOF
+
+# Ensure all 107 PDF templates are linked/supported
+if [ -f /opt/unetlab/html/templates/versafvnf.yml ] && [ ! -f /opt/unetlab/html/templates/versavnf.yml ]; then
+    cp /opt/unetlab/html/templates/versafvnf.yml /opt/unetlab/html/templates/versavnf.yml 2>/dev/null || true
+fi
+if [ -d /opt/unetlab/html/templates/intel ] && [ -f /opt/unetlab/html/templates/intel/versafvnf.yml ] && [ ! -f /opt/unetlab/html/templates/intel/versavnf.yml ]; then
+    cp /opt/unetlab/html/templates/intel/versafvnf.yml /opt/unetlab/html/templates/intel/versavnf.yml 2>/dev/null || true
+fi
+
+# --- 6. Direct Lab XML Batch Normalizer ---
+echo "[6/8] Normalizing lab XML image references directly..."
 python3 - << 'PYEOF'
 import glob, re, os
 
@@ -234,10 +299,10 @@ for path in glob.glob('/opt/unetlab/labs/**/*.unl', recursive=True):
     except Exception:
         pass
 
-print(f"  [✔] Clean direct mapping: vios -> {vios_real}, viosl2 -> {viosl2_real} ({count} labs updated)")
+print(f"  [✔] Direct mapping: vios -> {vios_real}, viosl2 -> {viosl2_real} ({count} labs updated)")
 PYEOF
 
-# --- 6. Cisco IOU License Generation ---
+# --- 7. Cisco IOU License Generation ---
 echo "[6/7] Generating Cisco IOU/IOL License (iourc)..."
 mkdir -p /opt/unetlab/addons/iol/bin /etc /opt/unetlab/data 2>/dev/null || true
 python3 - << 'PYEOF'

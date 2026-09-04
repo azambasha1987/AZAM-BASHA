@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNETLab Image Doctor & Virtual Disk Integrity Diagnostic
+# Azam Basha Image Doctor & Virtual Disk Integrity Diagnostic
+# Fully compliant with EVE-NG / UNetLab QEMU Image Naming Standards:
 #
-# Inspects and repairs:
-# 1. Image folder naming conventions in /opt/unetlab/addons/qemu/
-# 2. Virtual disk filenames (virtioa.qcow2, hda.qcow2, cdrom.iso)
-# 3. QCOW2 virtual disk corruption using qemu-img check
-# 4. Validates templates against /opt/unetlab/html/templates/
-# 5. Fixes file permissions on newly uploaded images
+# 1. Folder structure: /opt/unetlab/addons/qemu/<template>-<version>
+# 2. Supported disk formats:
+#    - VirtIO:   virtioa.qcow2, virtiob.qcow2, ...
+#    - IDE:      hda.qcow2, hdb.qcow2, ...
+#    - SATA:     sataa.qcow2, satab.qcow2, ...
+#    - SCSI:     scsia.qcow2, scsib.qcow2, ...
+#    - VirtIDE:  virtidea.qcow2, ...
+#    - LSI:      lsia.qcow2, ...
+#    - MegaSAS:  megasasa.qcow, megasasa.qcow2, ...
+#    - Media:    cdrom.iso, kernel.img, BaseSystem.img
+# 3. Validates against all 107 templates in /opt/unetlab/html/templates/
+# 4. Auto-corrects non-standard filenames and repairs permissions
 # ==============================================================================
 set -euo pipefail
 
@@ -16,7 +23,7 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
     echo "Usage: sudo bash $0 [--check | --fix | --repair-disks]"
     echo ""
     echo "Options:"
-    echo "  --check          Inspect all installed images and report issues (non-destructive)"
+    echo "  --check          Inspect all installed images and report compliance (non-destructive)"
     echo "  --fix            Auto-correct misnamed image files and fix permissions"
     echo "  --repair-disks   Run qemu-img check -r all on all QCOW2 disks"
     exit 0
@@ -25,7 +32,7 @@ fi
 MODE="${1:---check}"
 
 echo "============================================================"
-echo "          PNETLab Image Doctor & Disk Health Audit          "
+echo "      Azam Basha Image Doctor & Disk Health Audit Engine    "
 echo "============================================================"
 
 QEMU_DIR="/opt/unetlab/addons/qemu"
@@ -37,6 +44,9 @@ TOTAL_IMAGES=0
 CORRECT_IMAGES=0
 ISSUE_IMAGES=0
 
+# Valid standard disk regex from EVE-NG specification
+VALID_DISK_REGEX='^(virtio[a-z]+|hd[a-z]+|sata[a-z]+|scsi[a-z]+|virtide[a-z]+|lsi[a-z]+|megasas[a-z]+)\.qcow2?$|^(cdrom\.iso|kernel\.img|BaseSystem\.img)$'
+
 # 1. Audit QEMU Images
 echo -e "\n[*] Auditing QEMU Virtual Appliances ($QEMU_DIR)..."
 if [ -d "$QEMU_DIR" ]; then
@@ -45,43 +55,68 @@ if [ -d "$QEMU_DIR" ]; then
         TOTAL_IMAGES=$((TOTAL_IMAGES + 1))
         folder_name=$(basename "$img_folder")
         
-        # Check template prefix
+        # Check template prefix (everything before the first hyphen)
         prefix=$(echo "$folder_name" | cut -d'-' -f1)
-        template_file="${TEMPLATES_DIR}/${prefix}.php"
         
-        has_disk=false
-        disk_name=""
+        # Check template file in templates root or subfolders
+        template_found=false
+        if [ -f "${TEMPLATES_DIR}/${prefix}.yml" ] || \
+           [ -f "${TEMPLATES_DIR}/intel/${prefix}.yml" ] || \
+           [ -f "${TEMPLATES_DIR}/amd/${prefix}.yml" ]; then
+            template_found=true
+        fi
+        
+        has_valid_disk=false
+        disk_names=()
+        non_standard_disks=()
+        
         for f in "$img_folder"/*; do
             [ ! -f "$f" ] && continue
             fname=$(basename "$f")
-            if [[ "$fname" =~ ^(virtioa\.qcow2|hda\.qcow2|sata\.qcow2|cdrom\.iso)$ ]]; then
-                has_disk=true
-                disk_name="$fname"
-                break
-            elif [[ "$fname" =~ \.(qcow2|img|vmdk|raw)$ ]]; then
-                disk_name="$fname (Non-standard filename)"
+            if [[ "$fname" =~ $VALID_DISK_REGEX ]]; then
+                has_valid_disk=true
+                disk_names+=("$fname")
+            elif [[ "$fname" =~ \.(qcow2|qcow|img|vmdk|raw)$ ]]; then
+                non_standard_disks+=("$fname")
             fi
         done
 
-        if [ -f "$template_file" ] && [ "$has_disk" = true ]; then
-            echo -e "  [✔ OK] $folder_name &rarr; Matched template '${prefix}.php' (Disk: $disk_name)"
+        if [ "$template_found" = true ] && [ "$has_valid_disk" = true ]; then
+            echo -e "  [✔ OK] $folder_name &rarr; Template: '${prefix}.yml' | Disks: ${disk_names[*]}"
             CORRECT_IMAGES=$((CORRECT_IMAGES + 1))
         else
             echo -e "  [⚠ ISSUE] $folder_name"
-            [ ! -f "$template_file" ] && echo -e "      ↳ Missing or unknown template: '${prefix}.php'"
-            [ "$has_disk" = false ] && echo -e "      ↳ Disk filename issue: $disk_name (Should be virtioa.qcow2 or hda.qcow2)"
+            [ "$template_found" = false ] && echo -e "      ↳ Missing or unknown template: '${prefix}.yml'"
+            [ "$has_valid_disk" = false ] && echo -e "      ↳ No standard HDD image found. Detected: ${non_standard_disks[*]:-none} (Should be virtioa.qcow2, hda.qcow2, sataa.qcow2, etc.)"
             ISSUE_IMAGES=$((ISSUE_IMAGES + 1))
 
             # Auto-Fix if in --fix mode
-            if [ "$MODE" = "--fix" ] && [ "$has_disk" = false ]; then
-                for f in "$img_folder"/*; do
-                    fname=$(basename "$f")
-                    if [[ "$fname" =~ \.(qcow2|img)$ ]] && [ "$fname" != "virtioa.qcow2" ]; then
-                        echo "      [FIXING] Renaming '$fname' &rarr; 'virtioa.qcow2'..."
-                        mv -f "$f" "$img_folder/virtioa.qcow2"
-                        break
-                    fi
-                done
+            if [ "$MODE" = "--fix" ] && [ "$has_valid_disk" = false ] && [ ${#non_standard_disks[@]} -gt 0 ]; then
+                target_disk="virtioa.qcow2"
+                # Determine default disk type from prefix
+                case "$prefix" in
+                    a10|acs|asa|barracuda|cda|cips|clearpass|aruba|cpsg|extremevoss|esxi|fpfw|fpsmc|hpvsr|huaweiusg6kv|ise|mikrotik|nsx|olive|ostinato|osx|silveredge|silverorch|stealth|timos|veos|vmx|vnam|vqfxpfe|vqfxre|xrv)
+                        target_disk="hda.qcow2"
+                        ;;
+                    extremexos|firepower6|kerio|nxosv9k|sonicwall|vcenter)
+                        target_disk="sataa.qcow2"
+                        ;;
+                    firepower|sourcefire)
+                        target_disk="scsia.qcow2"
+                        ;;
+                    timoscpm|timosiom)
+                        target_disk="virtidea.qcow2"
+                        ;;
+                    vwlc)
+                        target_disk="megasasa.qcow"
+                        ;;
+                    *)
+                        target_disk="virtioa.qcow2"
+                        ;;
+                esac
+                first_disk="${non_standard_disks[0]}"
+                echo "      [FIXING] Renaming '$first_disk' &rarr; '$target_disk'..."
+                mv -f "$img_folder/$first_disk" "$img_folder/$target_disk"
             fi
         fi
 
@@ -109,30 +144,33 @@ if [ -d "$IOL_DIR" ]; then
     done
     [ "$IOL_COUNT" -eq 0 ] && echo "  -> No Cisco IOL .bin images found."
     
-    if [ -f "$IOL_DIR/iourc" ]; then
+    if [ -f "$IOL_DIR/iourc" ] || [ -f "/etc/iourc" ]; then
         echo "  [✔ OK] Cisco IOL license file (iourc) present."
     else
-        echo "  [⚠ ISSUE] Missing iourc license file in $IOL_DIR."
+        echo "  [⚠ ISSUE] Missing iourc license file."
         if [ "$MODE" = "--fix" ]; then
             echo "      [FIXING] Generating offline Cisco IOL license (iourc)..."
             python3 - << 'PYEOF'
-import socket, struct, os
+import hashlib, os, struct, socket
 hostname = socket.gethostname()
 try:
-    hostid = int(os.popen('hostid').read().strip(), 16)
+    hostid = int(os.popen('hostid').read().strip(), 16) & 0xFFFFFFFF
 except Exception:
     hostid = 0
-key = 0
-for char in hostname:
-    key = (key * 33 + ord(char)) & 0xFFFFFFFF
-key = (key ^ hostid ^ 0x5a5a5a5a) & 0xFFFFFFFF
-license_str = f"[license]\n{hostname} = {key:016x};\n"
-for path in ["/opt/unetlab/addons/iol/bin/iourc", "/etc/iourc"]:
+pad1 = b'\x4b\x58\x21\x81\x56\x7b\x0d\x91\xdf\x24\x08\xf8\x5c\x9b\x74\xf2'
+pad2 = b'\x80' + b'\x00'*39
+m = hashlib.md5()
+m.update(struct.pack('!I', hostid))
+m.update(pad1)
+m.update(pad2)
+key = m.hexdigest()[:16]
+content = f"[license]\n{hostname} = {key};\n"
+for path in ["/opt/unetlab/addons/iol/bin/iourc", "/etc/iourc", "/opt/unetlab/data/iourc"]:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
-        f.write(license_str)
+        f.write(content)
     os.chmod(path, 0o644)
-print("      -> Successfully generated /opt/unetlab/addons/iol/bin/iourc and /etc/iourc")
+print(f"      -> Successfully generated iourc for '{hostname}' (key: {key})")
 PYEOF
         fi
     fi

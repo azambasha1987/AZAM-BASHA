@@ -7,8 +7,8 @@
 #>
 
 param (
-    [string]$VmxPath = "C:\Users\azamb\Documents\Virtual Machines\R9-PNET\R9-PNET.vmx",
-    [string]$OutputOva = "$([Environment]::GetFolderPath('Desktop'))\AzamBasha-v8-Ubuntu26-Master.ova"
+    [string]$VmxPath = "",
+    [string]$OutputOva = "$([Environment]::GetFolderPath('Desktop'))\AzamBasha-v8-Baseline-Master.ova"
 )
 
 Write-Host "============================================================" -ForegroundColor Cyan
@@ -28,7 +28,28 @@ if (-not (Test-Path $ovftool)) {
 }
 Write-Host "[1/3] Located VMware OVF Tool: $ovftool" -ForegroundColor Green
 
-# 2. Check source VMX file
+# 2. Check source VMX file / Auto-detect active running VM
+if ([string]::IsNullOrWhiteSpace($VmxPath)) {
+    $activeLock = Get-ChildItem "C:\Users\azamb\Documents\Virtual Machines" -Recurse -Filter "*.vmx.lck" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($activeLock) {
+        $vmxName = $activeLock.Name -replace '\.vmx\.lck$', '.vmx'
+        $detectedPath = Join-Path $activeLock.Directory.Parent.FullName $vmxName
+        if (-not (Test-Path $detectedPath)) {
+            $detectedPath = Join-Path $activeLock.DirectoryName $vmxName
+        }
+        if (Test-Path $detectedPath) {
+            $VmxPath = $detectedPath
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($VmxPath) -or -not (Test-Path $VmxPath)) {
+        if (Test-Path "C:\Users\azamb\Documents\Virtual Machines\R9-AZAM\R9-AZAM.vmx") {
+            $VmxPath = "C:\Users\azamb\Documents\Virtual Machines\R9-AZAM\R9-AZAM.vmx"
+        } else {
+            $VmxPath = "C:\Users\azamb\Documents\Virtual Machines\R9-PNET\R9-PNET.vmx"
+        }
+    }
+}
+
 if (-not (Test-Path $VmxPath)) {
     Write-Error "[ERROR] Source VM configuration file not found at: $VmxPath"
     exit 1

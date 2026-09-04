@@ -72,17 +72,16 @@ echo "14) Create Full Lab & Database Backup Archive"
 echo "15) AI Lab Builder & Ollama MCP Integration"
 echo "16) Freeze Version & Block Future Updates (Anti-Conflict Lock)"
 echo "17) Azam Basha Pure Black Dark Mode Theme Engine"
-echo "18) Apply ALL Essential Fixes & Dark Mode Suite (with Auto-Snapshot)"
-echo "19) System Rollback & Snapshot Recovery"
-echo "20) Exit"
+echo "18) Apply ALL Essential Fixes & Dark Mode Suite"
+echo "19) Exit"
 echo "============================================================"
 
 # Handle interactive /dev/tty or non-interactive argument/fallback
 CHOICE=""
-if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-9]|20)$ ]]; then
+if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-9])$ ]]; then
     CHOICE="$1"
 elif [ -e /dev/tty ]; then
-    read -rp "Select an option [1-20, default: 18]: " USER_INPUT < /dev/tty || true
+    read -rp "Select an option [1-19, default: 18]: " USER_INPUT < /dev/tty || true
     CHOICE="${USER_INPUT:-18}"
 else
     CHOICE="18"
@@ -149,12 +148,6 @@ case "$CHOICE" in
             bash "${SCRIPT_DIR}/azambasha-dark-theme.sh"
         fi
         ;;
-    18)
-        echo "--> [0/14] Creating Pre-Flight Safety Snapshot..."
-        if [ -f "${SCRIPT_DIR}/azambasha-rollback.sh" ]; then
-            bash "${SCRIPT_DIR}/azambasha-rollback.sh" --snapshot || true
-        fi
-        echo ""
         echo "--> [1/14] Applying Permanent Session Fix..."
         bash "${SCRIPT_DIR}/azambasha-disable-logout.sh"
         echo ""
@@ -212,14 +205,6 @@ case "$CHOICE" in
         echo "============================================================"
         ;;
     19)
-        if [ -f "${SCRIPT_DIR}/azambasha-rollback.sh" ]; then
-            bash "${SCRIPT_DIR}/azambasha-rollback.sh" --restore
-        else
-            echo "[ERROR] Rollback script not found at ${SCRIPT_DIR}/azambasha-rollback.sh"
-            exit 1
-        fi
-        ;;
-    20)
         echo "Exiting."
         exit 0
         ;;

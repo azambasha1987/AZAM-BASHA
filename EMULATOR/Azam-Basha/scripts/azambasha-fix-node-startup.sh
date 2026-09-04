@@ -188,28 +188,54 @@ EOF
     chmod 755 /opt/unetlab/scripts/createdosdisk.sh
 fi
 
-# --- 5. Smart IOSv & Image Alias Linker ---
-echo "[5/7] Configuring IOSv & QEMU Lab Image Aliases..."
-# Router aliases
-VIOS_REAL=$(find /opt/unetlab/addons/qemu -maxdepth 1 -type d -name "vios-*" 2>/dev/null | head -n1 || true)
-if [ -n "$VIOS_REAL" ]; then
-    echo "      -> Detected primary IOSv Router image: $(basename "$VIOS_REAL")"
-    ln -sfn "$VIOS_REAL" /opt/unetlab/addons/qemu/vios-adventerprisek9-m.spa.159-3.M3 2>/dev/null || true
-    ln -sfn "$VIOS_REAL" /opt/unetlab/addons/qemu/vios-adventerprisek9-m.spa.156-2.T 2>/dev/null || true
-    ln -sfn "$VIOS_REAL" /opt/unetlab/addons/qemu/vios-adventerprisek9-m.spa.157-3.M3 2>/dev/null || true
-    ln -sfn "$VIOS_REAL" /opt/unetlab/addons/qemu/vios-iosv 2>/dev/null || true
-    echo "  [✔] Common IOSv router aliases linked to $(basename "$VIOS_REAL")"
-fi
+# --- 5. Direct Image Normalizer (No Shortcuts / Symlinks) ---
+echo "[5/7] Cleaning symlinks and normalizing lab images..."
+# Remove any symlinks in /opt/unetlab/addons/qemu/
+find /opt/unetlab/addons/qemu/ -maxdepth 1 -type l -delete 2>/dev/null || true
 
-# Switch aliases
-VIOSL2_REAL=$(find /opt/unetlab/addons/qemu -maxdepth 1 -type d -name "viosl2-*" 2>/dev/null | head -n1 || true)
-if [ -n "$VIOSL2_REAL" ]; then
-    echo "      -> Detected primary IOSv L2 Switch image: $(basename "$VIOSL2_REAL")"
-    ln -sfn "$VIOSL2_REAL" /opt/unetlab/addons/qemu/viosl2-adventerprisek9-m.vmd.SPA.156-0.3.E 2>/dev/null || true
-    ln -sfn "$VIOSL2_REAL" /opt/unetlab/addons/qemu/viosl2-adventerprisek9-m.03.2017 2>/dev/null || true
-    ln -sfn "$VIOSL2_REAL" /opt/unetlab/addons/qemu/viosl2-iosvl2 2>/dev/null || true
-    echo "  [✔] Common IOSvL2 switch aliases linked to $(basename "$VIOSL2_REAL")"
-fi
+# Direct Lab XML batch normalizer
+python3 - << 'PYEOF'
+import glob, re, os
+
+vios_real = "vios-15.8"
+viosl2_real = "viosl2-adventerprisek9-m.ssa.high_iron_20200929"
+
+# Detect real directories if renamed
+qemu_dir = "/opt/unetlab/addons/qemu"
+if os.path.isdir(qemu_dir):
+    vios_dirs = [d for d in os.listdir(qemu_dir) if os.path.isdir(os.path.join(qemu_dir, d)) and d.startswith("vios-")]
+    if vios_dirs:
+        vios_real = sorted(vios_dirs)[0]
+    
+    viosl2_dirs = [d for d in os.listdir(qemu_dir) if os.path.isdir(os.path.join(qemu_dir, d)) and d.startswith("viosl2-")]
+    if viosl2_dirs:
+        viosl2_real = sorted(viosl2_dirs)[0]
+
+count = 0
+for path in glob.glob('/opt/unetlab/labs/**/*.unl', recursive=True):
+    try:
+        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+        
+        orig = content
+        def fix_node_tag(m):
+            tag = m.group(0)
+            if 'template="vios"' in tag:
+                tag = re.sub(r'image="[^"]*"', f'image="{vios_real}"', tag)
+            elif 'template="viosl2"' in tag:
+                tag = re.sub(r'image="[^"]*"', f'image="{viosl2_real}"', tag)
+            return tag
+
+        new_content = re.sub(r'<node\b[^>]*>', fix_node_tag, content)
+        if new_content != orig:
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            count += 1
+    except Exception:
+        pass
+
+print(f"  [✔] Clean direct mapping: vios -> {vios_real}, viosl2 -> {viosl2_real} ({count} labs updated)")
+PYEOF
 
 # --- 6. Cisco IOU License Generation ---
 echo "[6/7] Generating Cisco IOU/IOL License (iourc)..."

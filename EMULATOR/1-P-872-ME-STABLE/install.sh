@@ -215,15 +215,20 @@ if [ -d "$DEB_POOL_DIR" ] && compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; the
             echo "      -> Extracting and installing $(basename "$deb_path")..."
             dpkg-deb -x "$deb_path" / 2>/dev/null || true
             dpkg -i --force-depends --force-confdef --force-confold "$deb_path" 2>/dev/null || true
+        else
+            echo "      [WARNING] Package $deb not found in pool, searching for available version..."
+            matching_deb=$(find "$DEB_POOL_DIR" -name "${deb%%_*_*}*.deb" | sort -V | tail -n1 || true)
+            if [ -n "$matching_deb" ] && [ -f "$matching_deb" ]; then
+                echo "      -> Installing fallback $(basename "$matching_deb")..."
+                dpkg-deb -x "$matching_deb" / 2>/dev/null || true
+                dpkg -i --force-depends --force-confdef --force-confold "$matching_deb" 2>/dev/null || true
+            fi
         fi
     done
 else
-    echo "      [INFO] Local debian directory not found; invoking official network installer bootstrap..."
-    if [ -f "${SCRIPT_DIR}/generic/0.channel/pnetlab-network-install-latest.sh" ]; then
-        bash "${SCRIPT_DIR}/generic/0.channel/pnetlab-network-install-latest.sh" --yes --release latest
-    else
-        curl -fsSL https://codeberg.org/api/packages/netkillui/generic/pnetlab-core-assets/0.channel/pnetlab-network-install-latest.sh | bash -s -- --yes --release latest
-    fi
+    echo "      [ERROR] Local debian directory ($DEB_POOL_DIR) not found or empty."
+    echo "      Please ensure the debian/pool directory is included in your standalone folder."
+    exit 1
 fi
 
 # --- Step 4: Configure Database & Schemas ---

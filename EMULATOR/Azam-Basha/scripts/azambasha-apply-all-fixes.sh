@@ -195,9 +195,14 @@ case "$CHOICE" in
             bash "${SCRIPT_DIR}/azambasha-image-doctor.sh" --fix || true
         fi
         echo ""
-        echo "--> [14/14] Applying Azam Basha Pure Black Dark Mode Theme..."
+        echo "--> [14/15] Applying Azam Basha Pure Black Dark Mode Theme..."
         if [ -f "${SCRIPT_DIR}/azambasha-dark-theme.sh" ]; then
             bash "${SCRIPT_DIR}/azambasha-dark-theme.sh" || true
+        fi
+        echo ""
+        echo "--> [15/15] Applying Advanced UI, Telemetry Heatmap & Quad-Tree Suite..."
+        if [ -f "${SCRIPT_DIR}/azambasha-ui-enhancements.sh" ]; then
+            bash "${SCRIPT_DIR}/azambasha-ui-enhancements.sh" || true
         fi
         echo ""
         echo "============================================================"

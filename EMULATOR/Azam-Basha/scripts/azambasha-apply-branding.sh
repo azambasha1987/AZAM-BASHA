@@ -15,6 +15,7 @@ PARENT_DIR="$(cd "${SCRIPT_DIR}/.." 2>/dev/null && pwd || echo "/opt/azambasha")
 ASSETS_DIR="${PARENT_DIR}/assets"
 [ ! -d "$ASSETS_DIR" ] && ASSETS_DIR="/opt/azambasha/assets"
 [ ! -d "$ASSETS_DIR" ] && ASSETS_DIR="/opt/unetlab/html/images"
+BRAND_DIR="/opt/unetlab/data/branding"
 
 echo "============================================================"
 echo "    Azam Basha UI Branding, Version & Credentials Engine    "
@@ -46,12 +47,8 @@ fi
 
 # 3. Update Database Admin Password to 'azam' and Version to '1.0.0'
 AZAM_HASH="aec7a491c6e8d1433b213e694f086222fe6fde75a17c379b7fc22472539ff8e1"
-mysql -u pnetlab -ppnetlab pnetlab_db << EOF 2>/dev/null || mysql pnetlab_db << EOF 2>/dev/null || true
-UPDATE users SET password = '${AZAM_HASH}' WHERE username = 'admin';
-INSERT INTO control (control_name, control_value) VALUES
-  ('ctrl_version','1.0.0')
-ON DUPLICATE KEY UPDATE control_value = '1.0.0';
-EOF
+SQL_UPDATE="UPDATE users SET password = '${AZAM_HASH}' WHERE username = 'admin'; INSERT INTO control (control_name, control_value) VALUES ('ctrl_version','1.0.0') ON DUPLICATE KEY UPDATE control_value = '1.0.0';"
+mysql -u pnetlab -ppnetlab pnetlab_db -e "$SQL_UPDATE" 2>/dev/null || mysql pnetlab_db -e "$SQL_UPDATE" 2>/dev/null || true
 echo "  [✔] Database Web Admin password updated to 'azam' (SHA-256)"
 echo "  [✔] Database control version updated to '1.0.0'"
 
@@ -64,7 +61,6 @@ echo "  [✔] System SSH root/pnet password updated to 'azam'"
 rm -rf /dev/shm/pnet-authfail* /tmp/pnet-authfail* 2>/dev/null || true
 
 # 6. Ensure Branding Data Directory & Configuration
-BRAND_DIR="/opt/unetlab/data/branding"
 mkdir -p "$BRAND_DIR"
 
 cat > "${BRAND_DIR}/config.json" << 'EOF'

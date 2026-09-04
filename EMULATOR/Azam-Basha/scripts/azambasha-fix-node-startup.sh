@@ -121,11 +121,20 @@ usermod -aG kvm,unl www-data 2>/dev/null || true
 echo "  [✔] Universal tunctl driver active and sudoers permissions granted"
 
 # --- 2. Ensure QEMU Binaries & /opt/qemu Symlink ---
-echo "[2/7] Setting up QEMU system dispatch and /opt/qemu symlinks..."
-mkdir -p /opt/qemu/bin /opt/unetlab/addons/qemu 2>/dev/null || true
+echo "[2/7] Setting up QEMU system dispatch, UEFI firmware & /opt/qemu symlinks..."
+mkdir -p /opt/qemu/bin /opt/unetlab/addons/qemu /usr/share/qemu /opt/qemu/share/qemu /usr/share/OVMF 2>/dev/null || true
 ln -sfn /usr /opt/qemu 2>/dev/null || true
 ln -sfn /usr/bin/qemu-system-x86_64 /opt/qemu/bin/qemu-system-x86_64 2>/dev/null || true
 ln -sfn /usr/bin/qemu-img /opt/qemu/bin/qemu-img 2>/dev/null || true
+
+# Deploy OVMF UEFI firmware symlinks for NX-OS 9000v and UEFI appliances
+ln -sfn /opt/unetlab/scripts/OVMF-20160813.fd /usr/share/qemu/OVMF-sata.fd 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/OVMF-20160813.fd /opt/qemu/share/qemu/OVMF-sata.fd 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/OVMF.fd /usr/share/qemu/OVMF.fd 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/OVMF.fd /opt/qemu/share/qemu/OVMF.fd 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/OVMF_CODE.fd /usr/share/OVMF/OVMF_CODE.fd 2>/dev/null || true
+ln -sfn /opt/unetlab/scripts/OVMF_VARS-1024x768.fd /usr/share/OVMF/OVMF_VARS.fd 2>/dev/null || true
+echo "  [✔] UEFI BIOS firmware (OVMF-sata.fd, OVMF.fd) linked for NX-OS & appliances"
 
 # --- 3. Hardware Acceleration & Kernel Modules ---
 echo "[3/7] Activating Kernel Virtualization, vhost-net & Loopback Drivers..."

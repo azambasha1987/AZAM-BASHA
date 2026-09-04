@@ -43,11 +43,17 @@ try:
 except Exception:
     pass
 
-# 4. Create /etc/network/interfaces
-print("[4/6] Setting up /etc/network/interfaces...")
+# 4. Create /etc/network/interfaces & timeout guard
+print("[4/6] Setting up sanitized /etc/network/interfaces and systemd timeout guard...")
+os.makedirs("/etc/systemd/system/networking.service.d", exist_ok=True)
+try:
+    with open("/etc/systemd/system/networking.service.d/10-timeout.conf", "w") as f:
+        f.write("[Service]\nTimeoutStartSec=10sec\n")
+except Exception:
+    pass
+
 ifaces_file = "/etc/network/interfaces"
-if not os.path.exists(ifaces_file) or os.path.getsize(ifaces_file) == 0 or "pnet0" not in open(ifaces_file, errors="ignore").read():
-    content = f"""# This file describes the network interfaces available on your system
+content = """# This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
 source /etc/network/interfaces.d/*
@@ -55,20 +61,14 @@ source /etc/network/interfaces.d/*
 # The loopback network interface
 auto lo
 iface lo inet loopback
-
-# The primary network interface
-# BEGIN pnetlab-netcfg pnet0
-allow-hotplug pnet0
-iface pnet0 inet dhcp
-    pre-up ip link set dev {real_iface} up
-    bridge_ports {real_iface}
-    bridge_stp off
-# END pnetlab-netcfg pnet0
 """
+try:
     with open(ifaces_file, "w") as f:
         f.write(content)
     os.chmod(ifaces_file, 0o644)
-    print("      -> Created /etc/network/interfaces")
+    print("      -> Created sanitized /etc/network/interfaces")
+except Exception:
+    pass
 
 # 5. Patch /opt/unetlab/scripts/pnetlab-brokerd.py
 print("[5/6] Patching /opt/unetlab/scripts/pnetlab-brokerd.py...")

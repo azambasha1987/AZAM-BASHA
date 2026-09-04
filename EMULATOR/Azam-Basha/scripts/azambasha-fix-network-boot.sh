@@ -54,12 +54,49 @@ esac
 echo "[1/5] Physical Uplink Interface : ${REAL_IFACE}"
 echo "      Configuring Static IP     : ${IP_ADDR}/${CIDR} via ${GATEWAY}"
 
-# 2. Disable Cloud-Init Network Overwrites
-mkdir -p /etc/cloud/cloud.cfg.d
+# 2. Disable Cloud-Init Network Overwrites & Purge Conflicting Netplan Files
+mkdir -p /etc/cloud/cloud.cfg.d /etc/netplan /etc/systemd/system/networking.service.d /etc/modules-load.d /etc/sysctl.d
 cat > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg << 'EOF'
 network: {config: disabled}
 EOF
-echo "[2/5] Cloud-init overwrite disabled."
+
+# Purge any legacy/installer/cloud-init netplan YAMLs that could re-enable DHCP on physical NIC
+for f in /etc/netplan/*.yaml /etc/netplan/*.yml; do
+    [ -f "$f" ] && [ "$(basename "$f")" != "01-pnetlab-netcfg.yaml" ] && rm -f "$f" 2>/dev/null || true
+done
+rm -f /etc/systemd/network/*.network 2>/dev/null || true
+
+# Install 10-second timeout drop-in to permanently eliminate 5-minute boot stalls from networking.service
+cat > /etc/systemd/system/networking.service.d/10-timeout.conf << 'EOF'
+[Service]
+TimeoutStartSec=10sec
+EOF
+
+# Ensure kernel bridge, 8021q, tun, and br_netfilter modules load at early boot
+cat > /etc/modules-load.d/pnetlab.conf << 'EOF'
+bridge
+stp
+llc
+8021q
+tun
+dummy
+br_netfilter
+EOF
+modprobe bridge 2>/dev/null || true
+modprobe 8021q 2>/dev/null || true
+modprobe tun 2>/dev/null || true
+modprobe br_netfilter 2>/dev/null || true
+
+# Bridge sysctl bypass to ensure ARP and IP traffic on bridges are never dropped by netfilter
+cat > /etc/sysctl.d/99-pnetlab-bridge.conf << 'EOF'
+net.bridge.bridge-nf-call-iptables = 0
+net.bridge.bridge-nf-call-arptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.ipv4.ip_forward = 1
+EOF
+sysctl --system 2>/dev/null || true
+
+echo "[2/5] Cloud-init overwrite disabled, netplan purged, and kernel modules registered."
 
 # 3. Create Persistent Standalone Kernel Bridge Script
 cat > /usr/local/bin/pnetlab-boot-network.sh << EOF
@@ -67,6 +104,13 @@ cat > /usr/local/bin/pnetlab-boot-network.sh << EOF
 # PNetLab Persistent Network Boot Runner
 modprobe bridge 2>/dev/null || true
 modprobe 8021q 2>/dev/null || true
+modprobe tun 2>/dev/null || true
+modprobe br_netfilter 2>/dev/null || true
+
+# Set bridge sysctl bypass
+sysctl -w net.bridge.bridge-nf-call-iptables=0 2>/dev/null || true
+sysctl -w net.bridge.bridge-nf-call-arptables=0 2>/dev/null || true
+sysctl -w net.ipv4.ip_forward=1 2>/dev/null || true
 
 # Discover physical interface
 IFACE=""
@@ -81,6 +125,9 @@ for i in \$(ip -o link show 2>/dev/null | awk -F': ' '{print \$2}' | cut -d'@' -
 done
 [ -z "\$IFACE" ] && IFACE="${REAL_IFACE}"
 
+# Release any rogue DHCP client on physical interface
+dhclient -r "\$IFACE" 2>/dev/null || true
+
 # Bring up physical link in promiscuous mode for VMware / hypervisor
 ip link set dev "\$IFACE" up promisc on 2>/dev/null || true
 
@@ -89,20 +136,20 @@ if ! ip link show pnet0 2>/dev/null | grep -q "pnet0"; then
     ip link add name pnet0 type bridge forward_delay 0 stp_state 0 2>/dev/null || true
 fi
 
-# Clone MAC address from physical NIC to bridge for VMware compatibility
+# Clone MAC address from physical NIC to bridge for VMware / Wi-Fi compatibility
 MAC_ADDR=\$(cat /sys/class/net/\$IFACE/address 2>/dev/null || true)
 if [ -n "\$MAC_ADDR" ]; then
     ip link set dev pnet0 address "\$MAC_ADDR" 2>/dev/null || true
 fi
 
-# Attach physical interface to pnet0
+# Attach physical interface to pnet0 and ensure promiscuous mode
 ip link set dev "\$IFACE" master pnet0 2>/dev/null || true
 ip link set dev "\$IFACE" up promisc on 2>/dev/null || true
-ip link set dev pnet0 up 2>/dev/null || true
+ip link set dev pnet0 up promisc on 2>/dev/null || true
 
-# Assign Static IP to pnet0
-ip addr flush dev pnet0 2>/dev/null || true
+# Assign Static IP to pnet0 and flush physical interface to prevent dual-IP subnet conflicts
 ip addr flush dev "\$IFACE" 2>/dev/null || true
+ip addr flush dev pnet0 2>/dev/null || true
 ip addr add "${IP_ADDR}/${CIDR}" dev pnet0 2>/dev/null || true
 ip route replace default via "${GATEWAY}" dev pnet0 2>/dev/null || true
 
@@ -120,12 +167,7 @@ EOF
 chmod +x /usr/local/bin/pnetlab-boot-network.sh
 echo "[3/5] Installed /usr/local/bin/pnetlab-boot-network.sh"
 
-# 4. Synchronize Netplan and /etc/network/interfaces
-mkdir -p /etc/netplan
-for f in /etc/netplan/00-installer-config*.yaml /etc/netplan/50-cloud-init.yaml /etc/netplan/99-installer*.yaml; do
-    [ -f "$f" ] && mv "$f" "${f}.bak" 2>/dev/null || true
-done
-
+# 4. Synchronize Netplan and Clean /etc/network/interfaces
 cat > /etc/netplan/01-pnetlab-netcfg.yaml << EOF
 network:
   version: 2
@@ -152,25 +194,16 @@ network:
 EOF
 chmod 600 /etc/netplan/01-pnetlab-netcfg.yaml
 
+# Keep /etc/network/interfaces strictly for loopback to prevent ifupdown 5-minute boot deadlocks
 mkdir -p /etc/network/interfaces.d
-cat > /etc/network/interfaces << EOF
+cat > /etc/network/interfaces << 'EOF'
+# Loopback interface only - physical and cloud bridges are managed by Netplan / systemd-networkd
 source /etc/network/interfaces.d/*
 auto lo
 iface lo inet loopback
-
-# BEGIN pnetlab-netcfg pnet0
-allow-hotplug pnet0
-iface pnet0 inet static
-    pre-up ip link set dev ${REAL_IFACE} up promisc on
-    bridge_ports ${REAL_IFACE}
-    bridge_stp off
-    address ${IP_ADDR}
-    netmask ${NETMASK}
-    gateway ${GATEWAY}
-# END pnetlab-netcfg pnet0
 EOF
 chmod 644 /etc/network/interfaces
-echo "[4/5] Synchronized Netplan and /etc/network/interfaces."
+echo "[4/5] Synchronized Netplan and sanitized /etc/network/interfaces."
 
 # 5. Install Systemd Service for Boot Persistence
 cat > /etc/systemd/system/pnetlab-boot-network.service << 'EOF'

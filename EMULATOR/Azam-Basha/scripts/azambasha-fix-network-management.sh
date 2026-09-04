@@ -44,8 +44,46 @@ mkdir -p /opt/unetlab/data/netcfg-backups
 mkdir -p /etc/systemd/resolved.conf.d
 mkdir -p /etc/netplan
 mkdir -p /run/pnetlab
+mkdir -p /etc/systemd/system/networking.service.d
+mkdir -p /etc/modules-load.d
+mkdir -p /etc/sysctl.d
 chmod 755 /opt/unetlab/data/netcfg-backups /etc/systemd/resolved.conf.d /run/pnetlab 2>/dev/null || true
 chown root:www-data /run/pnetlab 2>/dev/null || true
+
+# Purge any legacy/installer/cloud-init netplan YAMLs
+for f in /etc/netplan/*.yaml /etc/netplan/*.yml; do
+    [ -f "$f" ] && [ "$(basename "$f")" != "01-pnetlab-netcfg.yaml" ] && rm -f "$f" 2>/dev/null || true
+done
+rm -f /etc/systemd/network/*.network 2>/dev/null || true
+
+# Prevent 5-minute boot stall with 10-second timeout drop-in
+cat > /etc/systemd/system/networking.service.d/10-timeout.conf << 'EOF'
+[Service]
+TimeoutStartSec=10sec
+EOF
+
+# Kernel Modules & Bridge Netfilter Sysctl Bypass
+cat > /etc/modules-load.d/pnetlab.conf << 'EOF'
+bridge
+stp
+llc
+8021q
+tun
+dummy
+br_netfilter
+EOF
+modprobe bridge 2>/dev/null || true
+modprobe 8021q 2>/dev/null || true
+modprobe tun 2>/dev/null || true
+modprobe br_netfilter 2>/dev/null || true
+
+cat > /etc/sysctl.d/99-pnetlab-bridge.conf << 'EOF'
+net.bridge.bridge-nf-call-iptables = 0
+net.bridge.bridge-nf-call-arptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.ipv4.ip_forward = 1
+EOF
+sysctl --system 2>/dev/null || true
 
 # 4. Initialize /etc/network/interfaces if Missing or Empty
 echo "[4/6] Setting up /etc/network/interfaces..."

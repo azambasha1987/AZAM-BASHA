@@ -97,8 +97,8 @@ if [ -n "$REAL_IFACE" ]; then
     mkdir -p /etc/cloud/cloud.cfg.d
     echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 
-    # Ensure kernel bridge and virtualization modules load at boot
-    mkdir -p /etc/modules-load.d
+    # Ensure kernel bridge, virtualization, and br_netfilter modules load at boot
+    mkdir -p /etc/modules-load.d /etc/sysctl.d /etc/systemd/system/networking.service.d
     cat > /etc/modules-load.d/pnetlab.conf << 'MODEOF'
 bridge
 stp
@@ -106,44 +106,92 @@ llc
 8021q
 tun
 dummy
+br_netfilter
 MODEOF
     modprobe bridge 2>/dev/null || true
     modprobe 8021q 2>/dev/null || true
     modprobe tun 2>/dev/null || true
+    modprobe br_netfilter 2>/dev/null || true
 
-    # Preserve/Ensure Netplan configuration for the real interface
+    # Bridge sysctl bypass to ensure ARP and IP traffic on bridges are never dropped by netfilter
+    cat > /etc/sysctl.d/99-pnetlab-bridge.conf << 'EOF'
+net.bridge.bridge-nf-call-iptables = 0
+net.bridge.bridge-nf-call-arptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.ipv4.ip_forward = 1
+EOF
+    sysctl --system 2>/dev/null || true
+
+    # Install 10-second timeout drop-in to prevent any 5-minute boot stalls from networking.service
+    cat > /etc/systemd/system/networking.service.d/10-timeout.conf << 'EOF'
+[Service]
+TimeoutStartSec=10sec
+EOF
+
+    # Purge conflicting Netplan and systemd-networkd files
     mkdir -p /etc/netplan
-    for f in /etc/netplan/00-*.yaml /etc/netplan/50-*.yaml; do
-        [ -f "$f" ] && mv "$f" "${f}.bak" 2>/dev/null || true
+    for f in /etc/netplan/*.yaml /etc/netplan/*.yml; do
+        [ -f "$f" ] && [ "$(basename "$f")" != "01-pnetlab-netcfg.yaml" ] && rm -f "$f" 2>/dev/null || true
     done
+    rm -f /etc/systemd/network/*.network 2>/dev/null || true
 
-    if [ ! -f /etc/netplan/01-pnetlab-netcfg.yaml ]; then
+    # Write authoritative Netplan configuration (Static or DHCP on bridge pnet0)
+    if [ -n "$STATIC_IP" ]; then
+        IP_NET="$STATIC_IP"
+        [[ "$IP_NET" != *"/"* ]] && IP_NET="${IP_NET}/24"
+        GW_LINE=""
+        [ -n "$STATIC_GW" ] && GW_LINE="      routes:\n        - to: default\n          via: ${STATIC_GW}"
+        
         cat << NETEOF > /etc/netplan/01-pnetlab-netcfg.yaml
 network:
   version: 2
   renderer: networkd
   ethernets:
     $REAL_IFACE:
+      dhcp4: false
+      dhcp6: false
+  bridges:
+    pnet0:
+      interfaces: [$REAL_IFACE]
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - $IP_NET
+$(echo -e "$GW_LINE")
+      nameservers:
+        addresses: [$STATIC_DNS, 1.1.1.1]
+      parameters:
+        stp: false
+        forward-delay: 0
+NETEOF
+    else
+        cat << NETEOF > /etc/netplan/01-pnetlab-netcfg.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    $REAL_IFACE:
+      dhcp4: false
+      dhcp6: false
+  bridges:
+    pnet0:
+      interfaces: [$REAL_IFACE]
       dhcp4: true
       dhcp6: false
+      parameters:
+        stp: false
+        forward-delay: 0
 NETEOF
-        chmod 600 /etc/netplan/01-pnetlab-netcfg.yaml
     fi
+    chmod 600 /etc/netplan/01-pnetlab-netcfg.yaml
 
-    # Ensure /etc/network/interfaces does not break on missing eth0
+    # Sanitize /etc/network/interfaces to loopback only (avoids ifupdown 5-minute boot deadlocks)
     mkdir -p /etc/network /etc/network/interfaces.d
     cat << INTEOF > /etc/network/interfaces
+# Loopback interface only - physical and cloud bridges are managed by Netplan / systemd-networkd
 source /etc/network/interfaces.d/*
 auto lo
 iface lo inet loopback
-
-# BEGIN pnetlab-netcfg pnet0
-allow-hotplug pnet0
-iface pnet0 inet dhcp
-    pre-up ip link set dev $REAL_IFACE up
-    bridge_ports $REAL_IFACE
-    bridge_stp off
-# END pnetlab-netcfg pnet0
 INTEOF
     chmod 644 /etc/network/interfaces
 fi

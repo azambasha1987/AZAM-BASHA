@@ -208,9 +208,27 @@ if systemctl list-unit-files | grep -q "systemd-timesyncd"; then
     echo "  -> systemd-timesyncd active: VM time drift on sleep/resume prevented."
 fi
 
-# 5. Clean up Noisy / Irrelevant Virtual Machine Boot Services
-echo "[5/5] Disabling unneeded virtual machine boot services (multipathd, keyboard-setup)..."
+# 5. Clean up Noisy / Irrelevant Virtual Machine Boot Services & Network Timeout Guard
+echo "[5/5] Disabling unneeded boot services and setting network boot timeout guard..."
 modprobe binfmt_misc 2>/dev/null || true
+modprobe br_netfilter 2>/dev/null || true
+
+# Install 10-second timeout drop-in for networking.service to prevent 5-minute boot freezes
+mkdir -p /etc/systemd/system/networking.service.d /etc/sysctl.d
+cat > /etc/systemd/system/networking.service.d/10-timeout.conf << 'EOF'
+[Service]
+TimeoutStartSec=10sec
+EOF
+
+# Ensure bridge netfilter does not intercept bridge ARP/IP
+cat > /etc/sysctl.d/99-pnetlab-bridge.conf << 'EOF'
+net.bridge.bridge-nf-call-iptables = 0
+net.bridge.bridge-nf-call-arptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.ipv4.ip_forward = 1
+EOF
+sysctl --system 2>/dev/null || true
+
 systemctl mask multipathd.service multipathd.socket keyboard-setup.service console-setup.service systemd-networkd-wait-online.service 2>/dev/null || true
 systemctl disable --now udhcpd.service kdump-tools.service multipathd.service 2>/dev/null || true
 systemctl reset-failed 2>/dev/null || true

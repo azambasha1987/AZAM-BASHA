@@ -72,7 +72,9 @@ run_or_fetch "azambasha-dataplane-engine.sh"
 
 # Phase 6: Bare-Metal Hardware NIC Tuning (Broadcom/Intel Ring Buffers & QinQ)
 echo "[*] Tuning bare-metal physical NIC ring buffers & 802.1ad QinQ..."
-for nic in $(find /sys/class/net/ -maxdepth 1 \( -name "eth*" -o -name "en*" \) | xargs -n1 basename 2>/dev/null); do
+for nic_path in /sys/class/net/eth* /sys/class/net/en*; do
+    [ -e "$nic_path" ] || continue
+    nic=$(basename "$nic_path")
     # Expand hardware ring buffers to 4096 descriptors if supported
     ethtool -G "$nic" rx 4096 tx 4096 2>/dev/null || true
     # Offload optimizations

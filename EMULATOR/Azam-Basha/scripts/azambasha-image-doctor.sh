@@ -82,7 +82,7 @@ if [ -d "$QEMU_DIR" ]; then
         done
 
         if [ "$template_found" = true ] && [ "$has_valid_disk" = true ]; then
-            echo -e "  [✔ OK] $folder_name &rarr; Template: '${prefix}.yml' | Disks: ${disk_names[*]}"
+            echo -e "  [✔ OK] $folder_name -> Template: '${prefix}.yml' | Disks: ${disk_names[*]}"
             CORRECT_IMAGES=$((CORRECT_IMAGES + 1))
         else
             echo -e "  [⚠ ISSUE] $folder_name"
@@ -115,7 +115,7 @@ if [ -d "$QEMU_DIR" ]; then
                         ;;
                 esac
                 first_disk="${non_standard_disks[0]}"
-                echo "      [FIXING] Renaming '$first_disk' &rarr; '$target_disk'..."
+                echo "      [FIXING] Renaming '$first_disk' -> '$target_disk'..."
                 mv -f "$img_folder/$first_disk" "$img_folder/$target_disk"
             fi
         fi

@@ -106,8 +106,11 @@ echo "[4/7] Patching sliding cookie renewal in functions.php..."
 FUNCTIONS_FILE="/opt/unetlab/html/includes/functions.php"
 if [ -f "$FUNCTIONS_FILE" ] && ! grep -q "Never-Logout Sliding Cookie" "$FUNCTIONS_FILE"; then
     cp "$FUNCTIONS_FILE" "${FUNCTIONS_FILE}.bak.${TIMESTAMP}"
-    python3 - <<PYEOF || true
-with open("${FUNCTIONS_FILE}", "r", encoding="utf-8", errors="ignore") as f:
+    python3 - "$FUNCTIONS_FILE" << 'PYEOF' || true
+import sys
+
+functions_file = sys.argv[1]
+with open(functions_file, "r", encoding="utf-8", errors="ignore") as f:
     content = f.read()
 
 target = "function updateUserCookie"
@@ -117,7 +120,7 @@ if target in content:
     if brace_idx != -1:
         injection = '\n        // Never-Logout Sliding Cookie\n        if (!headers_sent()) {\n            @setcookie("token", $cookie, [\n                "expires"  => time() + 315360000,\n                "path"     => "/",\n                "secure"   => true,\n                "httponly" => true,\n                "samesite" => "Strict",\n            ]);\n        }\n'
         content = content[:brace_idx+1] + injection + content[brace_idx+1:]
-        with open("${FUNCTIONS_FILE}", "w", encoding="utf-8") as f:
+        with open(functions_file, "w", encoding="utf-8") as f:
             f.write(content)
 PYEOF
 fi

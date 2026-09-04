@@ -101,7 +101,7 @@ case "$COMMAND" in
         echo "[2/3] Restoring configurations and templates..."
         if [ -d "${TEMP_DIR}/ai" ]; then
             cp -rn "${TEMP_DIR}/ai/." /opt/unetlab/data/ai/
-            chown -R root:pnetlab-mcp /opt/unetlab/data/ai
+            chown -R root:www-data /opt/unetlab/data/ai 2>/dev/null || true
         fi
         if [ -d "${TEMP_DIR}/templates" ]; then
             cp -rn "${TEMP_DIR}/templates/." /opt/unetlab/html/templates/ 2>/dev/null || true

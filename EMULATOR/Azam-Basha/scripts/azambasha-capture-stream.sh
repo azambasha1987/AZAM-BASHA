@@ -47,13 +47,18 @@ shift
 case "$COMMAND" in
     list)
         echo "=== Available Capture Interfaces (Point-to-Point / Hub / Cloud) ==="
-        for dev in $(find /sys/class/net/ -maxdepth 1 \( -name "vunl*" -o -name "vnet*" -o -name "pnet*" \) | xargs -n1 basename 2>/dev/null | sort); do
+        found=0
+        for dev_path in /sys/class/net/vunl* /sys/class/net/vnet* /sys/class/net/pnet*; do
+            [ -e "$dev_path" ] || continue
+            dev=$(basename "$dev_path")
             RX_PKTS=$(cat "/sys/class/net/$dev/statistics/rx_packets" 2>/dev/null || echo 0)
             TX_PKTS=$(cat "/sys/class/net/$dev/statistics/tx_packets" 2>/dev/null || echo 0)
             DEV_TYPE="Link/TAP"
             [[ "$dev" =~ ^pnet ]] && DEV_TYPE="Cloud/Bridge Hub"
             echo "  * $dev [$DEV_TYPE] (Rx: ${RX_PKTS} pkts, Tx: ${TX_PKTS} pkts)"
+            found=1
         done
+        [ "$found" -eq 0 ] && echo "  (No active virtual tap or bridge interfaces currently up)"
         ;;
 
     live)

@@ -299,7 +299,7 @@ CREATE TABLE `node_sessions` (
   KEY `node_session_iol` (`node_session_iol`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE `if_sessions` (
+CREATE TABLE IF NOT EXISTS `if_sessions` (
   `if_session_id` bigint NOT NULL AUTO_INCREMENT,
   `if_session_lab` int DEFAULT NULL,
   `if_session_node` int DEFAULT NULL,

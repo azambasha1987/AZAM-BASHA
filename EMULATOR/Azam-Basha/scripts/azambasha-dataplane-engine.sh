@@ -125,7 +125,9 @@ OPTIMIZE_SCRIPT="/usr/local/bin/azambasha-optimize-interfaces"
 cat << 'EOF' > "$OPTIMIZE_SCRIPT"
 #!/bin/bash
 # Optimize all active vunl, vnet and bridge interfaces
-for iface in $(find /sys/class/net/ -maxdepth 1 \( -name "vunl*" -o -name "vnet*" -o -name "pnet*" \) | xargs -n1 basename 2>/dev/null); do
+for iface_path in /sys/class/net/vunl* /sys/class/net/vnet* /sys/class/net/pnet*; do
+    [ -e "$iface_path" ] || continue
+    iface=$(basename "$iface_path")
     # Increase transmit queue length to 10,000 packets
     ip link set dev "$iface" txqueuelen 10000 2>/dev/null || true
     
@@ -137,7 +139,9 @@ for iface in $(find /sys/class/net/ -maxdepth 1 \( -name "vunl*" -o -name "vnet*
 done
 
 # Set zero-forward-delay on point-to-point lab bridges to eliminate MAC learning stalls
-for br in $(find /sys/class/net/ -maxdepth 1 -type d \( -name "pnet*" -o -name "br*" \) | xargs -n1 basename 2>/dev/null); do
+for br_path in /sys/class/net/pnet* /sys/class/net/br*; do
+    [ -e "$br_path" ] || continue
+    br=$(basename "$br_path")
     if [ -d "/sys/class/net/$br/bridge" ]; then
         brctl setfd "$br" 0 2>/dev/null || true
         brctl setageing "$br" 300 2>/dev/null || true

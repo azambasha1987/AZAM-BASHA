@@ -35,7 +35,7 @@ def read_interface_stats():
         if not parts:
             continue
         iface = parts[0].rstrip(":")
-        if not (iface.startswith("vnet") or iface.startswith("pnet") or iface.startswith("eth") or iface.startswith("br")):
+        if not iface.startswith(("vnet", "vunl", "pnet", "eth", "ens", "enp", "eno", "br")):
             continue
 
         try:

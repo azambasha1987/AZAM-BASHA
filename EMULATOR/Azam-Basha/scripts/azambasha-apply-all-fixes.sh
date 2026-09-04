@@ -31,9 +31,8 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
     echo "  15   Configure AI Lab Builder & Ollama Integration"
     echo "  16   Freeze Version & Block Future Updates (Anti-Conflict Lock)"
     echo "  17   Azam Basha Pure Black Dark Mode Theme Engine"
-    echo "  18   Apply ALL Essential Fixes & Dark Mode Suite (with Auto-Snapshot)"
-    echo "  19   Rollback System to Pre-Upgrade Snapshot"
-    echo "  20   Exit"
+    echo "  18   Apply ALL Essential Fixes & Dark Mode Suite"
+    echo "  19   Exit"
     echo "  --check  Run non-destructive diagnostic health check"
     exit 0
 fi
@@ -148,6 +147,7 @@ case "$CHOICE" in
             bash "${SCRIPT_DIR}/azambasha-dark-theme.sh"
         fi
         ;;
+    18)
         echo "--> [1/14] Applying Permanent Session Fix..."
         bash "${SCRIPT_DIR}/azambasha-disable-logout.sh"
         echo ""

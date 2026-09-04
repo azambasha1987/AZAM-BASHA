@@ -200,9 +200,14 @@ case "$CHOICE" in
             bash "${SCRIPT_DIR}/azambasha-dark-theme.sh" || true
         fi
         echo ""
-        echo "--> [15/15] Applying Advanced UI, Telemetry Heatmap & Quad-Tree Suite..."
+        echo "--> [15/16] Applying Advanced UI, Telemetry Heatmap & Quad-Tree Suite..."
         if [ -f "${SCRIPT_DIR}/azambasha-ui-enhancements.sh" ]; then
             bash "${SCRIPT_DIR}/azambasha-ui-enhancements.sh" || true
+        fi
+        echo ""
+        echo "--> [16/16] Applying Smart Alignment, Spotlight & Mini-Map GUI Suite..."
+        if [ -f "${SCRIPT_DIR}/azambasha-gui-enhancements.sh" ]; then
+            bash "${SCRIPT_DIR}/azambasha-gui-enhancements.sh" || true
         fi
         echo ""
         echo "============================================================"

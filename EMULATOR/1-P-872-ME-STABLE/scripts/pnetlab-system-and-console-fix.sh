@@ -191,12 +191,19 @@ systemctl daemon-reload 2>/dev/null || true
 systemctl enable pnetlab-bridges.service 2>/dev/null || true
 
 # 4. NTP Time Synchronization & Drift Fix
-echo "[4/4] Configuring NTP Time Synchronization (systemd-timesyncd)..."
+echo "[4/5] Configuring NTP Time Synchronization (systemd-timesyncd)..."
 if systemctl list-unit-files | grep -q "systemd-timesyncd"; then
     systemctl enable systemd-timesyncd 2>/dev/null || true
     systemctl restart systemd-timesyncd 2>/dev/null || true
     echo "  -> systemd-timesyncd active: VM time drift on sleep/resume prevented."
 fi
+
+# 5. Clean up Noisy / Irrelevant Virtual Machine Boot Services
+echo "[5/5] Disabling unneeded virtual machine boot services (multipathd, keyboard-setup)..."
+modprobe binfmt_misc 2>/dev/null || true
+systemctl mask multipathd.service multipathd.socket keyboard-setup.service console-setup.service systemd-networkd-wait-online.service 2>/dev/null || true
+systemctl disable --now udhcpd.service kdump-tools.service multipathd.service 2>/dev/null || true
+systemctl reset-failed 2>/dev/null || true
 
 # Restart Apache
 systemctl restart apache2 2>/dev/null || service apache2 restart 2>/dev/null || true

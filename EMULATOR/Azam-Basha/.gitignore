@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs and runtime files
+sync.log
+*.tmp
+*.log
+
+# Git tracks and submodules
+track-1-git/
+
+# Windows OS artifacts
+Thumbs.db
+ehthumbs.db
+# Archives
+*.zip
+*.tar.gz
+
+# Local certificates and keys
+*.crt
+*.cer
+*.key
+*.pem
+*.csr
+*.ext

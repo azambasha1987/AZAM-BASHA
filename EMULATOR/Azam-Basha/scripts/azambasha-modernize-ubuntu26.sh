@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNetLab Master Modernization & Fine-Tuning Suite for Ubuntu 26+ (Resolute)
-# Complete orchestration script to modernize Datapath, PHP 8.5, Cgroups v2,
-# Python 3.14+, and Security barriers on existing or new PNETLab installations.
+# Azam Basha Master Modernization & Fine-Tuning Suite for Ubuntu 26+ (Resolute)
+# Complete orchestration script to modernize Silicon Datapath, PHP 8.5, Cgroups v2,
+# Python 3.14+, 1024-Node Lab Scaling, Bare-Metal NIC Tuning & Security Barriers.
 # ==============================================================================
 set -euo pipefail
 
@@ -64,10 +64,45 @@ run_or_fetch "azambasha-php-modernizer.sh"
 # Phase 3: Cgroups v2 & Virtualization Throttling
 run_or_fetch "azambasha-cgroups-v2-engine.sh"
 
-# Phase 4: Python 3.14+ Ecosystem & Web Console Bridges
+# Phase 4: High-Performance Speed Optimizer & 1024-Node Scaling
+run_or_fetch "azambasha-speed-optimizer.sh"
+
+# Phase 5: Silicon Dataplane Fast-Path Accelerator
+run_or_fetch "azambasha-dataplane-engine.sh"
+
+# Phase 6: Bare-Metal Hardware NIC Tuning (Broadcom/Intel Ring Buffers & QinQ)
+echo "[*] Tuning bare-metal physical NIC ring buffers & 802.1ad QinQ..."
+for nic in $(find /sys/class/net/ -maxdepth 1 \( -name "eth*" -o -name "en*" \) | xargs -n1 basename 2>/dev/null); do
+    # Expand hardware ring buffers to 4096 descriptors if supported
+    ethtool -G "$nic" rx 4096 tx 4096 2>/dev/null || true
+    # Offload optimizations
+    ethtool -K "$nic" gro on gso on 2>/dev/null || true
+done
+
+# Ensure KVM, vhost-net and 802.1q kernel modules are persisted
+mkdir -p /etc/modules-load.d
+cat << 'EOF' > /etc/modules-load.d/pnetlab.conf
+kvm
+kvm_intel
+kvm_amd
+vhost
+vhost_net
+tun
+bridge
+br_netfilter
+8021q
+sch_fq_codel
+EOF
+
+# Ensure /lib/modules link exists for modprobe
+if [ ! -d /lib/modules ] && [ -d /usr/lib/modules ]; then
+    ln -sfn /usr/lib/modules /lib/modules
+fi
+
+# Phase 7: Python 3.14+ Ecosystem & Web Console Bridges
 run_or_fetch "azambasha-python-environment-setup.sh"
 
-# Phase 5: Database & System Deep Fixes
+# Phase 8: Database & System Deep Fixes
 run_or_fetch "azambasha-database-and-system-deep-fix.sh"
 run_or_fetch "azambasha-fix-export-and-apt.sh"
 run_or_fetch "azambasha-disable-logout.sh"

@@ -1,0 +1,17 @@
+---
+type: docker
+config_script: config_frr.py
+description: FRRouting Docker (High-Performance Dataplane)
+name: FRR
+cpulimit: 1
+icon: Router-2D-Gen-Grey-S.svg
+ethernet: 8
+eth_format: eth{0}
+console: telnet
+cpu: 1
+ram: 256
+mtu: 9000
+prep: prep_frr.sh
+dock_args: --privileged --net=none -v ./daemons:/etc/frr/daemons:ro
+docker_shell: pgrep zebra 1>/dev/null && echo Press Enter to start CLI && read -r && vtysh || ( echo waiting system && sleep 2 )
+...

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# PNETLab Composable Link Impairment & Quality Controller
+# Azam Basha Composable Link Impairment & Quality Controller
 #
-# Programmatically configures and controls real-world link conditions on PNETLab
-# virtual links and TAP interfaces:
+# Programmatically configures and controls real-world link conditions on Azam Basha
+# virtual links, TAP interfaces, and bridge hubs:
 # • Latency & Jitter (e.g., 20ms delay with 5ms normal distribution jitter)
 # • Packet Loss & Burst Loss (e.g., 1.5% random or burst loss)
 # • Bandwidth Throttling (e.g., 10Mbit, 100Mbit, 1Gbit token bucket)
@@ -15,7 +15,7 @@ set -euo pipefail
 # Help & Usage
 if [[ "${1:-}" =~ ^(-h|--help)$ ]] || [ $# -eq 0 ]; then
     echo "============================================================"
-    echo "       PNETLab Composable Link Impairment Controller        "
+    echo "       Azam Basha Composable Link Impairment Controller     "
     echo "============================================================"
     echo "Usage: sudo bash $0 <command> [arguments]"
     echo ""
@@ -23,7 +23,7 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]] || [ $# -eq 0 ]; then
     echo "  set <IFACE> [OPTIONS]     Apply impairment parameters to an interface"
     echo "  show [<IFACE>]            Display active impairments on interface(s)"
     echo "  clear <IFACE | all>       Remove impairments and restore wire-speed"
-    echo "  list                      List all active PNETLab virtual interfaces"
+    echo "  list                      List all active virtual interfaces (TAP/Hub)"
     echo ""
     echo "Set Options:"
     echo "  --delay <MS>              Artificial latency (e.g. 25ms)"
@@ -36,14 +36,14 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]] || [ $# -eq 0 ]; then
     echo "  --reorder <PCT>           Packet reordering percentage (e.g. 5%)"
     echo ""
     echo "Examples:"
-    echo "  # Simulate a 30ms WAN link with 5ms jitter and 1% packet loss on vnet0_1_0:"
-    echo "  sudo bash $0 set vnet0_1_0 --delay 30ms --jitter 5ms --loss 1%"
+    echo "  # Simulate a 30ms WAN link with 5ms jitter and 1% packet loss on vunl0_1_0:"
+    echo "  sudo bash $0 set vunl0_1_0 --delay 30ms --jitter 5ms --loss 1%"
     echo ""
     echo "  # Throttle link to 10 Mbps with 50ms latency:"
-    echo "  sudo bash $0 set vnet0_1_0 --rate 10mbit --delay 50ms"
+    echo "  sudo bash $0 set vunl0_1_0 --rate 10mbit --delay 50ms"
     echo ""
-    echo "  # Clear impairment on vnet0_1_0 or all interfaces:"
-    echo "  sudo bash $0 clear vnet0_1_0"
+    echo "  # Clear impairment on vunl0_1_0 or all interfaces:"
+    echo "  sudo bash $0 clear vunl0_1_0"
     echo "  sudo bash $0 clear all"
     exit 0
 fi
@@ -53,8 +53,8 @@ shift
 
 case "$COMMAND" in
     list)
-        echo "=== Active PNETLab Virtual Interfaces ==="
-        find /sys/class/net/ -maxdepth 1 -name "vnet*" -o -name "pnet*" | xargs -n1 basename 2>/dev/null || echo "No virtual interfaces found."
+        echo "=== Active Virtual Interfaces (Point-to-Point / Hub) ==="
+        find /sys/class/net/ -maxdepth 1 \( -name "vunl*" -o -name "vnet*" -o -name "pnet*" \) | xargs -n1 basename 2>/dev/null || echo "No virtual interfaces found."
         ;;
 
     show)
@@ -64,7 +64,7 @@ case "$COMMAND" in
             tc qdisc show dev "$IFACE"
         else
             echo "=== Active Impairments across all Virtual Interfaces ==="
-            for dev in $(find /sys/class/net/ -maxdepth 1 -name "vnet*" -o -name "pnet*" | xargs -n1 basename 2>/dev/null); do
+            for dev in $(find /sys/class/net/ -maxdepth 1 \( -name "vunl*" -o -name "vnet*" -o -name "pnet*" \) | xargs -n1 basename 2>/dev/null); do
                 QDISC_INFO=$(tc qdisc show dev "$dev" 2>/dev/null | grep -E "netem|tbf" || true)
                 if [ -n "$QDISC_INFO" ]; then
                     echo -e "\n[*] Interface: $dev"
@@ -82,7 +82,7 @@ case "$COMMAND" in
         TARGET="${1:-all}"
         if [ "$TARGET" = "all" ]; then
             echo "[*] Clearing all link impairments on all virtual interfaces..."
-            for dev in $(find /sys/class/net/ -maxdepth 1 -name "vnet*" -o -name "pnet*" | xargs -n1 basename 2>/dev/null); do
+            for dev in $(find /sys/class/net/ -maxdepth 1 \( -name "vunl*" -o -name "vnet*" -o -name "pnet*" \) | xargs -n1 basename 2>/dev/null); do
                 tc qdisc del dev "$dev" root 2>/dev/null || true
             done
             echo "[SUCCESS] All link impairments cleared. Full wire speed restored."

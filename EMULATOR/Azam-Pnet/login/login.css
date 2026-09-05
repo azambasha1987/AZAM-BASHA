@@ -194,164 +194,92 @@ body {
 }
 
 /* ============================================================================
-   Holographic Floating Circular Avatar Unit
-   The ENTIRE circular badge + orbital rings + portrait jumps/floats cohesively!
+   Supreme Holographic Circular Avatar Unit (Home Screen Exclusive)
+   Clean, single glowing ring, dynamic floating levitation, grounding shadow & interactive hover
    ============================================================================ */
 
 .avatar-hero-unit {
 	position: relative;
-	width: 146px;
-	height: 146px;
-	margin-bottom: 8px; /* Snug attachment directly above Azam Basha */
+	width: 144px;
+	height: 144px;
+	margin-bottom: 12px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	animation: avatarUnifiedJump 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+	animation: avatarLevitate 4.5s ease-in-out infinite;
 	cursor: pointer;
 	user-select: none;
+	perspective: 1000px;
 }
 
-/* Smooth Unified Jump / Float Animation */
-@keyframes avatarUnifiedJump {
+/* Floating Levitation with Dynamic Lighting */
+@keyframes avatarLevitate {
 	0%, 100% {
 		transform: translateY(0px) scale(1);
 	}
-	40% {
-		transform: translateY(-13px) scale(1.025);
-	}
 	50% {
-		transform: translateY(-14px) scale(1.03);
-	}
-	70% {
-		transform: translateY(-5px) scale(0.995);
+		transform: translateY(-12px) scale(1.025);
 	}
 }
 
-/* Expanding Radar/Sonar Wave Pulses */
-.sonar-wave {
-	position: absolute;
-	inset: 0;
-	border-radius: 50%;
-	border: 1.5px solid rgba(0, 242, 254, 0.45);
-	opacity: 0;
-	pointer-events: none;
-	z-index: 0;
-}
-
-.wave-1 {
-	animation: sonarPulse 4.2s ease-out infinite;
-}
-
-.wave-2 {
-	animation: sonarPulse 4.2s ease-out infinite 2.1s;
-}
-
-@keyframes sonarPulse {
-	0% {
-		transform: scale(0.85);
-		opacity: 0.8;
-	}
-	50% {
-		opacity: 0.3;
-	}
-	100% {
-		transform: scale(1.45);
-		opacity: 0;
-	}
-}
-
-/* Outer Clockwise Conic Gradient Ring */
-.orbital-ring-outer { display: none !important; }
-
-@keyframes spinClockwise {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
-}
-
-/* Inner Counter-Clockwise Segmented Ring with Orbiting Satellites */
-.orbital-ring-inner {
+/* Soft Ambient Radial Halo Behind Avatar */
+.avatar-aura-glow {
 	position: absolute;
 	inset: -14px;
 	border-radius: 50%;
-	border: 1px dashed rgba(0, 242, 254, 0.35);
-	animation: spinCounterClockwise 12s linear infinite;
+	background: radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(139, 92, 246, 0.25) 50%, transparent 75%);
+	filter: blur(18px);
 	z-index: 1;
 	pointer-events: none;
+	animation: auraPulse 4.5s ease-in-out infinite;
 }
 
-@keyframes spinCounterClockwise {
-	from { transform: rotate(360deg); }
-	to { transform: rotate(0deg); }
+@keyframes auraPulse {
+	0%, 100% {
+		opacity: 0.55;
+		transform: scale(0.92);
+	}
+	50% {
+		opacity: 0.95;
+		transform: scale(1.08);
+	}
 }
 
-.orbit-node {
-	position: absolute;
-	width: 7px;
-	height: 7px;
-	border-radius: 50%;
-	background: #00f2fe;
-	box-shadow: 0 0 10px #00f2fe, 0 0 20px #00f2fe;
-}
-
-.node-1 {
-	top: -4px;
-	left: 50%;
-	transform: translateX(-50%);
-}
-
-.node-2 {
-	bottom: -4px;
-	left: 50%;
-	transform: translateX(-50%);
-	background: #c084fc;
-	box-shadow: 0 0 10px #c084fc;
-}
-
-/* Outer Soft Neon Halo */
-.orbital-glow {
-	position: absolute;
-	inset: -16px;
-	border-radius: 50%;
-	background: radial-gradient(circle, rgba(0, 242, 254, 0.4) 0%, rgba(129, 140, 248, 0.2) 60%, transparent 80%);
-	filter: blur(16px);
-	z-index: 0;
-	animation: pulseGlow 3s ease-in-out infinite alternate;
-}
-
-@keyframes pulseGlow {
-	0% { opacity: 0.55; transform: scale(0.92); }
-	100% { opacity: 0.95; transform: scale(1.08); }
-}
-
-/* Inner Shield Circle Badge (Encapsulates portrait cleanly inside circle) */
+/* Inner Shield Circle Badge */
 .avatar-circle {
 	position: relative;
-	width: 124px;
-	height: 124px;
+	width: 136px;
+	height: 136px;
 	border-radius: 50%;
 	overflow: visible;
 	background: transparent;
-	border: none;
-	box-shadow: none;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	z-index: 5;
 }
 
-/* The Photo Cutout inside the Circle */
+/* The Supreme Circular Badge Logo */
 .brand-logo {
-	width: 124px;
-	height: 124px;
-	object-fit: contain;
+	width: 136px;
+	height: 136px;
+	border-radius: 50%;
+	object-fit: cover;
 	display: block;
-	filter: drop-shadow(0 0 20px rgba(0, 242, 254, 0.65)) drop-shadow(0 0 35px rgba(189, 0, 255, 0.35));
-	transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+	filter: drop-shadow(0 8px 22px rgba(0, 242, 254, 0.55)) drop-shadow(0 2px 10px rgba(189, 0, 255, 0.35));
+	transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
 }
 
+/* Interactive Hover Response */
 .avatar-hero-unit:hover .brand-logo {
-	transform: scale(1.1);
-	filter: drop-shadow(0 0 28px rgba(0, 242, 254, 0.95)) drop-shadow(0 0 45px rgba(189, 0, 255, 0.55));
+	transform: scale(1.08) rotate(1deg);
+	filter: drop-shadow(0 12px 32px rgba(0, 242, 254, 0.95)) drop-shadow(0 4px 18px rgba(189, 0, 255, 0.7));
+}
+
+.avatar-hero-unit:hover .avatar-aura-glow {
+	opacity: 1;
+	filter: blur(22px);
+	transform: scale(1.15);
 }
 
 .brand-logo[hidden] {
@@ -369,6 +297,7 @@ body {
 	font-size: 42px;
 	color: #fff;
 	background: linear-gradient(135deg, #0ea5e9, #6366f1);
+	border-radius: 50%;
 	z-index: 2;
 }
 
@@ -376,61 +305,13 @@ body {
 	display: none !important;
 }
 
-/* Smooth Torso Vignette at Bottom of Circle */
-.avatar-vignette-bottom {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	height: 35%;
-	background: linear-gradient(to top, rgba(2, 6, 23, 0.7) 0%, rgba(2, 6, 23, 0.1) 65%, transparent 100%);
-	pointer-events: none;
-	z-index: 3;
-}
-
-/* Inner Glass Specular Highlight Arc */
-.inner-specular-light {
-	position: absolute;
-	top: 0;
-	left: 8%;
-	right: 8%;
-	height: 48%;
-	border-radius: 120px 120px 0 0;
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, transparent 100%);
-	pointer-events: none;
-	z-index: 4;
-}
-
-/* Interactive Avatar Hover Supercharge */
-.avatar-hero-unit:hover .avatar-circle {
-	position: relative;
-	width: 124px;
-	height: 124px;
-	border-radius: 50%;
-	overflow: visible;
-	background: transparent;
-	border: none;
-	box-shadow: none;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 5;
-}
-
-.avatar-hero-unit:hover .orbital-ring-outer { display: none !important; }
-
-.avatar-hero-unit:hover .orbital-ring-inner {
-	animation-duration: 6s;
-	border-color: rgba(0, 242, 254, 0.7);
-}
-
-/* Grounding Levitation Shadow & Disc (Inversely scales with jump) */
+/* Grounding Levitation Shadow */
 .podium-container {
 	position: absolute;
-	bottom: -14px;
+	bottom: -16px;
 	left: 50%;
 	transform: translateX(-50%);
-	width: 100px;
+	width: 110px;
 	height: 16px;
 	display: flex;
 	align-items: center;
@@ -441,47 +322,22 @@ body {
 
 .podium-shadow {
 	position: absolute;
-	width: 96px;
+	width: 100px;
 	height: 12px;
 	border-radius: 50%;
-	background: radial-gradient(ellipse, rgba(0, 242, 254, 0.5) 0%, rgba(0, 0, 0, 0.85) 60%, transparent 85%);
+	background: radial-gradient(ellipse, rgba(0, 242, 254, 0.6) 0%, rgba(13, 27, 60, 0.7) 45%, transparent 75%);
 	filter: blur(6px);
-	animation: podiumShadowScale 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-}
-
-.podium-light-ring {
-	position: absolute;
-	width: 80px;
-	height: 8px;
-	border-radius: 50%;
-	border: 1px solid rgba(0, 242, 254, 0.35);
-	opacity: 0.6;
-	animation: podiumRingPulse 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+	animation: podiumShadowScale 4.5s ease-in-out infinite;
 }
 
 @keyframes podiumShadowScale {
 	0%, 100% {
 		transform: scale(1);
-		opacity: 0.9;
+		opacity: 0.85;
 	}
-	40%, 50% {
-		transform: scale(0.68);
+	50% {
+		transform: scale(0.72);
 		opacity: 0.35;
-	}
-	70% {
-		transform: scale(0.92);
-		opacity: 0.75;
-	}
-}
-
-@keyframes podiumRingPulse {
-	0%, 100% {
-		transform: scale(1);
-		opacity: 0.7;
-	}
-	40%, 50% {
-		transform: scale(0.7);
-		opacity: 0.2;
 	}
 }
 

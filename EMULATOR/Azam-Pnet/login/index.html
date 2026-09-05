@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Azam Basha — Next-Gen Platform</title>
+	<link rel="icon" href="/branding/api.php?action=logo">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="/login/login.css?v=1788586246">
+</head>
+<body>
+	<!-- Cyber Matrix Ambient Canvas -->
+	<div class="cyber-bg">
+		<div class="cyber-grid"></div>
+		<div class="cyber-scanlines"></div>
+		<div class="glow-orb orb-1"></div>
+		<div class="glow-orb orb-2"></div>
+		<div class="glow-orb orb-3"></div>
+	</div>
+
+	<main class="login-wrap">
+		<!-- Brand & Animated Holographic Floating Circular Avatar -->
+		<div class="brand-container">
+			<div class="avatar-hero-unit" id="avatar-hero-unit">
+				<!-- Outer Pulsing Sonar Waves -->
+				<div class="sonar-wave wave-1"></div>
+				<div class="sonar-wave wave-2"></div>
+
+				<!-- Dual Orbiting Cyber Rings -->
+				<div class="orbital-ring-outer"></div>
+				<div class="orbital-ring-inner">
+					<div class="orbit-node node-1"></div>
+					<div class="orbit-node node-2"></div>
+				</div>
+				<div class="orbital-glow"></div>
+				
+				<!-- High-Tech Circular Shield Frame -->
+				<div class="avatar-circle">
+					<img class="brand-logo" id="brand-logo" data-brand-logo src="/branding/api.php?action=logo" alt="Azam Basha">
+					<span class="brand-mark" id="brand-mark" hidden>AB</span>
+					<!-- Glass Specular Reflection & Smooth Torso Fade -->
+					<div class="avatar-vignette-bottom"></div>
+					<div class="inner-specular-light"></div>
+				</div>
+				
+				<!-- Grounding Levitation Shadow & Energy Disc -->
+				<div class="podium-container">
+					<div class="podium-shadow"></div>
+					<div class="podium-light-ring"></div>
+				</div>
+			</div>
+			
+			<h1 class="brand-title">
+				<span class="brand-name" data-brand-name>Azam Basha</span>
+			</h1>
+			<div class="cyber-divider"></div>
+			
+			<p class="login-header" id="login-header" hidden></p>
+			
+			<div class="status-badge-container">
+				<div class="status-pill">
+					<span class="pulse-dot"></span>
+					<span class="status-text">NETWORK EMULATION PLATFORM</span>
+					<span class="version-tag" id="version-line">v<span id="version-value">1.0.0</span></span>
+				</div>
+			</div>
+
+			<div class="default-account-pill" id="default-account">
+				<span class="acc-icon">⚡</span>
+				<span>Default: <strong class="glow-text">admin</strong> / <strong class="glow-text">azam</strong></span>
+			</div>
+		</div>
+
+		<!-- Futuristic Cyber-Glass Card -->
+		<form class="login-card" id="login-form" autocomplete="on">
+			<div class="card-glow-top"></div>
+			<div class="card-corner corner-tl"></div>
+			<div class="card-corner corner-tr"></div>
+			
+			<div class="field">
+				<label for="username">
+					<span class="field-label-text">USERNAME</span>
+				</label>
+				<div class="input-wrapper">
+					<input id="username" name="username" type="text" autocomplete="username"
+						autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter username" required autofocus>
+					<div class="input-focus-border"></div>
+				</div>
+			</div>
+
+			<div class="field">
+				<label for="password">
+					<span class="field-label-text">PASSWORD</span>
+				</label>
+				<div class="input-wrapper">
+					<input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+					<div class="input-focus-border"></div>
+				</div>
+			</div>
+
+			<div class="field">
+				<label for="console-pref">
+					<span class="field-label-text">CONSOLE ENGINE</span>
+				</label>
+				<div class="select-wrapper">
+					<select id="console-pref" name="console-pref">
+						<option value="native" selected>Default Console (Native Client)</option>
+						<option value="html5">HTML5 Web Console (In-Browser)</option>
+					</select>
+					<div class="select-arrow"></div>
+				</div>
+			</div>
+
+			<div class="alert" id="alert" role="alert" hidden></div>
+
+			<button class="btn-submit" id="submit" type="submit">
+				<span class="btn-shine"></span>
+				<span class="btn-label">AUTHENTICATE &amp; LAUNCH</span>
+				<span class="btn-spin" aria-hidden="true"></span>
+			</button>
+		</form>
+	</main>
+
+	<script src="/assets-common/js/pnq-branding.js?v=5c1fac93"></script>
+	<script src="/login/login.js?v=ac9a7d35"></script>
+</body>
+</html>

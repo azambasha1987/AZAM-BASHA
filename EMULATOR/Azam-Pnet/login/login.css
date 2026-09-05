@@ -1,0 +1,851 @@
+/* ============================================================================
+   Azam Basha Next-Gen Futuristic Cyber-Glass Design System
+   (Unified Holographic Circular Avatar + Floating & Jumping Dynamics)
+   ============================================================================ */
+
+:root {
+	--bg-deep: #040711;
+	--bg-surface: #0a0f1d;
+	--card-bg: rgba(11, 19, 38, 0.76);
+	--card-border: rgba(0, 242, 254, 0.24);
+	--card-border-hover: rgba(0, 242, 254, 0.55);
+	
+	--cyan-neon: #00f2fe;
+	--blue-neon: #38bdf8;
+	--purple-neon: #8b5cf6;
+	--magenta-neon: #d946ef;
+	--emerald-glow: #10b981;
+	
+	--text-main: #f8fafc;
+	--text-muted: #94a3b8;
+	--text-dim: #64748b;
+	
+	--field-bg: rgba(6, 11, 24, 0.88);
+	--field-border: rgba(148, 163, 184, 0.22);
+	--field-focus-border: #00f2fe;
+	
+	--font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html, body {
+	height: 100%;
+	width: 100%;
+	overflow-x: hidden;
+}
+
+body {
+	font-family: var(--font-sans);
+	background-color: var(--bg-deep);
+	color: var(--text-main);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	position: relative;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+/* Background Animated Canvas */
+.cyber-bg {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 0;
+	overflow: hidden;
+	background: radial-gradient(circle at 50% 15%, #0e1b38 0%, #060b17 55%, #020409 100%);
+}
+
+.cyber-grid {
+	position: absolute;
+	inset: 0;
+	background-image: 
+		linear-gradient(rgba(0, 242, 254, 0.04) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(0, 242, 254, 0.04) 1px, transparent 1px);
+	background-size: 44px 44px;
+	background-position: center center;
+	mask-image: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 65%, transparent 90%);
+	-webkit-mask-image: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 65%, transparent 90%);
+}
+
+.cyber-scanlines {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+	background-size: 100% 4px;
+	pointer-events: none;
+	opacity: 0.35;
+}
+
+/* Floating Ambient Aura Orbs */
+.glow-orb {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(110px);
+	opacity: 0.4;
+	pointer-events: none;
+	animation: floatOrb 18s ease-in-out infinite alternate;
+}
+
+.orb-1 {
+	top: 10%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 550px;
+	height: 550px;
+	background: radial-gradient(circle, rgba(0, 242, 254, 0.25) 0%, rgba(56, 189, 248, 0.12) 60%, transparent 100%);
+}
+
+.orb-2 {
+	bottom: 8%;
+	left: 18%;
+	width: 420px;
+	height: 420px;
+	background: radial-gradient(circle, rgba(139, 92, 246, 0.22) 0%, transparent 70%);
+	animation-delay: -6s;
+}
+
+.orb-3 {
+	top: 35%;
+	right: 12%;
+	width: 380px;
+	height: 380px;
+	background: radial-gradient(circle, rgba(0, 242, 254, 0.18) 0%, transparent 70%);
+	animation-delay: -11s;
+}
+
+@keyframes floatOrb {
+	0% { transform: translate(-50%, -50%) scale(1); }
+	50% { transform: translate(-46%, -42%) scale(1.15); }
+	100% { transform: translate(-54%, -58%) scale(0.92); }
+}
+
+/* Main Container */
+.login-wrap {
+	position: relative;
+	z-index: 10;
+	width: 100%;
+	max-width: 470px;
+	padding: 20px 20px 32px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* Brand & Hero Container */
+.brand-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-bottom: 18px;
+	text-align: center;
+	width: 100%;
+}
+
+/* ============================================================================
+   Holographic Floating Circular Avatar Unit
+   The ENTIRE circular badge + orbital rings + portrait jumps/floats cohesively!
+   ============================================================================ */
+
+.avatar-hero-unit {
+	position: relative;
+	width: 146px;
+	height: 146px;
+	margin-bottom: 8px; /* Snug attachment directly above Azam Basha */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	animation: avatarUnifiedJump 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+	cursor: pointer;
+	user-select: none;
+}
+
+/* Smooth Unified Jump / Float Animation */
+@keyframes avatarUnifiedJump {
+	0%, 100% {
+		transform: translateY(0px) scale(1);
+	}
+	40% {
+		transform: translateY(-13px) scale(1.025);
+	}
+	50% {
+		transform: translateY(-14px) scale(1.03);
+	}
+	70% {
+		transform: translateY(-5px) scale(0.995);
+	}
+}
+
+/* Expanding Radar/Sonar Wave Pulses */
+.sonar-wave {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	border: 1.5px solid rgba(0, 242, 254, 0.45);
+	opacity: 0;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.wave-1 {
+	animation: sonarPulse 4.2s ease-out infinite;
+}
+
+.wave-2 {
+	animation: sonarPulse 4.2s ease-out infinite 2.1s;
+}
+
+@keyframes sonarPulse {
+	0% {
+		transform: scale(0.85);
+		opacity: 0.8;
+	}
+	50% {
+		opacity: 0.3;
+	}
+	100% {
+		transform: scale(1.45);
+		opacity: 0;
+	}
+}
+
+/* Outer Clockwise Conic Gradient Ring */
+.orbital-ring-outer {
+	position: absolute;
+	inset: -6px;
+	border-radius: 50%;
+	background: conic-gradient(
+		from 0deg,
+		#00f2fe 0%,
+		#38bdf8 20%,
+		#818cf8 40%,
+		#c084fc 60%,
+		#00f2fe 85%,
+		#00f2fe 100%
+	);
+	animation: spinClockwise 8s linear infinite;
+	z-index: 1;
+	opacity: 0.85;
+	mask-image: radial-gradient(circle, transparent 67%, black 69%);
+	-webkit-mask-image: radial-gradient(circle, transparent 67%, black 69%);
+}
+
+@keyframes spinClockwise {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+/* Inner Counter-Clockwise Segmented Ring with Orbiting Satellites */
+.orbital-ring-inner {
+	position: absolute;
+	inset: -14px;
+	border-radius: 50%;
+	border: 1px dashed rgba(0, 242, 254, 0.35);
+	animation: spinCounterClockwise 12s linear infinite;
+	z-index: 1;
+	pointer-events: none;
+}
+
+@keyframes spinCounterClockwise {
+	from { transform: rotate(360deg); }
+	to { transform: rotate(0deg); }
+}
+
+.orbit-node {
+	position: absolute;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #00f2fe;
+	box-shadow: 0 0 10px #00f2fe, 0 0 20px #00f2fe;
+}
+
+.node-1 {
+	top: -4px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.node-2 {
+	bottom: -4px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: #c084fc;
+	box-shadow: 0 0 10px #c084fc;
+}
+
+/* Outer Soft Neon Halo */
+.orbital-glow {
+	position: absolute;
+	inset: -16px;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(0, 242, 254, 0.4) 0%, rgba(129, 140, 248, 0.2) 60%, transparent 80%);
+	filter: blur(16px);
+	z-index: 0;
+	animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+	0% { opacity: 0.55; transform: scale(0.92); }
+	100% { opacity: 0.95; transform: scale(1.08); }
+}
+
+/* Inner Shield Circle Badge (Encapsulates portrait cleanly inside circle) */
+.avatar-circle {
+	position: relative;
+	width: 132px;
+	height: 132px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 50% 30%, #172554 0%, #0f172a 65%, #020617 100%);
+	border: 3px solid rgba(0, 242, 254, 0.75);
+	overflow: hidden;
+	z-index: 2;
+	box-shadow: 
+		inset 0 0 25px rgba(0, 242, 254, 0.35),
+		0 10px 30px rgba(0, 0, 0, 0.85);
+	display: flex;
+	align-items: flex-end; /* Anchors portrait naturally to bottom rim */
+	justify-content: center;
+	transition: all 0.35s ease;
+}
+
+/* The Photo Cutout inside the Circle */
+.brand-logo {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+	display: block;
+	filter: brightness(1.06) contrast(1.06);
+	transform: translateY(5px) scale(1.08); /* Centers head and upper body inside the circle */
+	transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.avatar-hero-unit:hover .brand-logo {
+	transform: translateY(3px) scale(1.14);
+}
+
+.brand-logo[hidden] {
+	display: none !important;
+}
+
+/* Fallback Initials Mark */
+.brand-mark {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 800;
+	font-size: 42px;
+	color: #fff;
+	background: linear-gradient(135deg, #0ea5e9, #6366f1);
+	z-index: 2;
+}
+
+.brand-mark[hidden] {
+	display: none !important;
+}
+
+/* Smooth Torso Vignette at Bottom of Circle */
+.avatar-vignette-bottom {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 35%;
+	background: linear-gradient(to top, rgba(2, 6, 23, 0.7) 0%, rgba(2, 6, 23, 0.1) 65%, transparent 100%);
+	pointer-events: none;
+	z-index: 3;
+}
+
+/* Inner Glass Specular Highlight Arc */
+.inner-specular-light {
+	position: absolute;
+	top: 0;
+	left: 8%;
+	right: 8%;
+	height: 48%;
+	border-radius: 120px 120px 0 0;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, transparent 100%);
+	pointer-events: none;
+	z-index: 4;
+}
+
+/* Interactive Avatar Hover Supercharge */
+.avatar-hero-unit:hover .avatar-circle {
+	border-color: #00f2fe;
+	box-shadow: 
+		inset 0 0 30px rgba(0, 242, 254, 0.5),
+		0 0 35px rgba(0, 242, 254, 0.75);
+}
+
+.avatar-hero-unit:hover .orbital-ring-outer {
+	animation-duration: 4s;
+	opacity: 1;
+	filter: drop-shadow(0 0 12px rgba(0, 242, 254, 0.9));
+}
+
+.avatar-hero-unit:hover .orbital-ring-inner {
+	animation-duration: 6s;
+	border-color: rgba(0, 242, 254, 0.7);
+}
+
+/* Grounding Levitation Shadow & Disc (Inversely scales with jump) */
+.podium-container {
+	position: absolute;
+	bottom: -14px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 100px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.podium-shadow {
+	position: absolute;
+	width: 96px;
+	height: 12px;
+	border-radius: 50%;
+	background: radial-gradient(ellipse, rgba(0, 242, 254, 0.5) 0%, rgba(0, 0, 0, 0.85) 60%, transparent 85%);
+	filter: blur(6px);
+	animation: podiumShadowScale 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.podium-light-ring {
+	position: absolute;
+	width: 80px;
+	height: 8px;
+	border-radius: 50%;
+	border: 1px solid rgba(0, 242, 254, 0.35);
+	opacity: 0.6;
+	animation: podiumRingPulse 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+@keyframes podiumShadowScale {
+	0%, 100% {
+		transform: scale(1);
+		opacity: 0.9;
+	}
+	40%, 50% {
+		transform: scale(0.68);
+		opacity: 0.35;
+	}
+	70% {
+		transform: scale(0.92);
+		opacity: 0.75;
+	}
+}
+
+@keyframes podiumRingPulse {
+	0%, 100% {
+		transform: scale(1);
+		opacity: 0.7;
+	}
+	40%, 50% {
+		transform: scale(0.7);
+		opacity: 0.2;
+	}
+}
+
+/* ============================================================================
+   Brand Typography & Header Details
+   ============================================================================ */
+
+.brand-title {
+	margin-top: 4px;
+	margin-bottom: 4px;
+	z-index: 2;
+}
+
+.brand-name {
+	font-size: 32px;
+	font-weight: 800;
+	letter-spacing: 0.5px;
+	background: linear-gradient(135deg, #ffffff 30%, #bae6fd 70%, #38bdf8 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 0 18px rgba(0, 242, 254, 0.35));
+}
+
+.cyber-divider {
+	width: 56px;
+	height: 3px;
+	background: linear-gradient(90deg, transparent, var(--cyan-neon), transparent);
+	border-radius: 2px;
+	margin-bottom: 8px;
+	box-shadow: 0 0 12px var(--cyan-neon);
+}
+
+.login-header {
+	font-size: 13.5px;
+	color: var(--text-muted);
+	margin-bottom: 8px;
+	font-weight: 500;
+	max-width: 340px;
+	letter-spacing: 0.3px;
+}
+
+.login-header[hidden] {
+	display: none !important;
+}
+
+/* Status Pill */
+.status-badge-container {
+	margin-bottom: 8px;
+}
+
+.status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 5px 14px;
+	background: rgba(15, 23, 42, 0.85);
+	border: 1px solid rgba(0, 242, 254, 0.28);
+	border-radius: 100px;
+	font-size: 11px;
+	font-family: var(--font-mono);
+	letter-spacing: 0.6px;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 4px 15px rgba(0,0,0,0.4), 0 0 14px rgba(0, 242, 254, 0.12);
+}
+
+.pulse-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background-color: var(--emerald-glow);
+	box-shadow: 0 0 10px var(--emerald-glow);
+	animation: pulseGreen 2s infinite ease-in-out;
+}
+
+@keyframes pulseGreen {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+.status-text {
+	color: #cbd5e1;
+	font-weight: 600;
+}
+
+.version-tag {
+	color: var(--cyan-neon);
+	font-weight: 700;
+}
+
+/* Default Credentials Badge */
+.default-account-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 2px;
+	padding: 4px 14px;
+	background: rgba(30, 41, 59, 0.45);
+	border: 1px solid rgba(148, 163, 184, 0.2);
+	border-radius: 6px;
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.default-account-pill[hidden] {
+	display: none !important;
+}
+
+.acc-icon {
+	color: var(--cyan-neon);
+}
+
+.glow-text {
+	color: #38bdf8;
+	font-weight: 600;
+}
+
+/* ============================================================================
+   Glassmorphic High-Tech Card
+   ============================================================================ */
+
+.login-card {
+	position: relative;
+	width: 100%;
+	background: var(--card-bg);
+	border: 1px solid var(--card-border);
+	border-radius: 22px;
+	padding: 30px 30px 26px;
+	backdrop-filter: blur(30px);
+	-webkit-backdrop-filter: blur(30px);
+	box-shadow: 
+		0 25px 50px -12px rgba(0, 0, 0, 0.78),
+		0 0 40px rgba(0, 242, 254, 0.09),
+		inset 0 1px 1px rgba(255, 255, 255, 0.12);
+	transition: border-color 0.3s ease, box-shadow 0.3s ease;
+	overflow: hidden;
+}
+
+.login-card:hover {
+	border-color: var(--card-border-hover);
+	box-shadow: 
+		0 30px 60px -12px rgba(0, 0, 0, 0.88),
+		0 0 50px rgba(0, 242, 254, 0.16),
+		inset 0 1px 2px rgba(255, 255, 255, 0.18);
+}
+
+.card-glow-top {
+	position: absolute;
+	top: 0;
+	left: 8%;
+	right: 8%;
+	height: 2px;
+	background: linear-gradient(90deg, transparent, var(--cyan-neon), var(--blue-neon), transparent);
+	opacity: 0.85;
+}
+
+/* Cyber Corner Accents */
+.card-corner {
+	position: absolute;
+	width: 8px;
+	height: 8px;
+	border: 2px solid var(--cyan-neon);
+	opacity: 0.65;
+	pointer-events: none;
+}
+
+.corner-tl {
+	top: 8px;
+	left: 8px;
+	border-right: none;
+	border-bottom: none;
+}
+
+.corner-tr {
+	top: 8px;
+	right: 8px;
+	border-left: none;
+	border-bottom: none;
+}
+
+/* Fields */
+.field {
+	margin-bottom: 18px;
+}
+
+.field label {
+	display: block;
+	margin-bottom: 7px;
+}
+
+.field-label-text {
+	font-size: 11px;
+	font-family: var(--font-mono);
+	font-weight: 600;
+	letter-spacing: 1.1px;
+	color: var(--text-muted);
+}
+
+.input-wrapper, .select-wrapper {
+	position: relative;
+	width: 100%;
+}
+
+.field input {
+	width: 100%;
+	height: 46px;
+	padding: 0 16px;
+	background: var(--field-bg);
+	border: 1px solid var(--field-border);
+	border-radius: 12px;
+	color: var(--text-main);
+	font-size: 14.5px;
+	font-family: inherit;
+	outline: none;
+	transition: all 0.25s ease;
+}
+
+.field input::placeholder {
+	color: var(--text-dim);
+	font-size: 13.5px;
+}
+
+.field input:focus {
+	border-color: var(--field-focus-border);
+	background: rgba(10, 18, 38, 0.95);
+	box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.22), 0 0 22px rgba(0, 242, 254, 0.16);
+}
+
+/* Select Dropdown */
+.field select {
+	width: 100%;
+	height: 46px;
+	padding: 0 40px 0 16px;
+	background: var(--field-bg);
+	border: 1px solid var(--field-border);
+	border-radius: 12px;
+	color: var(--text-main);
+	font-size: 14px;
+	font-family: inherit;
+	outline: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	cursor: pointer;
+	transition: all 0.25s ease;
+}
+
+.select-arrow {
+	position: absolute;
+	right: 16px;
+	top: 50%;
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid var(--text-muted);
+	border-bottom: 2px solid var(--text-muted);
+	transform: translateY(-70%) rotate(45deg);
+	pointer-events: none;
+	transition: border-color 0.2s;
+}
+
+.field select:focus {
+	border-color: var(--field-focus-border);
+	background: rgba(10, 18, 38, 0.95);
+	box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.22), 0 0 22px rgba(0, 242, 254, 0.16);
+}
+
+.field select:focus + .select-arrow {
+	border-color: var(--cyan-neon);
+}
+
+.field select option {
+	background: #0b1329;
+	color: #f8fafc;
+	padding: 10px;
+}
+
+/* Error Alert */
+.alert {
+	margin-bottom: 16px;
+	padding: 12px 14px;
+	background: rgba(239, 68, 68, 0.15);
+	border: 1px solid rgba(239, 68, 68, 0.38);
+	border-radius: 10px;
+	color: #fca5a5;
+	font-size: 13px;
+	line-height: 1.4;
+	backdrop-filter: blur(8px);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.alert[hidden] {
+	display: none !important;
+}
+
+/* High-Tech Submit Button */
+.btn-submit {
+	position: relative;
+	width: 100%;
+	height: 48px;
+	margin-top: 6px;
+	background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #2563eb 100%);
+	border: 1px solid rgba(56, 189, 248, 0.45);
+	border-radius: 12px;
+	color: #ffffff;
+	font-size: 13.5px;
+	font-family: var(--font-mono);
+	font-weight: 700;
+	letter-spacing: 1px;
+	cursor: pointer;
+	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	box-shadow: 0 4px 20px rgba(2, 132, 199, 0.38), 0 0 25px rgba(0, 242, 254, 0.16);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-shine {
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 60%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+	transform: skewX(-25deg);
+	transition: all 0.75s ease;
+}
+
+.btn-submit:hover .btn-shine {
+	left: 150%;
+}
+
+.btn-submit:hover {
+	transform: translateY(-2px);
+	background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 40%, #3b82f6 100%);
+	box-shadow: 0 8px 30px rgba(14, 165, 233, 0.55), 0 0 35px rgba(0, 242, 254, 0.32);
+	border-color: rgba(56, 189, 248, 0.85);
+}
+
+.btn-submit:active {
+	transform: translateY(1px);
+	box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4);
+}
+
+.btn-submit:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.btn-spin {
+	width: 16px;
+	height: 16px;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	border-top-color: #ffffff;
+	border-radius: 50%;
+	display: none;
+	animation: spin 0.6s linear infinite;
+}
+
+.btn-submit.is-busy .btn-spin {
+	display: inline-block;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+	.login-wrap {
+		padding: 16px 14px;
+	}
+	.login-card {
+		padding: 22px 18px 20px;
+		border-radius: 16px;
+	}
+	.avatar-hero-unit {
+		width: 120px;
+		height: 120px;
+	}
+	.avatar-circle {
+		width: 110px;
+		height: 110px;
+	}
+	.brand-name {
+		font-size: 28px;
+	}
+}

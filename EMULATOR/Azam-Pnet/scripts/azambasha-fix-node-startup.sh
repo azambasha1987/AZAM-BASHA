@@ -278,14 +278,28 @@ try:
             '$image = "/opt/unetlab/addons/qemu/" . $this->image;',
             '$imageName = $this->resolveImage();\n            $image = "/opt/unetlab/addons/qemu/" . $imageName;\n            if (!is_dir($image)) {\n                error_log(date("M d H:i:s ") . "ERROR: Image directory " . $image . " not found");\n                return 80041;\n            }'
         )
-        code = code.replace(
-            "foreach (scandir($image) as $filename) {",
-            "foreach (scandir($image) as $filename) {\n                if ($filename === '.' || $filename === '..') continue;"
-        )
+        # Ensure console property always falls back to template or telnet
+        target1 = 'if (isset($p["console"])) {\n            $this->console = htmlentities($p["console"]);\n        }'
+        replacement1 = """if (isset($p["console"])) {
+            $this->console = htmlentities($p["console"]);
+        }
+        if (empty($this->console)) {
+            $this->console = !empty($this->tpl["console"]) ? $this->tpl["console"] : "telnet";
+        }"""
+        if target1 in code:
+            code = code.replace(target1, replacement1)
+
+        target2 = 'if ($this->console == "telnet" || $this->console_2nd == "telnet") {'
+        replacement2 = """if (empty($this->console)) {
+            $this->console = !empty($this->tpl["console"]) ? $this->tpl["console"] : "telnet";
+        }
+        if ($this->console == "telnet" || $this->console_2nd == "telnet") {"""
+        if target2 in code and "if (empty($this->console)) {" not in code:
+            code = code.replace(target2, replacement2, 1)
 
     with open(dev_qemu, 'w', encoding='utf-8') as f:
         f.write(code)
-    print("  [✔] Smart PDF Image Resolver active in device_qemu.php")
+    print("  [✔] Smart PDF Image Resolver & Console Fallback active in device_qemu.php")
 except Exception as e:
     print(f"  [!] Note: {e}")
 PYEOF
@@ -330,6 +344,8 @@ for path in glob.glob('/opt/unetlab/labs/**/*.unl', recursive=True):
                 tag = re.sub(r'image="[^"]*"', f'image="{vios_real}"', tag)
             elif 'template="viosl2"' in tag:
                 tag = re.sub(r'image="[^"]*"', f'image="{viosl2_real}"', tag)
+            if 'console=""' in tag:
+                tag = tag.replace('console=""', 'console="telnet"')
             return tag
 
         new_content = re.sub(r'<node\b[^>]*>', fix_node_tag, content)
@@ -340,7 +356,7 @@ for path in glob.glob('/opt/unetlab/labs/**/*.unl', recursive=True):
     except Exception:
         pass
 
-print(f"  [✔] Direct mapping: vios -> {vios_real}, viosl2 -> {viosl2_real} ({count} labs updated)")
+print(f"  [✔] Direct mapping & console normalization: vios -> {vios_real}, viosl2 -> {viosl2_real} ({count} labs updated)")
 PYEOF
 
 # --- 7. Cisco IOU License Generation ---

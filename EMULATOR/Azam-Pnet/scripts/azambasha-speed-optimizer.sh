@@ -130,6 +130,7 @@ echo "  [✔] CPU Scaling Governor: Set to Performance across all host cores"
 
 # Streamline QEMU peripheral dispatch (strip audio/webdav on headless telnet nodes)
 python3 - << 'PYEOF'
+import os
 dev_file = "/opt/unetlab/html/devices/qemu/device_qemu.php"
 if os.path.exists(dev_file):
     try:
@@ -148,19 +149,20 @@ if os.path.exists(dev_file):
         print(f"  [!] device_qemu note: {e}")
 PYEOF
 
-# 2. Configure PHP OPcache & Realpath Cache (256MB Bytecode Acceleration)
-echo "[2/4] Accelerating PHP Backend (OPcache 256MB + Realpath Cache)..."
+# 2. Configure PHP OPcache & JIT Tracing (256MB Bytecode Acceleration + JIT)
+echo "[2/4] Accelerating PHP Backend (OPcache 256MB + JIT Tracing + Realpath Cache)..."
 cat << 'EOF' > /tmp/azambasha_opcache.ini
-; Azam Basha High-Performance OPcache & Realpath Tuning
+; Azam Basha High-Performance OPcache & JIT Tuning for Ubuntu 26+
 opcache.enable = 1
 opcache.enable_cli = 1
 opcache.memory_consumption = 256
-opcache.interned_strings_buffer = 16
-opcache.max_accelerated_files = 20000
+opcache.interned_strings_buffer = 32
+opcache.max_accelerated_files = 30000
 opcache.validate_timestamps = 1
 opcache.revalidate_freq = 2
-opcache.fast_shutdown = 1
 opcache.save_comments = 1
+opcache.jit = tracing
+opcache.jit_buffer_size = 64M
 realpath_cache_size = 4096K
 realpath_cache_ttl = 600
 EOF

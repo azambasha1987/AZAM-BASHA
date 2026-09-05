@@ -312,32 +312,25 @@ if [ ! -d "$DEB_POOL_DIR" ] || ! compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null;
 fi
 
 if [ -n "$DEB_POOL_DIR" ] && [ -d "$DEB_POOL_DIR" ] && compgen -G "${DEB_POOL_DIR}/*.deb" > /dev/null; then
-    echo "      Found local debian packages in $DEB_POOL_DIR. Installing latest 6.8.72 builds..."
+    echo "      Found local debian packages in $DEB_POOL_DIR. Resolving latest production builds..."
     
-    # Priority order for clean server installation (excluding satellite worker)
-    PACKAGES=(
-        "pnetlab-schema_6.8.72resolute1_amd64.deb"
-        "pnetlab-guacd_6.8.72resolute1_amd64.deb"
-        "pnetlab-qemu_6.8.72resolute1_amd64.deb"
-        "pnetlab-vpcs_6.8.72resolute1_amd64.deb"
-        "pnetlab-bridge-dkms_6.8.72resolute1_all.deb"
-        "pnetlab_6.8.72resolute1_amd64.deb"
+    # Priority dependency order for clean master server installation
+    PKG_PREFIXES=(
+        "pnetlab-schema"
+        "pnetlab-guacd"
+        "pnetlab-qemu"
+        "pnetlab-vpcs"
+        "pnetlab-bridge-dkms"
+        "pnetlab-docker"
+        "pnetlab"
     )
 
-    for deb in "${PACKAGES[@]}"; do
-        deb_path="${DEB_POOL_DIR}/${deb}"
-        if [ -f "$deb_path" ]; then
-            echo "      -> Extracting and installing $(basename "$deb_path")..."
+    for prefix in "${PKG_PREFIXES[@]}"; do
+        deb_path=$(find "$DEB_POOL_DIR" -maxdepth 1 -name "${prefix}_*.deb" ! -name "pnetlab-satellite*" | sort -V | tail -n1 || true)
+        if [ -n "$deb_path" ] && [ -f "$deb_path" ]; then
+            echo "      -> Installing $(basename "$deb_path")..."
             dpkg-deb -x "$deb_path" / 2>/dev/null || true
             dpkg -i --force-depends --force-confdef --force-confold "$deb_path" 2>/dev/null || true
-        else
-            echo "      [WARNING] Package $deb not found in pool, searching for available version..."
-            matching_deb=$(find "$DEB_POOL_DIR" -name "${deb%%_*_*}*.deb" | sort -V | tail -n1 || true)
-            if [ -n "$matching_deb" ] && [ -f "$matching_deb" ]; then
-                echo "      -> Installing fallback $(basename "$matching_deb")..."
-                dpkg-deb -x "$matching_deb" / 2>/dev/null || true
-                dpkg -i --force-depends --force-confdef --force-confold "$matching_deb" 2>/dev/null || true
-            fi
         fi
     done
 else

@@ -31,14 +31,17 @@ if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
     echo "  15   Configure AI Lab Builder & Ollama Integration"
     echo "  16   Freeze Version & Block Future Updates (Anti-Conflict Lock)"
     echo "  17   Azam Basha Pure Black Dark Mode Theme Engine"
-    echo "  18   Apply ALL Essential Fixes & Dark Mode Suite"
-    echo "  19   Exit"
+    echo "  18   Run Complete Node & Image Validation Suite (IOL, IOS, QEMU, Docker)"
+    echo "  19   Apply ALL Essential Fixes & Dark Mode Suite"
+    echo "  20   Exit"
     echo "  --check  Run non-destructive diagnostic health check"
     exit 0
 fi
 
 if [[ "${1:-}" =~ ^(--check|--status)$ ]]; then
-    if [ -f "${SCRIPT_DIR}/azambasha-health-check.sh" ]; then
+    if [ -f "${SCRIPT_DIR}/azambasha-node-test-suite.py" ]; then
+        python3 "${SCRIPT_DIR}/azambasha-node-test-suite.py" --all
+    elif [ -f "${SCRIPT_DIR}/azambasha-health-check.sh" ]; then
         bash "${SCRIPT_DIR}/azambasha-health-check.sh"
     elif [ -f "${SCRIPT_DIR}/azambasha-speed-optimizer.sh" ]; then
         bash "${SCRIPT_DIR}/azambasha-speed-optimizer.sh" --check || true
@@ -71,19 +74,20 @@ echo "14) Create Full Lab & Database Backup Archive"
 echo "15) AI Lab Builder & Ollama MCP Integration"
 echo "16) Freeze Version & Block Future Updates (Anti-Conflict Lock)"
 echo "17) Azam Basha Pure Black Dark Mode Theme Engine"
-echo "18) Apply ALL Essential Fixes & Dark Mode Suite"
-echo "19) Exit"
+echo "18) Run Complete Node & Image Validation Suite (IOL, IOS, QEMU, Docker)"
+echo "19) Apply ALL Essential Fixes & Dark Mode Suite"
+echo "20) Exit"
 echo "============================================================"
 
 # Handle interactive /dev/tty or non-interactive argument/fallback
 CHOICE=""
-if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-9])$ ]]; then
+if [ -n "${1:-}" ] && [[ "$1" =~ ^([1-9]|1[0-9]|20)$ ]]; then
     CHOICE="$1"
 elif [ -e /dev/tty ]; then
-    read -rp "Select an option [1-19, default: 18]: " USER_INPUT < /dev/tty || true
-    CHOICE="${USER_INPUT:-18}"
+    read -rp "Select an option [1-20, default: 19]: " USER_INPUT < /dev/tty || true
+    CHOICE="${USER_INPUT:-19}"
 else
-    CHOICE="18"
+    CHOICE="19"
 fi
 
 case "$CHOICE" in
@@ -148,49 +152,56 @@ case "$CHOICE" in
         fi
         ;;
     18)
-        echo "--> [1/14] Applying Permanent Session Fix..."
+        if [ -f "${SCRIPT_DIR}/azambasha-node-test-suite.py" ]; then
+            python3 "${SCRIPT_DIR}/azambasha-node-test-suite.py" --all
+        else
+            bash "${SCRIPT_DIR}/azambasha-image-doctor.sh" --check
+        fi
+        ;;
+    19)
+        echo "--> [1/15] Applying Permanent Session Fix..."
         bash "${SCRIPT_DIR}/azambasha-disable-logout.sh"
         echo ""
-        echo "--> [2/14] Applying Lab Export & APT Fix..."
+        echo "--> [2/15] Applying Lab Export & APT Fix..."
         bash "${SCRIPT_DIR}/azambasha-fix-export-and-apt.sh"
         echo ""
-        echo "--> [3/14] Applying 512MB Upload Limits & Docker Routing..."
+        echo "--> [3/15] Applying 512MB Upload Limits & Docker Routing..."
         bash "${SCRIPT_DIR}/azambasha-upload-and-docker-fix.sh"
         echo ""
-        echo "--> [4/14] Applying SSL IP-SAN, Console & Cloud Bridge Fix..."
+        echo "--> [4/15] Applying SSL IP-SAN, Console & Cloud Bridge Fix..."
         bash "${SCRIPT_DIR}/azambasha-system-and-console-fix.sh"
         echo ""
-        echo "--> [5/14] Applying Database SQL Mode, 1M Limits & Logrotate..."
+        echo "--> [5/15] Applying Database SQL Mode, 1M Limits & Logrotate..."
         bash "${SCRIPT_DIR}/azambasha-database-and-system-deep-fix.sh"
         echo ""
-        echo "--> [6/14] Fixing File Permissions & Sockets..."
+        echo "--> [6/15] Fixing File Permissions & Sockets..."
         bash "${SCRIPT_DIR}/azambasha-fix-permissions.sh"
         echo ""
-        echo "--> [7/14] Applying High-Performance Speed Optimizer (1024-Node Scaling)..."
+        echo "--> [7/15] Applying High-Performance Speed Optimizer (1024-Node Scaling)..."
         bash "${SCRIPT_DIR}/azambasha-speed-optimizer.sh"
         echo ""
-        echo "--> [8/14] Activating Silicon Dataplane Fast-Path Accelerator (MTU 9000)..."
+        echo "--> [8/15] Activating Silicon Dataplane Fast-Path Accelerator (MTU 9000)..."
         bash "${SCRIPT_DIR}/azambasha-dataplane-engine.sh"
         echo ""
-        echo "--> [9/14] Applying Cgroups v2 & System Limits..."
+        echo "--> [9/15] Applying Cgroups v2 & System Limits..."
         if [ -f "${SCRIPT_DIR}/azambasha-cgroups-v2-engine.sh" ]; then
             bash "${SCRIPT_DIR}/azambasha-cgroups-v2-engine.sh" || true
         fi
         echo ""
-        echo "--> [10/14] Freezing Version & Blocking Future Updates..."
+        echo "--> [10/15] Freezing Version & Blocking Future Updates..."
         bash "${SCRIPT_DIR}/azambasha-block-updates.sh"
         echo ""
-        echo "--> [11/14] Applying Azam Basha Enterprise Branding & Logo Assets..."
+        echo "--> [11/15] Applying Azam Basha Enterprise Branding & Logo Assets..."
         if [ -f "${SCRIPT_DIR}/azambasha-apply-branding.sh" ]; then
             bash "${SCRIPT_DIR}/azambasha-apply-branding.sh" || true
         fi
         echo ""
-        echo "--> [12/14] Applying Node Startup & Cisco IOSv Repair Engine..."
+        echo "--> [12/15] Applying Node Startup & Cisco IOSv Repair Engine..."
         if [ -f "${SCRIPT_DIR}/azambasha-fix-node-startup.sh" ]; then
             bash "${SCRIPT_DIR}/azambasha-fix-node-startup.sh" || true
         fi
         echo ""
-        echo "--> [13/14] Auditing Virtual Disks with Image Doctor..."
+        echo "--> [13/15] Auditing Virtual Disks with Image Doctor..."
         if [ -f "${SCRIPT_DIR}/azambasha-image-doctor.sh" ]; then
             bash "${SCRIPT_DIR}/azambasha-image-doctor.sh" --fix || true
         fi
@@ -200,21 +211,16 @@ case "$CHOICE" in
             bash "${SCRIPT_DIR}/azambasha-dark-theme.sh" || true
         fi
         echo ""
-        echo "--> [15/16] Applying Advanced UI, Telemetry Heatmap & Quad-Tree Suite..."
-        if [ -f "${SCRIPT_DIR}/azambasha-ui-enhancements.sh" ]; then
-            bash "${SCRIPT_DIR}/azambasha-ui-enhancements.sh" || true
-        fi
-        echo ""
-        echo "--> [16/16] Applying Smart Alignment, Spotlight & Mini-Map GUI Suite..."
-        if [ -f "${SCRIPT_DIR}/azambasha-gui-enhancements.sh" ]; then
-            bash "${SCRIPT_DIR}/azambasha-gui-enhancements.sh" || true
+        echo "--> [15/15] Running Automated Node & Virtualization Validation Suite..."
+        if [ -f "${SCRIPT_DIR}/azambasha-node-test-suite.py" ]; then
+            python3 "${SCRIPT_DIR}/azambasha-node-test-suite.py" --all || true
         fi
         echo ""
         echo "============================================================"
         echo "  [SUCCESS] ALL ESSENTIAL ENHANCEMENTS APPLIED SUCCESSFULLY! "
         echo "============================================================"
         ;;
-    19)
+    20)
         echo "Exiting."
         exit 0
         ;;

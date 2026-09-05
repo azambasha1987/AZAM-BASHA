@@ -15,14 +15,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="/var/log/azambasha-satellite-install.log"
 
-# Maintain root installation symlinks for /opt/azambasha and /opt/azambasha
-mkdir -p /opt/azambasha /opt/azambasha 2>/dev/null || true
+# Maintain root installation symlinks for /opt/azambasha and /opt/pnetlab
+mkdir -p /opt/azambasha /opt/pnetlab 2>/dev/null || true
 if [ "$SCRIPT_DIR" != "/opt/azambasha" ]; then
     ln -sfn "$SCRIPT_DIR" /opt/azambasha 2>/dev/null || true
 fi
-if [ "$SCRIPT_DIR" != "/opt/azambasha" ]; then
-    ln -sfn "$SCRIPT_DIR" /opt/azambasha 2>/dev/null || true
-fi
+ln -sfn /opt/azambasha /opt/pnetlab 2>/dev/null || true
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "[ERROR] Please run this script as root (sudo bash $0)" >&2
@@ -82,6 +80,7 @@ SATELLITE_DEPS=(
     libsdl1.2debian
     libaio1t64
     php-cli
+    zstd
 )
 
 for pkg in "${SATELLITE_DEPS[@]}"; do
@@ -92,19 +91,19 @@ done
 echo "[3/6] Installing Satellite runtime debian packages..."
 DEB_POOL_DIR="${SCRIPT_DIR}/debian/pool/resolute/main"
 
-if [ -d "$DEB_POOL_DIR" ]; then
-    PACKAGES=(
-        "pnetlab-qemu_6.8.72resolute1_amd64.deb"
-        "pnetlab-vpcs_6.8.72resolute1_amd64.deb"
-        "pnetlab-bridge-dkms_6.8.72resolute1_all.deb"
-        "pnetlab-docker_6.8.72resolute1_amd64.deb"
-        "pnetlab-satellite_6.8.72resolute1_amd64.deb"
+if [ -n "$DEB_POOL_DIR" ] && [ -d "$DEB_POOL_DIR" ]; then
+    PKG_PREFIXES=(
+        "pnetlab-qemu"
+        "pnetlab-vpcs"
+        "pnetlab-bridge-dkms"
+        "pnetlab-docker"
+        "pnetlab-satellite"
     )
 
-    for deb in "${PACKAGES[@]}"; do
-        deb_path="${DEB_POOL_DIR}/${deb}"
-        if [ -f "$deb_path" ]; then
-            echo "      -> Extracting and installing $(basename "$deb_path")..."
+    for prefix in "${PKG_PREFIXES[@]}"; do
+        deb_path=$(find "$DEB_POOL_DIR" -maxdepth 1 -name "${prefix}_*.deb" | sort -V | tail -n1 || true)
+        if [ -n "$deb_path" ] && [ -f "$deb_path" ]; then
+            echo "      -> Installing $(basename "$deb_path")..."
             dpkg-deb -x "$deb_path" / 2>/dev/null || true
             dpkg -i --force-depends --force-confdef --force-confold "$deb_path" 2>/dev/null || true
         fi
@@ -113,9 +112,9 @@ fi
 
 # --- Step 4: Extract QEMU Zoo Assets if Available ---
 echo "[4/6] Checking for QEMU multi-version runtime zoo..."
-ASSET_TAR="${SCRIPT_DIR}/generic/6.8.72resolute1/pnetlab-core-assets-6.8.72resolute1.tar.zst"
-if [ -f "$ASSET_TAR" ] && command -v zstd &>/dev/null; then
-    echo "      -> Unpacking QEMU runtime assets..."
+ASSET_TAR=$(find "${SCRIPT_DIR}/generic" -name "pnetlab-core-assets-*.tar.zst" 2>/dev/null | sort -V | tail -n1 || true)
+if [ -n "$ASSET_TAR" ] && [ -f "$ASSET_TAR" ] && command -v zstd &>/dev/null; then
+    echo "      -> Unpacking QEMU runtime assets ($(basename "$ASSET_TAR"))..."
     tar --zstd -xf "$ASSET_TAR" -C /opt/unetlab/ 2>/dev/null || true
 fi
 

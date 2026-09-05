@@ -105,3 +105,36 @@ MD5sum: c15d90853143d4a1e629ae7835a5031a
 SHA1: 55ee2f5c29ac887d5211d2c2f8f1619fba7f0e79
 SHA256: 6650c0d666129e1fab0611cdc88d93413fff083b0cf7651467461705eeb22757
 SHA512: 5ca8706b7f0405937cbf232dceba00f76298a4898cff9f847a4230b47201392f4685af344cd56e452e45e2d6d78beafa6d6b8639056f8c7188d01602d7678e82
+
+Package: pnetlab-bridge-dkms
+Version: 6.8.74resolute1
+Architecture: all
+Maintainer: PNetLab Noble Port <noble@pnetlab.local>
+Installed-Size: 864
+Depends: dkms (>= 2.1.0.0), build-essential, iproute2, kmod
+Section: kernel
+Priority: optional
+Homepage: http://www.pnetlab.com/
+Description: PNetLab patched bridge module (group-MAC forwarding)
+ Rebuilds the kernel bridge module via DKMS with BR_GROUPFWD_RESTRICTED
+ cleared, so a bridge's group_fwd_mask can forward all 01:80:c2:00:00:0X
+ reserved group MACs (STP, MAC pause, LACP/slow protocols). This lets
+ emulated switches connected through the host Linux bridges that PNetLab
+ builds per lab network form LACP EtherChannels and exchange pause frames —
+ impossible with the stock module, which hard-restricts those bits.
+ .
+ The module installs under updates/ (outranking the in-tree bridge.ko) and
+ is rebuilt automatically on every kernel upgrade. The engine writes
+ group_fwd_mask 65535 with a 65528 fallback, so labs work with or without it.
+ A boot-time self-check records whether the running bridge module actually
+ accepts the full mask, making future kernel/DKMS incompatibilities visible.
+ Runtime results are retained per kernel and can be reviewed with
+ pnetlab-bridge-dkms-status. Rollback guidance uses only the shipped registry
+ of fully gated kernels that are actually installed; it never treats a mask
+ pass as release confirmation or changes GRUB/unloads an active bridge.
+Filename: pool/resolute/main/pnetlab-bridge-dkms_6.8.74resolute1_all.deb
+Size: 142376
+MD5sum: 8686d25276bb413c64a5b3f3d899ea0e
+SHA1: 12f0161a35c2c897d60d72c00e062984117b0b10
+SHA256: f936b6898d1de6ac13db0e40017d38a55a9007654ca3d4f205d836e7a4b9a696
+SHA512: 1d2c38a2278a957cca1a99aece3d0193a68ef7504a246d831adcb9ae9afbf44743e35974b91a8b9d9604267c10592413eea0656284cd2508deecba88dc431e34

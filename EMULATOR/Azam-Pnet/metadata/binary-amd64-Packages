@@ -346,6 +346,76 @@ SHA1: dc67cb745b7b17cc15df7ba72e319f2cbbcd87c0
 SHA256: 68eb03c93f02f20e8a5ba1721175176d5409bdb8f7a190cd3724e35d65bedf6f
 SHA512: 357cc56c946a32e319d90f160d009b203cd68f35a5c05c404c0dbd2d16fee3300866c7d5ad5d9d7bcf693f9c6c8a2ce9ae3e12431175ce8fd4d90261df4d3236
 
+Package: pnetlab
+Version: 6.8.74resolute1
+Architecture: amd64
+Maintainer: PNetLab Noble Port <noble@pnetlab.local>
+Installed-Size: 151427
+Pre-Depends: pnetlab-schema, pnetlab-guacd
+Depends: apache2, apt, bridge-utils, ca-certificates, curl, debconf-utils, default-mysql-client, dialog, dmidecode, dnsmasq-base, genisoimage, iptables, iptables-persistent, lib32gcc-s1, lib32z1, libapache2-mod-php, php-xml, libc6, libc6-i386, libelf1t64, libpcap0.8t64, libsdl1.2debian, logrotate, lsb-release, lsof, lvm2, net-tools, chrony, php, php-cli, php-imagick, php-mysql, php-sqlite3, php-zip, gpg, plymouth-label, python3-pexpect, python3-requests, python3-cryptography, sqlite3, tcpdump, telnet, udhcpd, unzip, zip, cgroup-tools, php-yaml, rsync, sshpass, libxss1, ifupdown, php-gd, vim, dos2unix, pnetlab-vpcs, php-curl, php-mbstring, busybox, dhcpcd-base, pnetlab-qemu, nodejs, python3, util-linux, python3-httpx, python3-websockets
+Recommends: docker-ce
+Conflicts: eve-ng, eve-ng-pro, pnetlab-store, pnetlab-webconsole
+Replaces: eve-ng, eve-ng-pro, pnetlab-guacamole, pnetlab-store, pnetlab-webconsole, pnetlab-wireshark, unetlab
+Provides: pnetlab, pnetlab-webconsole
+Section: devel
+Priority: optional
+Homepage: http://www.pnetlab.com/
+Description: Packet Network Emulator Tool Lab (Noble)
+ PNetLab engine for building and sharing multi-vendor networking labs.
+ Noble (24.04) rebuild: self-contained payload (engine html + customizations
+ merged in), Noble dependency names, python3 IOL keygen, cgroup-v2 cleanup.
+ The Laravel store (pnetlab-store) is retired — the engine-native /login/
+ replaces it and /opt/unetlab/html/store does not exist on fresh installs.
+ The web console (frontend + backend bridges + units) is built into this
+ package as of 6.8.31 — the pnetlab-webconsole package is retired
+ (Provides/Replaces/Conflicts it so it is removed cleanly on upgrade).
+ .
+ Ubuntu 26.04 (27H1 v8) Depends deltas vs the focal vendor package:
+ lib32gcc1->lib32gcc-s1; ntp/ntpdate->chrony; libsdl1.2-compat->libsdl1.2debian
+ (libsdl1.2-compat gone on 26.04); time64 renames libelf1->libelf1t64,
+ libpcap0.8->libpcap0.8t64; dropped python2, uml-utilities, resolvconf,
+ libtinfo5/libncurses5/libncursesw5 (IOL ncurses compat ships as a staged deps/
+ deb). Stock Linux 7.0 carries in-tree KSM, so no custom kernel is pinned.
+ .
+ Added 2026-08-05: python3-httpx + python3-websockets. This package Provides
+ pnetlab-webconsole and ships /opt/pnet-webconsole's bridges, so their python
+ imports are THIS package's dependencies. Both were undeclared here; httpx
+ arrived only incidentally via the installer's optional AI/MCP pip step, so an
+ install that skipped it left pnet-http-bridge crash-looping on
+ ModuleNotFoundError and every node web console AND Wireshark capture iframe
+ rendered Apache's 503 page. Prefer the apt packages: pip installs under
+ /usr/local shadow apt modules.
+ .
+ Added 2026-08-23: the legacy pnet-websockify.service and
+ pnet-telnet-bridge.service were deliberately retired at a072c76, but an
+ additive builder sync plus wildcard stage copy kept shipping them until
+ 6.8.67, where they failed with 203/EXEC. python3-websockify is deliberately
+ not re-added; web-console unit staging is now an explicit allowlist with a
+ build-time negative gate for retired units and backends.
+ .
+ Added 2026-08-23: dhcpcd-base is an explicit runtime dependency for the
+ shipped /usr/sbin/pnetlab-netcfg CLI and pnetlab-netcfg-firstboot.service,
+ which invoke dhcpcd on the first-boot network setup path.
+ .
+ Added 2026-08-24: iptables-persistent (Defect #A, D1's "L3 forwarding rules
+ survive reboot" guarantee). Before this, every boot started with empty
+ netfilter tables and only PNetLab's own reconciled rules came back --
+ any admin-added iptables/ip6tables rule was silently lost. Ordering against
+ pnet-fwd-reconcile.sh's own PNETLAB-FWD chain matters: see the drop-in at
+ engine-custom/etc/systemd/system/pnetlab-ovfstartup.service.d/ and the
+ comment above reconcile_iptables() in pnet-fwd-reconcile.sh. Installer/
+ upgrade apt-get calls already run with DEBIAN_FRONTEND=noninteractive, so
+ the package's debconf autosave question is answered from its own default,
+ no explicit preseed needed. ebtables/L2 persistence is explicitly OUT OF
+ SCOPE -- PNETLAB-L2 is reconciled fresh every boot by design, never
+ admin-customizable; see D1 in docs/pass2-design/03-revised-plan.md.
+Filename: pool/resolute/main/pnetlab_6.8.74resolute1_amd64.deb
+Size: 87895538
+MD5sum: 02c4b359c7c13bdd216da6841d8cc096
+SHA1: cce86db022a043e072ace6521fd55bab687cab04
+SHA256: 3219bf161f0863d4dbbf5915bac852361707a1869ebcbe586ab7d039a8bdaaa5
+SHA512: ec30b2ee31a1c4d74948dfd57307544d80ad5717de6f6422f84aa1afab4acf8852913898cbe3f7fe1345551ae49474d4d6eb849194a1bd5434a1abe3df733921
+
 Package: pnetlab-docker
 Version: 6.8.63resolute1
 Name: PNETLab Docker
@@ -482,6 +552,40 @@ SHA1: ea80df56aadfe48292e439ec3797edb8475f5c5e
 SHA256: ed4a801ef5d201128aaaba47c4eb76431b2de2c2d2d1f3a7b7bf0305c0e923eb
 SHA512: 40be3a4427bc6c9bf4343438227dcdc3017dac356992893b0fdf2ebaf156aaa502a3d4cc6c42830e56c53272467672e7874a21843423115a31394cddc54c9b8b
 
+Package: pnetlab-docker
+Version: 6.8.74resolute1
+Name: PNETLab Docker
+Architecture: amd64
+Section: devel
+Priority: optional
+Maintainer: pnetlab.com
+Homepage: http://www.pnetlab.com
+Conflicts: eve-ng-dockers
+Replaces: docker-engine, docker-ce
+Pre-Depends:  docker-engine | docker-ce
+Depends:  docker-engine | docker-ce, jq
+Description: Docker PNETLab compatible
+ Versioned to ENGINE_VERSION (debs/VERSION) since 6.8.63resolute1 so the package
+ validates under debs/publish-codeberg.sh (distribution Phase 1); the content is
+ the 6.0.0-31 docker-rebroker Stage 7 config deb, unchanged. 6.0.0-31 ->
+ 6.8.63resolute1 sorts forward, so the upgrade path is monotonic.
+ .
+ docker-rebroker Stage 7: daemon.json binds ONLY the unix socket
+ (tcp://127.0.0.1:4243 retired) and enables live-restore so dockerd restarts
+ do not bounce running lab containers. postinst no longer stops/prunes
+ running containers (the 6.0.0-30 postinst did — destructive on upgrades).
+ /etc/docker/daemon.json is jq-CONVERGED by the postinst from the reference
+ defaults at /usr/share/pnetlab-docker/daemon.defaults.json: admin edits are
+ preserved, hosts (unix-only) + live-restore are force-set, and dockerd is
+ restarted only when those forced keys actually changed. Address pools default
+ to 10.177.0.0/16 size 24 (256 networks).
+Filename: pool/resolute/main/pnetlab-docker_6.8.74resolute1_amd64.deb
+Size: 3610
+MD5sum: 3cafc895584f8bfa3dfacb1daf7b81b6
+SHA1: 6944cc3b153afc53b15432ad8880b9dfde6e5d59
+SHA256: ac6c7312952ff8831f628effef3cfc703dbee318498c265b6170648ea7fbaf8e
+SHA512: 4e8bf1e79277bd89c831b93af957a6378ced5432e47600bd77ea70d011202fba102c4324719d5b9e21a574e18fb183138e53b1955d4aca487c9053c83fbc588d
+
 Package: pnetlab-guacd
 Version: 6.8.63resolute1
 Architecture: amd64
@@ -577,6 +681,30 @@ MD5sum: 2887d91eb4ec03d75b5c8e7113aeba41
 SHA1: e5c4a58b0a1781e15efd1dda0d68d3055a0b10cf
 SHA256: f405eb8cc587879cf819c3db55f0fe55f580dcaa3c721e8e56fa1a7c992f96cc
 SHA512: c298cdc25428b3f5caa29800b04e176324169ca235a50a26d27b0302150cc00e59c6254d932e00f75d7bca98f997969e951b0780ea8cb83dfa4f5aa3b2779081
+
+Package: pnetlab-guacd
+Version: 6.8.74resolute1
+Architecture: amd64
+Maintainer: PNetLab Noble Port <noble@pnetlab.local>
+Installed-Size: 3446
+Depends: libavcodec62 (>= 7:8.0.1), libavformat62 (>= 7:8.0.1), libavutil60 (>= 7:8.0.1), libc6 (>= 2.42), libcairo2 (>= 1.6.0), libfreerdp-client3-3 (>= 3.0.0), libfreerdp3-3 (>= 3.0.0), libglib2.0-0t64 (>= 2.12.0), libjpeg8 (>= 8c), libpango-1.0-0 (>= 1.22.0), libpangocairo-1.0-0 (>= 1.14.0), libpng16-16t64 (>= 1.6.46), libpulse0 (>= 0.99.1), libssh2-1t64 (>= 1.7.0), libssl3t64 (>= 3.0.0), libswscale9 (>= 7:8.0.1), libtelnet2 (>= 0.23), libuuid1 (>= 2.16), libvncclient1 (>= 0.9.10), libwebp7 (>= 1.5.0), libwebsockets19t64 (>= 2.4.1), libwinpr3-3 (>= 3.17.0)
+Conflicts: guacd
+Replaces: guacd, pnetlab-guacamole
+Provides: guacd
+Section: net
+Priority: optional
+Homepage: https://guacamole.apache.org/
+Description: Apache Guacamole proxy daemon (guacd 1.6.0) for Noble
+ guacd built from source on Noble so its library sonames are correct. Required by
+ the web console RDP lane (guacamole-lite). Replaces the focal-built
+ guacd-*-bin.tgz that the installer extracted to /. Ships a systemd unit in place
+ of the SysV /etc/init.d/guacd script. The Tomcat Guacamole webapp is NOT shipped.
+Filename: pool/resolute/main/pnetlab-guacd_6.8.74resolute1_amd64.deb
+Size: 462556
+MD5sum: f5acf69b698651935971cfe7210b8906
+SHA1: c94e9952611fb019356d08fe77adf57059dd8179
+SHA256: f5ee0c29a4be5bf14706e0ed499688088bdd73f2c2b6081260337a790c62fdcd
+SHA512: f2c9db60063c66ebf166d497ecbe7084259f2c782f14229ec35577a16a25fa65478a32e7347273bc59e235f4776932a5c4bcce7ed59ac5bc712d140cd10ce0ff
 
 Package: pnetlab-qemu
 Version: 6.8.63resolute1
@@ -727,6 +855,44 @@ MD5sum: 752f39fdc1927eece93c88cc1efddf19
 SHA1: 05b6ea5a6b01d0939acf2d5afcbcc7e3de74e7f6
 SHA256: 1e0ce76a8b46c5efdfddea8bdb498764a133f48c45af23027d93e3e94ce5573d
 SHA512: 71eea098ff0030ceaef4b28a638e2946e3bd1eb0c84473a15e7cf95f3914820759c4c1ed36d7d0e62c702573c02e04b47c7f0b1eacdc68e4df3d40e8dd6ef21e
+
+Package: pnetlab-qemu
+Version: 6.8.74resolute1
+Architecture: amd64
+Maintainer: PNetLab Noble Port <noble@pnetlab.local>
+Installed-Size: 1944
+Depends: qemu-system-x86, qemu-system-common, qemu-utils
+Recommends: ovmf
+Conflicts: unetlab-qemu
+Replaces: unetlab-qemu
+Section: devel
+Priority: optional
+Homepage: http://www.pnetlab.com/
+Description: QEMU runtime for PNetLab (thin metapackage on stock Ubuntu QEMU)
+ Thin metapackage that pulls in Ubuntu 26.04's own QEMU (qemu-system-x86,
+ qemu-system-common, qemu-utils) — the same set the offline installer's apt
+ step already installs — and wires the engine's expected /opt/qemu default
+ path to it via an idempotent postinst (a compat tree of symlinks mirroring
+ installer step [8/14]).
+ .
+ This package carries no QEMU executable binaries. It carries the small,
+ version-neutral OVMF-sata.fd firmware required by EFI node templates. It
+ replaces (same package
+ name, higher version) the opaque legacy rider pnetlab-qemu_6.0.0-30noble2,
+ which shipped the frozen focal-built version zoo /opt/qemu-1.3.1 .. 7.2.0.
+ On upgrade from that rider the maintainer scripts preserve the zoo on disk
+ (as unowned files) so node templates pinned to a legacy qemu_version keep
+ working; ownership/delivery of the zoo itself moves to the Phase-2
+ core-assets channel. See docs/pnetlab-qemu-transition-design.md.
+ .
+ Architecture is amd64 (not all) to match the rider this package replaces and
+ the amd64-only publication contract of debs/publish-codeberg.sh.
+Filename: pool/resolute/main/pnetlab-qemu_6.8.74resolute1_amd64.deb
+Size: 1275140
+MD5sum: 0602b4204edd271655bd7c740a10aff0
+SHA1: 2caafc5c7345f4a6b9394b4715773c095bf11880
+SHA256: 0bd483fefa0373b21399032990330455bc0679f1dee46090127d8d7fa262d5b3
+SHA512: bb72397d0454707911294ca8fe887a5e6a3f337f43f943e314da83e422ffe64d517ff2de88c6c6ea9ded3f99d375868ad85f958a153e86d326c799f081603933
 
 Package: pnetlab-satellite
 Version: 6.8.63resolute1
@@ -902,6 +1068,35 @@ SHA1: d63244615a60481fa8067e3b3b23b07548fe9a34
 SHA256: b1f2073106ad504bdbe7b89b53838e60b5bc7517592c3875c205fd86a5c4659b
 SHA512: d40e6097db7c01589e4ad211caa02eb4dc641222af1a3bf4cb4c238c2618d121bae4b299862df969f443d3ae5b2d5eb8c8c5c80e1ff6593364fe52cb5e06ab9e
 
+Package: pnetlab-satellite
+Version: 6.8.74resolute1
+Architecture: amd64
+Maintainer: PNetLab Noble Port <noble@pnetlab.local>
+Installed-Size: 123820
+Depends: bc, bridge-utils, dmidecode, genisoimage, iptables, lib32gcc-s1, lib32z1, libc6, libc6-i386, libelf1t64, libpcap0.8t64, libsdl1.2debian, lsof, lvm2, net-tools, chrony, php8.5-cli, php8.5-yaml, php8.5-mysql, php8.5-xml, php8.5-sqlite3, php8.5-zip, php8.5-curl, php8.5-mbstring, php8.5-gd, python3, python3-pexpect, rsync, openssh-server, openssl, sqlite3, tcpdump, telnet, unzip, zip, cgroup-tools, libyaml-0-2, busybox, ifupdown, libspice-client-glib-2.0-8, pnetlab-vpcs, pnetlab-qemu
+Recommends: docker-ce, pnetlab-bridge-dkms
+Conflicts: eve-ng, eve-ng-pro, pnetlab
+Replaces: eve-ng, eve-ng-pro, unetlab
+Section: devel
+Priority: optional
+Homepage: http://www.pnetlab.com/
+Description: PNetLab headless cluster satellite (Noble)
+ Headless node-execution host for a PNetLab cluster: ships the engine tree
+ (wrappers, device classes, templates) WITHOUT the web UI, store, console,
+ apache or mysql. Lab nodes are placed here from the cluster MASTER, which
+ owns the database, web front end and consoles. Join with:
+ .
+   pnet-satellite-join --master <ip> --id <1|2> --psk <psk-from-master>
+ .
+ Runs pnetlab-brokerd (local privilege broker) and pnetlab-satd (TLS cluster
+ agent on port 9050, PSK-authenticated; inert until joined).
+Filename: pool/resolute/main/pnetlab-satellite_6.8.74resolute1_amd64.deb
+Size: 82342146
+MD5sum: 4ba40a1df525f47ca0f70046fd5110c4
+SHA1: 7f45873e9649776867d067ab39813b275d8e1ceb
+SHA256: 7d8172c2283ee486927ea02770c66efa0a450af9f350161dc342e6511afd6fde
+SHA512: 7b20e569bf41251c7569f226e8c50c467b800dd23b0e62bd17b65c2d1a60b65c08626e272c08337b91811c94951739a0149eed1ae049b1be652f29a78a840547
+
 Package: pnetlab-schema
 Version: 6.8.63resolute1
 Architecture: amd64
@@ -1005,6 +1200,32 @@ MD5sum: f13eec46d425ac1289551c486d767a52
 SHA1: 84b1afcc0c501cb898ddecb9b9d229ae880cdcca
 SHA256: 51185ab96397a118ae9bdf09128314c12daacd924eb866327ca52cbcdbb96bf5
 SHA512: 1e509f4dfa17806c0d71e32cc87b004c1910ec04ba55e5cedb4335501eb713a020af6afb6c73ea73c846d41eae141bf280ea60bf0e3827c21ce54d6d5aa3262e
+
+Package: pnetlab-schema
+Version: 6.8.74resolute1
+Architecture: amd64
+Maintainer: PNetLab Noble Port <noble@pnetlab.local>
+Installed-Size: 50
+Section: devel
+Priority: optional
+Homepage: http://www.pnetlab.com/
+Description: PNetLab database schema (pnetlab_db + guacdb)
+ Ships the SQL structure dumps the installer/postinst import when a fresh
+ appliance's databases are empty:
+   /opt/unetlab/schema/pnetlab_db-schema.sql   engine DB (pnetlab_db)
+   /opt/unetlab/schema/guacdb-1.6.0-schema.sql Apache Guacamole 1.6.0 DB (guacdb)
+ The legacy rider file names (pnetlab_db.sql, guacamole-schema.sql) are kept as
+ symlinks so any consumer of the opaque pnetlab-schema_6.0.0-30 rider's paths
+ keeps working.
+ .
+ Architecture is amd64 (not all) to match the rider this package replaces and
+ the amd64-only publication contract of debs/publish-codeberg.sh.
+Filename: pool/resolute/main/pnetlab-schema_6.8.74resolute1_amd64.deb
+Size: 8724
+MD5sum: 5d8122cc14166fd3b2f19c29fdf3aef2
+SHA1: 599879bc5360d28e9c3cf3b99bba61f41ee137e7
+SHA256: a8415e59a9611e28245ff29408c82e85f66524766940811fd8c6d5c79e813fd4
+SHA512: 877a6aabd0f1c4d6cac450f19d629ddf9cc3592d7398190e642d2a0e029033fd526c98ff606fd426156ee6ca02117c772fdc85bb7b1c4dfad260613968d018f8
 
 Package: pnetlab-vpcs
 Version: 6.8.63resolute1
@@ -1137,3 +1358,25 @@ MD5sum: de3a6a706793eb7579a64f9aac55e838
 SHA1: 92d1f9b2e7d1b3527ae135098af329ef09c3ffde
 SHA256: c3af1643d8cc0d54feaf496a55fcf5789ed830758b5291d6ddb8b9c7b342cad7
 SHA512: e89be335bdb83085e6932393a0004c839858d1db68c083356de08f58ab7acda428c06776ec8b6ec6c9a00c2c96071579ce0bc236656d48f9f6db3e14c0058c46
+
+Package: pnetlab-vpcs
+Version: 6.8.74resolute1
+Architecture: amd64
+Maintainer: PNetLab Noble Port <noble@pnetlab.local>
+Installed-Size: 180
+Conflicts: unetlab-vpcs
+Replaces: unetlab-vpcs
+Section: devel
+Priority: optional
+Homepage: http://www.pnetlab.com/
+Description: VPCS-compatible virtual PC for PNetLab
+ netprobe is a statically linked virtual PC implementing raw Ethernet, ARP,
+ IPv4, ICMP, DHCP, DNS, UDP and minimal TCP for PNetLab labs. It replaces the
+ legacy opaque VPCS rider while retaining the pnetlab-vpcs package and
+ /opt/vpcsu/bin/vpcs runtime contracts.
+Filename: pool/resolute/main/pnetlab-vpcs_6.8.74resolute1_amd64.deb
+Size: 86668
+MD5sum: 5b9e818a34dca54b787964bf7ce18473
+SHA1: 8ba58d36129fa97870bdaa4109455314cd649a9e
+SHA256: 8da8340e48dfc91464e002e61b2a658cc2bec7bbb72529eee81b6d7d8221b1df
+SHA512: a0896bf0859b4aae80ed4593c6e06685af57e1c867f34ee1829095d2cac90fbdfba4d5061f6e961bfeda83fbd1d4b6e36c3db005e77f9f92f74dc87123e6f1cb

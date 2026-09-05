@@ -909,7 +909,7 @@ stage_satellite_bundle() {
         return 0
     fi
     local api_base script_name work deb_dir staging releases destination current pointer_tmp tombstone publish_lock_file publish_status
-    local script_sha inventory_sha asset_inventory_sha package_list optional_list optional_deb satellite_deb deb package arch version sha size filename
+    local script_sha inventory_sha asset_inventory_sha package_list optional_list optional_deb satellite_deb bridge_deb deb package arch version sha size filename
     local -a staged_debs=()
     api_base="${PNETLAB_GENERIC_API_BASE:-$PNETLAB_DEFAULT_GENERIC_API_BASE}"
     api_base="${api_base%/}"
@@ -1136,10 +1136,24 @@ stage_satellite_bundle() {
     fi
     reap_satellite_tombstones "$releases"
     satellite_deb=$(find "$destination/pnetlab-debs" -maxdepth 1 -type f -name 'pnetlab-satellite_*.deb' -print -quit || true)
+    bridge_deb=$(find "$destination/pnetlab-debs" -maxdepth 1 -type f -name 'pnetlab-bridge-dkms_*.deb' -print -quit || true)
     if [ -z "$satellite_deb" ] \
         || ! install -d -o root -g root -m 0755 /opt/unetlab/data/satellite \
         || ! install -m 0644 "$satellite_deb" /opt/unetlab/data/satellite/; then
         warn 'satellite deb staging to data/satellite failed; continuing'
+    fi
+    # Sync Satellite needs the matching DKMS package as well.  The bundle
+    # completeness gate has already verified the optional package identity and
+    # version; keep this copy independently guarded so a missing optional
+    # package never turns a successful network install into a hard failure.
+    if [ -n "$bridge_deb" ] && [ -n "$satellite_deb" ] \
+        && [ "$(dpkg-deb -f "$bridge_deb" Version 2>/dev/null || true)" = \
+             "$(dpkg-deb -f "$satellite_deb" Version 2>/dev/null || true)" ] \
+        && install -d -o root -g root -m 0755 /opt/unetlab/data/satellite \
+        && install -m 0644 "$bridge_deb" /opt/unetlab/data/satellite/; then
+        log 'matching pnetlab-bridge-dkms deb staged for Sync Satellite'
+    else
+        warn 'matching pnetlab-bridge-dkms deb unavailable; Sync Satellite will remain disabled until it is staged'
     fi
     log "satellite bundle published atomically: $destination (current -> $MANIFEST_RELEASE)"
     ); then
@@ -2298,6 +2312,14 @@ PROCNET
         systemctl enable --now php8.5-fpm >>"$LOG" 2>&1 || die 'php8.5-fpm did not start'
     fi
     systemctl daemon-reload >>"$LOG" 2>&1 || die 'systemd reload failed after PHP-FPM wiring'
+}
+
+configure_web_hardening() {
+    local hardening_script=/opt/unetlab/scripts/enable-web-hardening.sh
+    log '=== applying final web hardening and export aliases ==='
+    [ -x "$hardening_script" ] || die "missing web hardening script: $hardening_script"
+    bash "$hardening_script" >>"$LOG" 2>&1 || \
+        die 'web hardening/export alias activation failed'
 }
 
 configure_guac_key() {
@@ -3479,6 +3501,11 @@ main() {
         configure_guac_key
         install_telnetlib3
         systemctl daemon-reload >>"$LOG" 2>&1 || die 'systemd daemon-reload failed'
+
+        # The pnetlab postinst runs this once, but configure_apache() writes the
+        # final netinstall vhosts afterwards. Re-run it only after Apache/PHP are
+        # configured so /Exports and the other hardened aliases survive.
+        configure_web_hardening
 
         verify_docker
         [ "$NO_DOCKER" -eq 0 ] && preload_capture_web

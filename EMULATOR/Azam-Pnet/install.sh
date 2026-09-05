@@ -722,6 +722,7 @@ cat > /etc/apache2/sites-available/pnetlab-ssl.conf << 'EOF'
 EOF
 
 # Enable Required Apache Modules & Configurations
+a2dismod "php${PHP_VER}" php mpm_prefork 2>/dev/null || true
 a2enmod rewrite ssl proxy proxy_http proxy_wstunnel headers http2 mpm_event proxy_fcgi setenvif 2>/dev/null || true
 if [ -x /opt/unetlab/scripts/enable-php-fpm.sh ]; then
     bash /opt/unetlab/scripts/enable-php-fpm.sh 2>/dev/null || true

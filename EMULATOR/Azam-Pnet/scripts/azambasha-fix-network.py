@@ -176,8 +176,18 @@ for line in stdout.splitlines():
 if os.path.exists("/etc/network/interfaces"):
     try:
         with open("/etc/network/interfaces", "r") as f:
-            if "iface pnet0 inet static" in f.read():
+            content = f.read()
+            if "iface pnet0 inet static" in content:
                 is_static = True
+                m_addr = re.search(r'^\s*address\s+([0-9.]+)', content, re.MULTILINE)
+                if m_addr:
+                    current_ip = m_addr.group(1).strip()
+                m_mask = re.search(r'^\s*netmask\s+([0-9.]+)', content, re.MULTILINE)
+                if m_mask:
+                    current_mask = m_mask.group(1).strip()
+                m_gw = re.search(r'^\s*gateway\s+([0-9.]+)', content, re.MULTILINE)
+                if m_gw:
+                    current_gw = m_gw.group(1).strip()
     except Exception:
         pass
 

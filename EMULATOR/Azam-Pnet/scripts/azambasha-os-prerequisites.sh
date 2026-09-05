@@ -258,6 +258,17 @@ if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
 fi
 echo "      -> All system packages and runtime modules verified!"
 
+# Clean unused packages and headers
+apt-get autoremove -y -qq --purge 2>/dev/null || true
+apt-get clean 2>/dev/null || true
+
+# Pre-configure Apache for Event MPM and PHP-FPM
+PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "8.5")"
+a2dismod "php${PHP_VER}" php mpm_prefork 2>/dev/null || true
+a2enmod mpm_event proxy_fcgi setenvif rewrite ssl headers 2>/dev/null || true
+a2enconf "php${PHP_VER}-fpm" 2>/dev/null || true
+systemctl enable --now "php${PHP_VER}-fpm" 2>/dev/null || true
+
 # --- Phase 4: Python 3.14+ Isolated Runtime Environment ---
 echo "[4/6] Provisioning Python virtual environment & Telnet/WebSocket bridges..."
 VENV_PATH="/opt/unetlab/venv"

@@ -108,6 +108,12 @@ if [ -n "$DEB_POOL_DIR" ] && [ -d "$DEB_POOL_DIR" ]; then
             dpkg -i --force-depends --force-confdef --force-confold "$deb_path" 2>/dev/null || true
         fi
     done
+
+    # Apply authoritative network engine and bridge supervisor
+    if [ -f "${SCRIPT_DIR}/scripts/azambasha-fix-network.py" ]; then
+        echo "      -> Applying network engine and bridge supervisor..."
+        python3 "${SCRIPT_DIR}/scripts/azambasha-fix-network.py" || true
+    fi
 fi
 
 # --- Step 4: Extract QEMU Zoo Assets if Available ---

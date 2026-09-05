@@ -86,8 +86,58 @@ echo "[1/8] Performing pre-flight hardware and OS checks..."
 UBUNTU_VER="$(lsb_release -rs 2>/dev/null || grep -oP '(?<=VERSION_ID=")[^"]*' /etc/os-release || echo "unknown")"
 echo "      Detected OS Version: Ubuntu $UBUNTU_VER"
 
-# Detect Active Physical Management Network Interface
-REAL_IFACE="$(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep -vE '^(lo|docker|pnet|vunl|virbr|br)' | head -n1 || true)"
+# Detect Active Physical Management Network Interface via Hardware-Backed Sysfs Inspection
+discover_real_iface() {
+    if [ -d /sys/class/net/pnet0/brif ]; then
+        for slave in /sys/class/net/pnet0/brif/*; do
+            if [ -d "$slave" ] && [ -e "/sys/class/net/$(basename "$slave")/device" ]; then
+                echo "$(basename "$slave")"
+                return 0
+            fi
+        done
+    fi
+
+    local best_iface=""
+    for iface_path in /sys/class/net/*; do
+        [ -e "$iface_path" ] || continue
+        local iface
+        iface=$(basename "$iface_path")
+        case "$iface" in
+            lo|pnet*|docker*|veth*|virbr*|tun*|tap*|br-*|dummy*|wg*|zt*) continue ;;
+        esac
+        if [ -e "$iface_path/device" ]; then
+            if [ -f "$iface_path/carrier" ] && [ "$(cat "$iface_path/carrier" 2>/dev/null)" = "1" ]; then
+                echo "$iface"
+                return 0
+            fi
+            if [ -z "$best_iface" ]; then
+                best_iface="$iface"
+            fi
+        fi
+    done
+
+    if [ -n "$best_iface" ]; then
+        echo "$best_iface"
+        return 0
+    fi
+
+    local dev
+    dev=$(ip -o route show to default 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="dev") print $(i+1)}' | head -n1 || true)
+    if [ -n "$dev" ] && [ "$dev" != "pnet0" ] && [ "$dev" != "lo" ]; then
+        echo "$dev"
+        return 0
+    fi
+
+    dev=$(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | cut -d'@' -f1 | grep -E '^(ens|enp|eno|eth)' | head -n1 || true)
+    if [ -n "$dev" ]; then
+        echo "$dev"
+        return 0
+    fi
+
+    echo "ens33"
+}
+
+REAL_IFACE="$(discover_real_iface)"
 if [ -n "$REAL_IFACE" ]; then
     echo "      Detected Physical Network Interface: $REAL_IFACE"
     # Ensure interface is up

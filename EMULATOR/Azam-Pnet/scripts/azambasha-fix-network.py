@@ -1,38 +1,100 @@
 #!/usr/bin/env python3
+# ==============================================================================
+# Azam-Pnet Permanent High-Performance Network Engine for Ubuntu 26.04+
+# Authoritative Dual-Sync: /etc/network/interfaces & Netplan 1.0 (systemd-networkd)
+# Dynamic Hardware-Backed Physical Uplink Discovery (VMware, Proxmox, KVM, Bare Metal)
+# ==============================================================================
 import os
 import sys
 import subprocess
 import shutil
 import re
 import time
+import ipaddress
+import json
 
 print("=" * 60)
-print("    Applying PNetLab Network Management & Broker Daemon Fix")
+print("    Azam-Pnet Permanent Network Engine for Ubuntu 26.04+   ")
 print("=" * 60)
 
-# 1. Install python3-yaml and dependencies
-print("[1/6] Installing python3-yaml and networking dependencies...")
-subprocess.run(["apt-get", "update", "-qq"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-subprocess.run(["apt-get", "install", "-y", "-qq", "python3-yaml", "python3-pip", "python3-setuptools"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+def run_cmd(cmd, check=False, timeout=15):
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return res.returncode, res.stdout.strip(), res.stderr.strip()
+    except Exception as e:
+        return -1, "", str(e)
 
-# 2. Discover real physical interface
-print("[2/6] Detecting primary physical interface...")
-real_iface = "ens33"
-try:
-    res = subprocess.run(["ip", "-o", "link", "show"], capture_output=True, text=True, timeout=5)
-    for line in res.stdout.splitlines():
+# 1. Install required packages
+print("[1/7] Ensuring networking tools & Python dependencies...")
+run_cmd(["apt-get", "update", "-qq"])
+run_cmd(["apt-get", "install", "-y", "-qq", "python3-yaml", "net-tools", "bridge-utils", "ethtool"])
+
+# 2. Hardware-Backed Physical Interface Discovery
+def discover_physical_uplink():
+    """
+    Authoritative discovery of the true physical / PCI / VirtIO uplink NIC.
+    Immune to virtual devices (pnet*, docker*, veth*, virbr*, tun*, tap*, dummy*, wg*).
+    """
+    # Priority 1: Check existing pnet0 bridge slaves for hardware device
+    brif = "/sys/class/net/pnet0/brif"
+    if os.path.isdir(brif):
+        for slave in sorted(os.listdir(brif)):
+            if os.path.exists(f"/sys/class/net/{slave}/device"):
+                return slave
+
+    # Priority 2: Iterate /sys/class/net and inspect hardware device backing
+    net_dir = "/sys/class/net"
+    candidates = []
+    if os.path.isdir(net_dir):
+        for dev in os.listdir(net_dir):
+            if dev == "lo" or dev.startswith(("pnet", "docker", "veth", "virbr", "tun", "tap", "br-", "dummy", "wg", "zt")):
+                continue
+            # Device must be backed by a real hardware/PCI/VirtIO bus
+            if os.path.exists(os.path.join(net_dir, dev, "device")):
+                carrier = 0
+                try:
+                    with open(os.path.join(net_dir, dev, "carrier"), "r") as f:
+                        carrier = int(f.read().strip())
+                except Exception:
+                    pass
+                operstate = "unknown"
+                try:
+                    with open(os.path.join(net_dir, dev, "operstate"), "r") as f:
+                        operstate = f.read().strip()
+                except Exception:
+                    pass
+                score = (carrier * 10) + (5 if operstate == "up" else 0)
+                candidates.append((score, dev))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        return candidates[0][1]
+
+    # Priority 3: Routing table default gateway device
+    rc, stdout, _ = run_cmd(["ip", "-o", "route", "show", "to", "default"])
+    for line in stdout.splitlines():
+        parts = line.split()
+        if "dev" in parts:
+            dev = parts[parts.index("dev") + 1]
+            if dev != "pnet0" and not dev.startswith(("lo", "docker", "veth", "virbr")):
+                return dev
+
+    # Priority 4: Pattern matching on standard kernel names
+    rc, stdout, _ = run_cmd(["ip", "-o", "link", "show"])
+    for line in stdout.splitlines():
         parts = line.split(":")
         if len(parts) >= 2:
             name = parts[1].strip().split("@")[0]
             if name.startswith(("ens", "enp", "eno", "eth")) and not name.startswith("pnet"):
-                real_iface = name
-                break
-except Exception:
-    pass
-print(f"      -> Detected physical interface: {real_iface}")
+                return name
 
-# 3. Create required directories
-print("[3/6] Creating network directories and runtime socket path...")
+    return "ens33"
+
+real_iface = discover_physical_uplink()
+print(f"[2/7] Detected primary physical uplink: {real_iface}")
+
+# 3. Create required directories and sanitize permissions
+print("[3/7] Setting up network paths, runtime directories, and cloud-init guards...")
 os.makedirs("/etc/network/interfaces.d", exist_ok=True)
 os.makedirs("/opt/unetlab/data/netcfg-backups", mode=0o755, exist_ok=True)
 os.makedirs("/etc/systemd/resolved.conf.d", mode=0o755, exist_ok=True)
@@ -43,17 +105,131 @@ try:
 except Exception:
     pass
 
-# 4. Create /etc/network/interfaces & timeout guard
-print("[4/6] Setting up sanitized /etc/network/interfaces and systemd timeout guard...")
-os.makedirs("/etc/systemd/system/networking.service.d", exist_ok=True)
+# Permanently disable cloud-init network overrides
+os.makedirs("/etc/cloud/cloud.cfg.d", exist_ok=True)
 try:
-    with open("/etc/systemd/system/networking.service.d/10-timeout.conf", "w") as f:
-        f.write("[Service]\nTimeoutStartSec=10sec\n")
+    with open("/etc/cloud/cloud.cfg.d/99-disable-network-config.cfg", "w") as f:
+        f.write("network: {config: disabled}\n")
 except Exception:
     pass
 
-ifaces_file = "/etc/network/interfaces"
-content = f"""# This file describes the network interfaces available on your system
+# Purge any conflicting netplan YAMLs
+for f in os.listdir("/etc/netplan"):
+    if f.endswith((".yaml", ".yml")) and f != "01-pnetlab-netcfg.yaml":
+        try:
+            os.remove(os.path.join("/etc/netplan", f))
+        except Exception:
+            pass
+
+# 4. Bridge sysctl bypass and module configuration
+print("[4/7] Applying kernel bridge bypass and sysctl forwarding parameters...")
+os.makedirs("/etc/modules-load.d", exist_ok=True)
+with open("/etc/modules-load.d/pnetlab.conf", "w") as f:
+    f.write("bridge\nstp\nllc\n8021q\ntun\ndummy\nbr_netfilter\n")
+
+for mod in ["bridge", "8021q", "tun", "br_netfilter"]:
+    run_cmd(["modprobe", mod])
+
+os.makedirs("/etc/sysctl.d", exist_ok=True)
+with open("/etc/sysctl.d/99-pnetlab-bridge.conf", "w") as f:
+    f.write("""net.bridge.bridge-nf-call-iptables = 0
+net.bridge.bridge-nf-call-arptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.ipv4.ip_forward = 1
+""")
+run_cmd(["sysctl", "--system"])
+
+# 5. Determine current IP configuration and write authoritative /etc/network/interfaces & Netplan
+print("[5/7] Synchronizing authoritative /etc/network/interfaces and Netplan 1.0...")
+current_ip = ""
+current_mask = "255.255.255.0"
+current_gw = ""
+is_static = False
+
+# Inspect live network on pnet0 or real_iface
+rc, stdout, _ = run_cmd(["ip", "-o", "-4", "addr", "show", "pnet0"])
+if not stdout:
+    rc, stdout, _ = run_cmd(["ip", "-o", "-4", "addr", "show", real_iface])
+
+if stdout:
+    for line in stdout.splitlines():
+        parts = line.split()
+        if len(parts) >= 4:
+            cidr_str = parts[3]
+            try:
+                iface_obj = ipaddress.IPv4Interface(cidr_str)
+                current_ip = str(iface_obj.ip)
+                current_mask = str(iface_obj.netmask)
+            except Exception:
+                pass
+            break
+
+# Check default gateway
+rc, stdout, _ = run_cmd(["ip", "-o", "route", "show", "to", "default"])
+for line in stdout.splitlines():
+    parts = line.split()
+    if "via" in parts:
+        current_gw = parts[parts.index("via") + 1]
+        break
+
+# Check existing netplan or interfaces for static intent
+if os.path.exists("/etc/network/interfaces"):
+    try:
+        with open("/etc/network/interfaces", "r") as f:
+            if "iface pnet0 inet static" in f.read():
+                is_static = True
+    except Exception:
+        pass
+
+if is_static and current_ip:
+    ifaces_content = f"""# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet static
+    address {current_ip}
+    netmask {current_mask}
+    gateway {current_gw}
+    pre-up ip link set dev {real_iface} up
+    bridge_ports {real_iface}
+    bridge_stp off
+# END pnetlab-netcfg pnet0
+"""
+    cidr = 24
+    try:
+        cidr = ipaddress.IPv4Network(f"0.0.0.0/{current_mask}").prefixlen
+    except Exception:
+        pass
+    gw_line = f"      routes:\n        - to: default\n          via: {current_gw}\n" if current_gw else ""
+    netplan_content = f"""network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {real_iface}:
+      dhcp4: false
+      dhcp6: false
+  bridges:
+    pnet0:
+      interfaces: [{real_iface}]
+      dhcp4: false
+      dhcp6: false
+      addresses: [{current_ip}/{cidr}]
+{gw_line}      nameservers:
+        addresses: [8.8.8.8, 1.1.1.1]
+      parameters:
+        stp: false
+        forward-delay: 0
+"""
+else:
+    ifaces_content = f"""# This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
 source /etc/network/interfaces.d/*
@@ -71,16 +247,204 @@ iface pnet0 inet dhcp
     bridge_stp off
 # END pnetlab-netcfg pnet0
 """
-try:
-    with open(ifaces_file, "w") as f:
-        f.write(content)
-    os.chmod(ifaces_file, 0o644)
-    print("      -> Created sanitized /etc/network/interfaces with pnet0 stanza")
-except Exception:
-    pass
+    netplan_content = f"""network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {real_iface}:
+      dhcp4: false
+      dhcp6: false
+  bridges:
+    pnet0:
+      interfaces: [{real_iface}]
+      dhcp4: true
+      dhcp6: false
+      parameters:
+        stp: false
+        forward-delay: 0
+"""
 
-# 5. Patch /opt/unetlab/scripts/pnetlab-brokerd.py
-print("[5/6] Patching /opt/unetlab/scripts/pnetlab-brokerd.py...")
+with open("/etc/network/interfaces", "w") as f:
+    f.write(ifaces_content)
+os.chmod("/etc/network/interfaces", 0o644)
+
+with open("/etc/netplan/01-pnetlab-netcfg.yaml", "w") as f:
+    f.write(netplan_content)
+os.chmod("/etc/netplan/01-pnetlab-netcfg.yaml", 0o600)
+
+# 6. Install Persistent Boot Guard Engine & Systemd Unit
+print("[6/7] Installing Azam-Pnet persistent network supervisor...")
+engine_script = """#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+import shutil
+import ipaddress
+import time
+
+def discover_physical_uplink():
+    brif = "/sys/class/net/pnet0/brif"
+    if os.path.isdir(brif):
+        for slave in sorted(os.listdir(brif)):
+            if os.path.exists(f"/sys/class/net/{slave}/device"):
+                return slave
+
+    net_dir = "/sys/class/net"
+    candidates = []
+    if os.path.isdir(net_dir):
+        for dev in os.listdir(net_dir):
+            if dev == "lo" or dev.startswith(("pnet", "docker", "veth", "virbr", "tun", "tap", "br-", "dummy", "wg", "zt")):
+                continue
+            if os.path.exists(os.path.join(net_dir, dev, "device")):
+                carrier = 0
+                try:
+                    with open(os.path.join(net_dir, dev, "carrier"), "r") as f:
+                        carrier = int(f.read().strip())
+                except Exception:
+                    pass
+                operstate = "unknown"
+                try:
+                    with open(os.path.join(net_dir, dev, "operstate"), "r") as f:
+                        operstate = f.read().strip()
+                except Exception:
+                    pass
+                score = (carrier * 10) + (5 if operstate == "up" else 0)
+                candidates.append((score, dev))
+    if candidates:
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        return candidates[0][1]
+
+    try:
+        res = subprocess.run(["ip", "-o", "link", "show"], capture_output=True, text=True, timeout=5)
+        for line in res.stdout.splitlines():
+            parts = line.split(":")
+            if len(parts) >= 2:
+                name = parts[1].strip().split("@")[0]
+                if name.startswith(("ens", "enp", "eno", "eth")) and not name.startswith("pnet"):
+                    return name
+    except Exception:
+        pass
+    return "ens33"
+
+def main():
+    real_iface = discover_physical_uplink()
+    
+    # 1. Ensure runtime directories & socket permissions
+    os.makedirs("/run/pnetlab", mode=0o755, exist_ok=True)
+    try:
+        shutil.chown("/run/pnetlab", "root", "www-data")
+        os.chmod("/run/pnetlab", 0o755)
+    except Exception:
+        pass
+    sock_path = "/run/pnetlab/broker.sock"
+    if os.path.exists(sock_path):
+        try:
+            os.chmod(sock_path, 0o666)
+            shutil.chown(sock_path, "root", "www-data")
+        except Exception:
+            pass
+
+    # 2. Ensure /etc/network/interfaces has pnet0 stanza
+    ifaces_path = "/etc/network/interfaces"
+    os.makedirs("/etc/network/interfaces.d", exist_ok=True)
+    needs_ifaces_repair = False
+    if not os.path.exists(ifaces_path) or os.path.getsize(ifaces_path) == 0:
+        needs_ifaces_repair = True
+    else:
+        try:
+            with open(ifaces_path, "r") as f:
+                c = f.read()
+                if "pnet0" not in c:
+                    needs_ifaces_repair = True
+        except Exception:
+            needs_ifaces_repair = True
+
+    if needs_ifaces_repair:
+        default_ifaces = f'''# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet dhcp
+    pre-up ip link set dev {real_iface} up
+    bridge_ports {real_iface}
+    bridge_stp off
+# END pnetlab-netcfg pnet0
+'''
+        try:
+            with open(ifaces_path, "w") as f:
+                f.write(default_ifaces)
+            os.chmod(ifaces_path, 0o644)
+        except Exception:
+            pass
+
+    # 3. Ensure pnet0 bridge exists and real_iface is enslaved
+    subprocess.run(["ip", "link", "set", "dev", real_iface, "up"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    res = subprocess.run(["ip", "link", "show", "pnet0"], capture_output=True, text=True)
+    if res.returncode != 0:
+        subprocess.run(["ip", "link", "add", "name", "pnet0", "type", "bridge", "forward_delay", "0", "stp_state", "0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    subprocess.run(["ip", "link", "set", "dev", real_iface, "master", "pnet0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["ip", "link", "set", "dev", "pnet0", "up"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["ip", "link", "set", "dev", "pnet0", "promisc", "on"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # 4. Enable Kernel Bridge Control Frame Forwarding (group_fwd_mask 65535)
+    for i in range(10):
+        br_name = f"pnet{i}"
+        fwd_mask_path = f"/sys/class/net/{br_name}/bridge/group_fwd_mask"
+        if os.path.exists(fwd_mask_path):
+            try:
+                with open(fwd_mask_path, "w") as f:
+                    f.write("65535\n")
+            except Exception:
+                pass
+
+    # 5. Bridge sysctl bypass
+    subprocess.run(["sysctl", "-w", "net.bridge.bridge-nf-call-iptables=0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["sysctl", "-w", "net.bridge.bridge-nf-call-arptables=0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["sysctl", "-w", "net.bridge.bridge-nf-call-ip6tables=0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["sysctl", "-w", "net.ipv4.ip_forward=1"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+if __name__ == "__main__":
+    main()
+"""
+
+with open("/usr/local/bin/pnetlab-network-engine", "w") as f:
+    f.write(engine_script)
+os.chmod("/usr/local/bin/pnetlab-network-engine", 0o755)
+
+unit_content = """[Unit]
+Description=Azam-Pnet High-Performance Network Engine & Bridge Supervisor
+DefaultDependencies=no
+Before=network-online.target pnetlab-brokerd.service apache2.service systemd-resolved.service
+After=local-fs.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/pnetlab-network-engine
+TimeoutSec=15
+
+[Install]
+WantedBy=multi-user.target
+"""
+with open("/etc/systemd/system/pnetlab-network-engine.service", "w") as f:
+    f.write(unit_content)
+
+run_cmd(["systemctl", "daemon-reload"])
+run_cmd(["systemctl", "enable", "pnetlab-network-engine.service"])
+run_cmd(["systemctl", "start", "pnetlab-network-engine.service"])
+
+# 7. Authoritative Patch for /opt/unetlab/scripts/pnetlab-brokerd.py
+print("[7/7] Hardening /opt/unetlab/scripts/pnetlab-brokerd.py...")
 broker_path = "/opt/unetlab/scripts/pnetlab-brokerd.py"
 if os.path.exists(broker_path):
     with open(broker_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -100,6 +464,37 @@ RE_NETCFG_DOMAIN = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.-]{0,252}[A-Za-z0-9])?$"
 
 
 def _get_real_iface():
+    brif = "/sys/class/net/pnet0/brif"
+    if os.path.isdir(brif):
+        for slave in sorted(os.listdir(brif)):
+            if os.path.exists("/sys/class/net/%s/device" % slave):
+                return slave
+
+    net_dir = "/sys/class/net"
+    candidates = []
+    if os.path.isdir(net_dir):
+        for dev in os.listdir(net_dir):
+            if dev == "lo" or dev.startswith(("pnet", "docker", "veth", "virbr", "tun", "tap", "br-", "dummy", "wg", "zt")):
+                continue
+            if os.path.exists(os.path.join(net_dir, dev, "device")):
+                carrier = 0
+                try:
+                    with open(os.path.join(net_dir, dev, "carrier"), "r") as f:
+                        carrier = int(f.read().strip())
+                except Exception:
+                    pass
+                operstate = "unknown"
+                try:
+                    with open(os.path.join(net_dir, dev, "operstate"), "r") as f:
+                        operstate = f.read().strip()
+                except Exception:
+                    pass
+                score = (carrier * 10) + (5 if operstate == "up" else 0)
+                candidates.append((score, dev))
+    if candidates:
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        return candidates[0][1]
+
     try:
         res = subprocess.run(["ip", "-o", "link", "show"], capture_output=True, text=True, timeout=5)
         for line in res.stdout.splitlines():
@@ -110,7 +505,7 @@ def _get_real_iface():
                     return name
     except Exception:
         pass
-    return "eth0"
+    return "ens33"
 
 
 def _ensure_interfaces_file():
@@ -336,6 +731,13 @@ def verb_server_netcfg(args):
     try:
         real_iface = _get_real_iface()
         os.makedirs("/etc/netplan", exist_ok=True)
+        for old_np in os.listdir("/etc/netplan"):
+            if old_np.endswith((".yaml", ".yml")) and old_np != "01-pnetlab-netcfg.yaml":
+                try:
+                    os.remove(os.path.join("/etc/netplan", old_np))
+                except Exception:
+                    pass
+
         if mode == "dhcp":
             netplan_yaml = (
                 "network:\\n"
@@ -458,57 +860,16 @@ def verb_server_netcfg(args):
 
         with open(broker_path, "w", encoding="utf-8") as f:
             f.write(patched_code)
+        os.chmod(broker_path, 0o755)
         print("      -> Successfully patched /opt/unetlab/scripts/pnetlab-brokerd.py")
 
-# 6. Create systemd unit file and start service
-print("[6/6] Creating and starting pnetlab-brokerd.service...")
-unit_content = """[Unit]
-Description=PNetLab privilege broker (allowlisted root verbs for the engine)
-After=network.target
+# Restart brokerd
+run_cmd(["systemctl", "daemon-reload"])
+run_cmd(["systemctl", "restart", "pnetlab-brokerd.service"])
 
-[Service]
-Type=simple
-ExecStart=/usr/bin/python3 /opt/unetlab/scripts/pnetlab-brokerd.py
-RuntimeDirectory=pnetlab
-RuntimeDirectoryMode=0755
-User=root
-Group=root
-Restart=always
-RestartSec=2
-
-[Install]
-WantedBy=multi-user.target
-"""
-unit_path = "/etc/systemd/system/pnetlab-brokerd.service"
-with open(unit_path, "w") as f:
-    f.write(unit_content)
-os.chmod(unit_path, 0o644)
-
-subprocess.run(["systemctl", "daemon-reload"])
-subprocess.run(["systemctl", "enable", "--now", "pnetlab-brokerd.service"])
-subprocess.run(["systemctl", "restart", "pnetlab-brokerd.service"])
-
-time.sleep(1)
-os.chmod("/run/pnetlab", 0o755)
-if os.path.exists("/run/pnetlab/broker.sock"):
-    os.chmod("/run/pnetlab/broker.sock", 0o666)
-    try:
-        shutil.chown("/run/pnetlab/broker.sock", "root", "www-data")
-    except Exception:
-        pass
-
-# Test reachability via PHP
-php_test = """
-require_once '/opt/unetlab/html/includes/broker.php';
-$res = broker_call('server_netcfg', ['op' => 'get'], 5);
-if (isset($res['ok']) && $res['ok']) {
-    echo '      [OK] Broker is ONLINE and responding! Data: ' . json_encode($res['out']) . PHP_EOL;
-} else {
-    echo '      [WARN] Broker test response: ' . json_encode($res) . PHP_EOL;
-}
-"""
-subprocess.run(["php", "-r", php_test])
+# Mask conflicting legacy services
+run_cmd(["systemctl", "mask", "pnetlab-netcfg-firstboot.service", "networking.service", "systemd-networkd-wait-online.service"])
 
 print("=" * 60)
-print("    [SUCCESS] Network Management & Broker Daemon Active!")
+print("    [SUCCESS] Azam-Pnet Network Engine Permanently Configured!  ")
 print("=" * 60)

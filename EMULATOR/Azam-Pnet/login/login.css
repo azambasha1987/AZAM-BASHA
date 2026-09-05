@@ -176,8 +176,8 @@ body {
 	position: relative;
 	z-index: 10;
 	width: 100%;
-	max-width: 470px;
-	padding: 20px 20px 32px;
+	max-width: 460px;
+	padding: 12px 20px 24px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -188,21 +188,21 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 18px;
+	margin-bottom: 12px;
 	text-align: center;
 	width: 100%;
 }
 
 /* ============================================================================
-   Supreme Holographic Circular Avatar Unit (Home Screen Exclusive)
-   Commanding 168px presence, rotating laser sweep, dynamic levitation, grounding shadow & interactive FX
+   Supreme Holographic Circular Avatar Unit (Home Screen Exclusive - Balanced Pro 118px)
+   Rotating laser sweep, dynamic levitation, grounding shadow & interactive FX
    ============================================================================ */
 
 .avatar-hero-unit {
 	position: relative;
-	width: 168px;
-	height: 168px;
-	margin-bottom: 14px;
+	width: 118px;
+	height: 118px;
+	margin-bottom: 10px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -218,17 +218,17 @@ body {
 		transform: translateY(0px) scale(1);
 	}
 	50% {
-		transform: translateY(-14px) scale(1.025);
+		transform: translateY(-8px) scale(1.02);
 	}
 }
 
 /* Soft Ambient Radial Halo Behind Avatar */
 .avatar-aura-glow {
 	position: absolute;
-	inset: -20px;
+	inset: -14px;
 	border-radius: 50%;
 	background: radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(147, 51, 234, 0.28) 45%, transparent 72%);
-	filter: blur(24px);
+	filter: blur(18px);
 	z-index: 0;
 	pointer-events: none;
 	animation: auraBreathing 4.5s ease-in-out infinite;
@@ -248,7 +248,7 @@ body {
 /* Orbiting Micro-Spark Particles */
 .avatar-sparks-orbit {
 	position: absolute;
-	inset: -10px;
+	inset: -6px;
 	border-radius: 50%;
 	pointer-events: none;
 	z-index: 4;
@@ -263,50 +263,50 @@ body {
 .spark {
 	position: absolute;
 	border-radius: 50%;
-	filter: drop-shadow(0 0 6px #00f2fe);
+	filter: drop-shadow(0 0 5px #00f2fe);
 }
 
 .s-1 {
 	top: -2px;
 	left: 50%;
-	width: 6px;
-	height: 6px;
+	width: 5px;
+	height: 5px;
 	background: #00f2fe;
-	box-shadow: 0 0 10px #00f2fe, 0 0 20px #00f2fe;
+	box-shadow: 0 0 8px #00f2fe, 0 0 16px #00f2fe;
 	transform: translateX(-50%);
 }
 
 .s-2 {
 	bottom: 8%;
 	left: 10%;
-	width: 5px;
-	height: 5px;
+	width: 4px;
+	height: 4px;
 	background: #c084fc;
-	box-shadow: 0 0 10px #c084fc;
+	box-shadow: 0 0 8px #c084fc;
 }
 
 .s-3 {
 	top: 35%;
 	right: -2px;
-	width: 4px;
-	height: 4px;
+	width: 3.5px;
+	height: 3.5px;
 	background: #38bdf8;
-	box-shadow: 0 0 8px #38bdf8;
+	box-shadow: 0 0 6px #38bdf8;
 }
 
 /* Inner Shield Circle Badge (Single Clean Circular Frame) */
 .avatar-circle {
 	position: relative;
-	width: 164px;
-	height: 164px;
+	width: 112px;
+	height: 112px;
 	border-radius: 50%;
 	overflow: hidden;
 	background: #030712;
-	border: 3px solid #00f2fe;
+	border: 2.5px solid #00f2fe;
 	box-shadow: 
-		0 0 16px rgba(0, 242, 254, 0.7),
-		0 0 32px rgba(168, 85, 247, 0.35),
-		inset 0 0 14px rgba(0, 242, 254, 0.4);
+		0 0 14px rgba(0, 242, 254, 0.65),
+		0 0 26px rgba(168, 85, 247, 0.3),
+		inset 0 0 10px rgba(0, 242, 254, 0.35);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -320,12 +320,12 @@ body {
 	inset: -2px;
 	border-radius: 50%;
 	background: conic-gradient(from 0deg, transparent 0%, rgba(0, 242, 254, 0.95) 20%, #ffffff 28%, rgba(0, 242, 254, 0.95) 36%, transparent 50%, rgba(192, 132, 252, 0.85) 70%, #ffffff 78%, rgba(192, 132, 252, 0.85) 86%, transparent 100%);
-	-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff calc(100% - 2.5px));
-	mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff calc(100% - 2.5px));
+	-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #fff calc(100% - 2px));
+	mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #fff calc(100% - 2px));
 	animation: spinLaserSweep 5s linear infinite;
 	z-index: 6;
 	pointer-events: none;
-	filter: drop-shadow(0 0 8px #00f2fe) drop-shadow(0 0 14px #a855f7);
+	filter: drop-shadow(0 0 6px #00f2fe) drop-shadow(0 0 12px #a855f7);
 }
 
 @keyframes spinLaserSweep {
@@ -347,9 +347,9 @@ body {
 .avatar-hero-unit:hover .avatar-circle {
 	border-color: #38bdf8;
 	box-shadow: 
-		0 0 24px rgba(0, 242, 254, 0.95),
-		0 0 45px rgba(189, 0, 255, 0.65),
-		inset 0 0 20px rgba(0, 242, 254, 0.6);
+		0 0 20px rgba(0, 242, 254, 0.95),
+		0 0 38px rgba(189, 0, 255, 0.6),
+		inset 0 0 16px rgba(0, 242, 254, 0.55);
 }
 
 .avatar-hero-unit:hover .brand-logo {
@@ -358,13 +358,13 @@ body {
 
 .avatar-hero-unit:hover .laser-sweep-ring {
 	animation-duration: 2.2s;
-	filter: drop-shadow(0 0 12px #00f2fe) drop-shadow(0 0 20px #c084fc);
+	filter: drop-shadow(0 0 10px #00f2fe) drop-shadow(0 0 18px #c084fc);
 }
 
 .avatar-hero-unit:hover .avatar-aura-glow {
 	opacity: 1;
-	filter: blur(28px);
-	transform: scale(1.18);
+	filter: blur(22px);
+	transform: scale(1.15);
 }
 
 .brand-logo[hidden] {
@@ -379,7 +379,7 @@ body {
 	align-items: center;
 	justify-content: center;
 	font-weight: 800;
-	font-size: 46px;
+	font-size: 36px;
 	color: #fff;
 	background: linear-gradient(135deg, #0ea5e9, #6366f1);
 	border-radius: 50%;
@@ -393,11 +393,11 @@ body {
 /* Grounding Levitation Shadow */
 .podium-container {
 	position: absolute;
-	bottom: -18px;
+	bottom: -12px;
 	left: 50%;
 	transform: translateX(-50%);
-	width: 130px;
-	height: 18px;
+	width: 90px;
+	height: 14px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -407,11 +407,11 @@ body {
 
 .podium-shadow {
 	position: absolute;
-	width: 120px;
-	height: 14px;
+	width: 80px;
+	height: 10px;
 	border-radius: 50%;
 	background: radial-gradient(ellipse, rgba(0, 242, 254, 0.65) 0%, rgba(13, 27, 60, 0.7) 45%, transparent 75%);
-	filter: blur(8px);
+	filter: blur(6px);
 	animation: podiumShadowScale 4.5s ease-in-out infinite;
 }
 
@@ -431,28 +431,28 @@ body {
    ============================================================================ */
 
 .brand-title {
-	margin-top: 6px;
-	margin-bottom: 4px;
+	margin-top: 4px;
+	margin-bottom: 2px;
 	z-index: 2;
 }
 
 .brand-name {
-	font-size: 34px;
+	font-size: 26px;
 	font-weight: 800;
-	letter-spacing: 0.8px;
+	letter-spacing: 0.6px;
 	background: linear-gradient(135deg, #ffffff 15%, #bae6fd 50%, #38bdf8 80%, #c084fc 100%);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 2px 18px rgba(0, 242, 254, 0.45));
+	filter: drop-shadow(0 2px 14px rgba(0, 242, 254, 0.4));
 }
 
 .cyber-divider {
-	width: 56px;
-	height: 3px;
+	width: 44px;
+	height: 2px;
 	background: linear-gradient(90deg, transparent, var(--cyan-neon), transparent);
 	border-radius: 2px;
-	margin-bottom: 8px;
-	box-shadow: 0 0 12px var(--cyan-neon);
+	margin-bottom: 6px;
+	box-shadow: 0 0 10px var(--cyan-neon);
 }
 
 .login-header {

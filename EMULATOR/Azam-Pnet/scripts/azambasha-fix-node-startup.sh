@@ -234,8 +234,32 @@ echo "[5/8] Cleaning symlinks and applying Smart PDF Image Resolver..."
 # Remove any symlinks in /opt/unetlab/addons/qemu/
 find /opt/unetlab/addons/qemu/ -maxdepth 1 -type l -delete 2>/dev/null || true
 
-# Patch device_qemu.php to automatically resolve template-matching image folders
+# Patch device.php, device_qemu.php, and cli.php to guarantee robust node startup
 python3 - << 'PYEOF'
+import re, glob, os
+import xml.etree.ElementTree as ET
+
+# 1. Patch device.php
+dev_file = "/opt/unetlab/html/devices/device.php"
+if os.path.exists(dev_file):
+    try:
+        with open(dev_file, 'r', encoding='utf-8') as f:
+            code = f.read()
+        target = 'if (isset($p[\'console\'])) {\n\t\t\t$this->console = htmlentities($p[\'console\']);\n\t\t}'
+        repl = """if (isset($p['console']) && $p['console'] !== '') {
+			$this->console = htmlentities($p['console']);
+		} else {
+			$this->console = !empty($this->tpl['console']) ? $this->tpl['console'] : 'telnet';
+		}"""
+        if target in code:
+            code = code.replace(target, repl)
+            with open(dev_file, 'w', encoding='utf-8') as f:
+                f.write(code)
+            print("  [✔] Console fallback active in device.php")
+    except Exception as e:
+        print(f"  [!] Note patching device.php: {e}")
+
+# 2. Patch device_qemu.php
 dev_qemu = "/opt/unetlab/html/devices/qemu/device_qemu.php"
 try:
     with open(dev_qemu, 'r', encoding='utf-8') as f:
@@ -278,30 +302,51 @@ try:
             '$image = "/opt/unetlab/addons/qemu/" . $this->image;',
             '$imageName = $this->resolveImage();\n            $image = "/opt/unetlab/addons/qemu/" . $imageName;\n            if (!is_dir($image)) {\n                error_log(date("M d H:i:s ") . "ERROR: Image directory " . $image . " not found");\n                return 80041;\n            }'
         )
-        # Ensure console property always falls back to template or telnet
-        target1 = 'if (isset($p["console"])) {\n            $this->console = htmlentities($p["console"]);\n        }'
-        replacement1 = """if (isset($p["console"])) {
-            $this->console = htmlentities($p["console"]);
-        }
-        if (empty($this->console)) {
-            $this->console = !empty($this->tpl["console"]) ? $this->tpl["console"] : "telnet";
-        }"""
-        if target1 in code:
-            code = code.replace(target1, replacement1)
 
-        target2 = 'if ($this->console == "telnet" || $this->console_2nd == "telnet") {'
-        replacement2 = """if (empty($this->console)) {
+    # Console fallback in device_qemu flags
+    target2 = 'if ($this->console == "telnet" || $this->console_2nd == "telnet") {'
+    replacement2 = """if (empty($this->console)) {
             $this->console = !empty($this->tpl["console"]) ? $this->tpl["console"] : "telnet";
         }
         if ($this->console == "telnet" || $this->console_2nd == "telnet") {"""
-        if target2 in code and "if (empty($this->console)) {" not in code:
-            code = code.replace(target2, replacement2, 1)
+    if target2 in code and "if (empty($this->console)) {" not in code:
+        code = code.replace(target2, replacement2, 1)
 
     with open(dev_qemu, 'w', encoding='utf-8') as f:
         f.write(code)
     print("  [✔] Smart PDF Image Resolver & Console Fallback active in device_qemu.php")
 except Exception as e:
-    print(f"  [!] Note: {e}")
+    print(f"  [!] Note patching device_qemu.php: {e}")
+
+# 3. Patch cli.php to safely handle Node vs Lab objects in start()
+cli_file = "/opt/unetlab/html/includes/cli.php"
+if os.path.exists(cli_file):
+    try:
+        with open(cli_file, 'r', encoding='utf-8') as f:
+            cli_code = f.read()
+        
+        target_start = 'function start($lab, $id)\n{\n\t$nodes = $lab->getNodes();\n\t$n = isset($nodes[$id]) ? $nodes[$id] : null;\n\tif ($n === null) return 1;\n\t$t = $lab->getHost();'
+        repl_start = '''function start($lab, $id)
+{
+	if ($lab instanceof Node) {
+		$n = $lab;
+		$t = $n->getHost();
+	} elseif (is_object($lab) && method_exists($lab, 'getNodes')) {
+		$nodes = $lab->getNodes();
+		$n = isset($nodes[$id]) ? $nodes[$id] : null;
+		$t = method_exists($lab, 'getHost') ? $lab->getHost() : 0;
+	} else {
+		$n = null;
+		$t = 0;
+	}
+	if ($n === null) return 1;'''
+        if target_start in cli_code:
+            cli_code = cli_code.replace(target_start, repl_start)
+            with open(cli_file, 'w', encoding='utf-8') as f:
+                f.write(cli_code)
+            print("  [✔] Safe Node/Lab dispatcher active in cli.php")
+    except Exception as e:
+        print(f"  [!] Note patching cli.php: {e}")
 PYEOF
 
 # Ensure all 107 PDF templates are linked/supported
@@ -312,10 +357,11 @@ if [ -d /opt/unetlab/html/templates/intel ] && [ -f /opt/unetlab/html/templates/
     cp /opt/unetlab/html/templates/intel/versafvnf.yml /opt/unetlab/html/templates/intel/versavnf.yml 2>/dev/null || true
 fi
 
-# --- 6. Direct Lab XML Batch Normalizer ---
-echo "[6/8] Normalizing lab XML image references directly..."
+# --- 6. Direct Lab XML Batch Normalizer (Using Strict XML DOM) ---
+echo "[6/8] Normalizing lab XML image references directly with XML DOM parser..."
 python3 - << 'PYEOF'
-import glob, re, os
+import glob, os
+import xml.etree.ElementTree as ET
 
 vios_real = "vios-15.8"
 viosl2_real = "viosl2-adventerprisek9-m.ssa.high_iron_20200929"
@@ -334,29 +380,30 @@ if os.path.isdir(qemu_dir):
 count = 0
 for path in glob.glob('/opt/unetlab/labs/**/*.unl', recursive=True):
     try:
-        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-            content = f.read()
+        tree = ET.parse(path)
+        root = tree.getroot()
+        modified = False
         
-        orig = content
-        def fix_node_tag(m):
-            tag = m.group(0)
-            if 'template="vios"' in tag:
-                tag = re.sub(r'image="[^"]*"', f'image="{vios_real}"', tag)
-            elif 'template="viosl2"' in tag:
-                tag = re.sub(r'image="[^"]*"', f'image="{viosl2_real}"', tag)
-            if 'console=""' in tag:
-                tag = tag.replace('console=""', 'console="telnet"')
-            return tag
-
-        new_content = re.sub(r'<node\b[^>]*>', fix_node_tag, content)
-        if new_content != orig:
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(new_content)
+        for node in root.findall('.//node'):
+            tpl = node.get('template', '')
+            if tpl == 'vios' and node.get('image') != vios_real:
+                node.set('image', vios_real)
+                modified = True
+            elif tpl == 'viosl2' and node.get('image') != viosl2_real:
+                node.set('image', viosl2_real)
+                modified = True
+            
+            if not node.get('console') or node.get('console') == '':
+                node.set('console', 'telnet')
+                modified = True
+        
+        if modified:
+            tree.write(path, encoding='utf-8', xml_declaration=True)
             count += 1
-    except Exception:
+    except Exception as e:
         pass
 
-print(f"  [✔] Direct mapping & console normalization: vios -> {vios_real}, viosl2 -> {viosl2_real} ({count} labs updated)")
+print(f"  [✔] Direct mapping & XML DOM normalization: vios -> {vios_real}, viosl2 -> {viosl2_real} ({count} labs updated)")
 PYEOF
 
 # --- 7. Cisco IOU License Generation ---

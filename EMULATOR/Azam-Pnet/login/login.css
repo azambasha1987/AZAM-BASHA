@@ -219,25 +219,7 @@ body {
 }
 
 /* Outer Clockwise Conic Gradient Ring */
-.orbital-ring-outer {
-	position: absolute;
-	inset: -6px;
-	border-radius: 50%;
-	background: conic-gradient(
-		from 0deg,
-		#00f2fe 0%,
-		#38bdf8 20%,
-		#818cf8 40%,
-		#c084fc 60%,
-		#00f2fe 85%,
-		#00f2fe 100%
-	);
-	animation: spinClockwise 8s linear infinite;
-	z-index: 1;
-	opacity: 0.85;
-	mask-image: radial-gradient(circle, transparent 67%, black 69%);
-	-webkit-mask-image: radial-gradient(circle, transparent 67%, black 69%);
-}
+.orbital-ring-outer { display: none !important; }
 
 @keyframes spinClockwise {
 	from { transform: rotate(0deg); }
@@ -389,11 +371,7 @@ body {
 		0 0 35px rgba(0, 242, 254, 0.75);
 }
 
-.avatar-hero-unit:hover .orbital-ring-outer {
-	animation-duration: 4s;
-	opacity: 1;
-	filter: drop-shadow(0 0 12px rgba(0, 242, 254, 0.9));
-}
+.avatar-hero-unit:hover .orbital-ring-outer { display: none !important; }
 
 .avatar-hero-unit:hover .orbital-ring-inner {
 	animation-duration: 6s;

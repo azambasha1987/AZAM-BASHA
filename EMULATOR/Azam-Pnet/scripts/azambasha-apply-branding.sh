@@ -42,7 +42,8 @@ echo "  [✔] Platform version set to 1.0.0 (v1.0.0)"
 # 2. Update Login Page Text & Default Credentials Notice (admin / azam)
 if [ -f /opt/unetlab/html/login/index.html ]; then
     sed -i -E 's/admin<\/strong> \/ <strong>[a-zA-Z0-9]+/admin<\/strong> \/ <strong>azam/g' /opt/unetlab/html/login/index.html 2>/dev/null || true
-    echo "  [✔] Login page default credentials set to admin / azam"
+    sed -i '/Offline appliance access/d' /opt/unetlab/html/login/index.html 2>/dev/null || true
+    echo "  [✔] Login page default credentials set to admin / azam (footnote removed)"
 fi
 
 # 3. Update Database Admin Password to 'azam' and Version to '1.0.0'

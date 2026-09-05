@@ -26,16 +26,12 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "/opt/azambasha")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "/opt/azambasha/EMULATOR/Azam-Pnet")"
 LOG_FILE="/var/log/azambasha-install.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-# Maintain root installation symlinks for /opt/azambasha and /opt/pnetlab
-mkdir -p /opt/azambasha /opt/pnetlab 2>/dev/null || true
-if [ -d "$SCRIPT_DIR" ] && [ "$SCRIPT_DIR" != "/opt/azambasha" ] && [ "$SCRIPT_DIR" != "/dev/fd" ]; then
-    ln -sfn "$SCRIPT_DIR" /opt/azambasha 2>/dev/null || true
-fi
-ln -sfn /opt/azambasha /opt/pnetlab 2>/dev/null || true
+mkdir -p /opt/pnetlab 2>/dev/null || true
+ln -sfn "$SCRIPT_DIR" /opt/pnetlab 2>/dev/null || true
 
 # Parse Command-Line Options for Unattended or Static IP Installation
 STATIC_IP=""

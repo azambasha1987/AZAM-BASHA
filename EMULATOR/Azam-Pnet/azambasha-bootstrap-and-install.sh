@@ -15,12 +15,9 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "/opt/azambasha")"
-mkdir -p /opt/azambasha /opt/pnetlab
-if [ "$SCRIPT_DIR" != "/opt/azambasha" ] && [ -d "$SCRIPT_DIR" ]; then
-    ln -sfn "$SCRIPT_DIR" /opt/azambasha 2>/dev/null || true
-fi
-ln -sfn /opt/azambasha /opt/pnetlab 2>/dev/null || true
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "/opt/azambasha/EMULATOR/Azam-Pnet")"
+mkdir -p /opt/pnetlab 2>/dev/null || true
+ln -sfn "$SCRIPT_DIR" /opt/pnetlab 2>/dev/null || true
 
 echo "============================================================"
 echo "    Azam-Pnet Master Bootstrap & Installer (Ubuntu 26.04+)   "

@@ -72,15 +72,28 @@ net.ipv4.ip_forward = 1
 EOF
 sysctl --system 2>/dev/null || true
 
-# 5. Sanitize /etc/network/interfaces (Loopback only)
-cat > /etc/network/interfaces << 'EOF'
-# Loopback interface only - physical and cloud bridges are managed by Netplan / systemd-networkd
+# 5. Sanitize /etc/network/interfaces (Loopback and pnet0 stanza for Web UI broker compatibility)
+cat > /etc/network/interfaces << EOF
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
 source /etc/network/interfaces.d/*
+
+# The loopback network interface
 auto lo
 iface lo inet loopback
+
+# The primary network interface
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet dhcp
+    pre-up ip link set dev ${REAL_IFACE} up
+    bridge_ports ${REAL_IFACE}
+    bridge_stp off
+# END pnetlab-netcfg pnet0
 EOF
 chmod 644 /etc/network/interfaces
-echo "      -> Sanitized /etc/network/interfaces"
+echo "      -> Sanitized /etc/network/interfaces with pnet0 stanza"
 
 # 6. Create /etc/netplan/01-pnetlab-netcfg.yaml for Native Ubuntu 26 Support
 if [ ! -f /etc/netplan/01-pnetlab-netcfg.yaml ]; then

@@ -53,7 +53,7 @@ except Exception:
     pass
 
 ifaces_file = "/etc/network/interfaces"
-content = """# This file describes the network interfaces available on your system
+content = f"""# This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
 source /etc/network/interfaces.d/*
@@ -61,12 +61,21 @@ source /etc/network/interfaces.d/*
 # The loopback network interface
 auto lo
 iface lo inet loopback
+
+# The primary network interface
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet dhcp
+    pre-up ip link set dev {real_iface} up
+    bridge_ports {real_iface}
+    bridge_stp off
+# END pnetlab-netcfg pnet0
 """
 try:
     with open(ifaces_file, "w") as f:
         f.write(content)
     os.chmod(ifaces_file, 0o644)
-    print("      -> Created sanitized /etc/network/interfaces")
+    print("      -> Created sanitized /etc/network/interfaces with pnet0 stanza")
 except Exception:
     pass
 
@@ -109,7 +118,19 @@ def _ensure_interfaces_file():
     os.makedirs("/etc/network", exist_ok=True)
     os.makedirs(NETCFG_BACKUP_DIR, mode=0o700, exist_ok=True)
     os.makedirs(os.path.dirname(NETCFG_RESOLVED), mode=0o755, exist_ok=True)
+    needs_init = False
     if not os.path.exists(NETCFG_INTERFACES) or os.path.getsize(NETCFG_INTERFACES) == 0:
+        needs_init = True
+    else:
+        try:
+            with open(NETCFG_INTERFACES, "r") as f:
+                c = f.read()
+                if "pnet0" not in c:
+                    needs_init = True
+        except Exception:
+            needs_init = True
+            
+    if needs_init:
         default_content = (
             "# This file describes the network interfaces available on your system\\n"
             "# and how to activate them. For more information, see interfaces(5).\\n\\n"

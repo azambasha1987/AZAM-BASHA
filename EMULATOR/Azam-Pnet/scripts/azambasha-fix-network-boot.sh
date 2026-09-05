@@ -191,16 +191,32 @@ network:
 EOF
 chmod 600 /etc/netplan/01-pnetlab-netcfg.yaml
 
-# Keep /etc/network/interfaces strictly for loopback to prevent ifupdown 5-minute boot deadlocks
+# Synchronize /etc/network/interfaces with pnet0 stanza for Web UI broker compatibility
 mkdir -p /etc/network/interfaces.d
-cat > /etc/network/interfaces << 'EOF'
-# Loopback interface only - physical and cloud bridges are managed by Netplan / systemd-networkd
+cat > /etc/network/interfaces << EOF
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
 source /etc/network/interfaces.d/*
+
+# The loopback network interface
 auto lo
 iface lo inet loopback
+
+# The primary network interface
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet static
+    address ${IP_ADDR}
+    netmask 255.255.255.0
+    gateway ${GATEWAY}
+    pre-up ip link set dev ${REAL_IFACE} up
+    bridge_ports ${REAL_IFACE}
+    bridge_stp off
+# END pnetlab-netcfg pnet0
 EOF
 chmod 644 /etc/network/interfaces
-echo "[4/5] Synchronized Netplan and sanitized /etc/network/interfaces."
+echo "[4/5] Synchronized Netplan and /etc/network/interfaces with pnet0 stanza."
 
 # 5. Install Systemd Service for Boot Persistence
 cat > /etc/systemd/system/pnetlab-boot-network.service << 'EOF'

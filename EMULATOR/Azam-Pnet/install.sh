@@ -182,14 +182,51 @@ NETEOF
     fi
     chmod 600 /etc/netplan/01-pnetlab-netcfg.yaml
 
-    # Sanitize /etc/network/interfaces to loopback only (avoids ifupdown 5-minute boot deadlocks)
+    # Synchronize /etc/network/interfaces with pnet0 stanza for Web UI Network management & broker compatibility
     mkdir -p /etc/network /etc/network/interfaces.d
-    cat << INTEOF > /etc/network/interfaces
-# Loopback interface only - physical and cloud bridges are managed by Netplan / systemd-networkd
+    if [ -n "$STATIC_IP" ]; then
+        IP_ONLY="${STATIC_IP%%/*}"
+        cat << INTEOF > /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
 source /etc/network/interfaces.d/*
+
+# The loopback network interface
 auto lo
 iface lo inet loopback
+
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet static
+    address $IP_ONLY
+    netmask 255.255.255.0
+    gateway ${STATIC_GW:-192.168.1.1}
+    pre-up ip link set dev $REAL_IFACE up
+    bridge_ports $REAL_IFACE
+    bridge_stp off
+# END pnetlab-netcfg pnet0
 INTEOF
+    else
+        cat << INTEOF > /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# BEGIN pnetlab-netcfg pnet0
+allow-hotplug pnet0
+iface pnet0 inet dhcp
+    pre-up ip link set dev $REAL_IFACE up
+    bridge_ports $REAL_IFACE
+    bridge_stp off
+# END pnetlab-netcfg pnet0
+INTEOF
+    fi
     chmod 644 /etc/network/interfaces
 fi
 
@@ -333,6 +370,12 @@ if [ -n "$DEB_POOL_DIR" ] && [ -d "$DEB_POOL_DIR" ] && compgen -G "${DEB_POOL_DI
             dpkg -i --force-depends --force-confdef --force-confold "$deb_path" 2>/dev/null || true
         fi
     done
+
+    # Apply authoritative network broker & interfaces synchronization
+    if [ -f "${SCRIPT_DIR}/scripts/azambasha-fix-network.py" ]; then
+        echo "      -> Applying network broker & interfaces synchronization..."
+        python3 "${SCRIPT_DIR}/scripts/azambasha-fix-network.py" || true
+    fi
 else
     echo "      [ERROR] Local debian directory ($DEB_POOL_DIR) not found or empty."
     echo "      Please ensure the debian/pool directory is included in your standalone folder."

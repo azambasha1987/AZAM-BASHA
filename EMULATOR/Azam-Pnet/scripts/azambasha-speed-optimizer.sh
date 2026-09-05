@@ -83,13 +83,14 @@ echo "============================================================"
 echo "    Azam Basha High-Performance & Scalability Suite         "
 echo "============================================================"
 
-# 1. Enable and Tune Kernel Samepage Merging (KSM)
-echo "[1/4] Configuring Proactive Adaptive KSM (Memory Deduplication)..."
+# 1. Enable and Tune Proactive Kernel Samepage Merging (KSM) & ZSWAP
+echo "[1/5] Configuring Proactive Adaptive KSM & In-Memory ZSWAP Compression..."
 if [ -d /sys/kernel/mm/ksm ]; then
     echo 1 > /sys/kernel/mm/ksm/run 2>/dev/null || true
-    echo 20 > /sys/kernel/mm/ksm/sleep_millisecs 2>/dev/null || true
-    echo 1000 > /sys/kernel/mm/ksm/pages_to_scan 2>/dev/null || true
+    echo 10 > /sys/kernel/mm/ksm/sleep_millisecs 2>/dev/null || true
+    echo 2500 > /sys/kernel/mm/ksm/pages_to_scan 2>/dev/null || true
     echo 1 > /sys/kernel/mm/ksm/use_zero_pages 2>/dev/null || true
+    echo 1 > /sys/kernel/mm/ksm/merge_across_nodes 2>/dev/null || true
 
     # Persist KSM via systemd service
     cat << 'EOF' > /etc/systemd/system/ksm-azambasha.service
@@ -99,7 +100,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c 'echo 1 > /sys/kernel/mm/ksm/run && echo 20 > /sys/kernel/mm/ksm/sleep_millisecs && echo 1000 > /sys/kernel/mm/ksm/pages_to_scan && echo 1 > /sys/kernel/mm/ksm/use_zero_pages || true'
+ExecStart=/bin/sh -c 'echo 1 > /sys/kernel/mm/ksm/run && echo 10 > /sys/kernel/mm/ksm/sleep_millisecs && echo 2500 > /sys/kernel/mm/ksm/pages_to_scan && echo 1 > /sys/kernel/mm/ksm/use_zero_pages && echo 1 > /sys/kernel/mm/ksm/merge_across_nodes || true'
 RemainAfterExit=yes
 
 [Install]
@@ -108,10 +109,44 @@ EOF
     systemctl daemon-reload
     systemctl enable ksm-azambasha.service || true
     systemctl start ksm-azambasha.service || true
-    echo "  [✔] KSM enabled: Automatically merges duplicate memory across Cisco IOL/QEMU/Docker"
+    echo "  [✔] KSM active: High-frequency memory deduplication across identical Cisco/Linux nodes"
 else
     echo "  -> Note: Kernel KSM interface not available in this kernel/container."
 fi
+
+# Configure ZSWAP in-memory compression (LZ4)
+if [ -d /sys/module/zswap/parameters ]; then
+    echo 1 > /sys/module/zswap/parameters/enabled 2>/dev/null || true
+    echo lz4 > /sys/module/zswap/parameters/compressor 2>/dev/null || true
+    echo 25 > /sys/module/zswap/parameters/max_pool_percent 2>/dev/null || true
+    echo "  [✔] ZSWAP active: In-RAM LZ4 fast page compression for idle VMs"
+fi
+
+# Set CPU Scaling Governor to Performance across all cores
+for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+    echo performance > "$g" 2>/dev/null || true
+done
+echo "  [✔] CPU Scaling Governor: Set to Performance across all host cores"
+
+# Streamline QEMU peripheral dispatch (strip audio/webdav on headless telnet nodes)
+python3 - << 'PYEOF'
+dev_file = "/opt/unetlab/html/devices/qemu/device_qemu.php"
+if os.path.exists(dev_file):
+    try:
+        with open(dev_file, 'r', encoding='utf-8') as f: code = f.read()
+        target_spice = "$flags .= ' -device virtio-serial-pci,id=virtio-serial0 -device virtio-balloon -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel1,id=channel1,name=org.spice-space.webdav.0 -chardev spiceport,name=org.spice-space.webdav.0,id=charchannel1 -chardev spicevmc,id=vdagent,debug=0,name=vdagent  -device virtserialport,chardev=vdagent,name=com.redhat.spice.0  -device ich9-usb-ehci1,id=usb -device ich9-usb-uhci1,masterbus=usb.0,firstport=0,multifunction=on -device ich9-usb-uhci2,masterbus=usb.0,firstport=2 -device ich9-usb-uhci3,masterbus=usb.0,firstport=4 -chardev spicevmc,name=usbredir,id=usbredirchardev1 -device usb-redir,chardev=usbredirchardev1,id=usbredirdev1 -chardev spicevmc,name=usbredir,id=usbredirchardev2 -device usb-redir,chardev=usbredirchardev2,id=usbredirdev2 -chardev spicevmc,name=usbredir,id=usbredirchardev3 -device usb-redir,chardev=usbredirchardev3,id=usbredirdev3 -device ich9-intel-hda -device hda-micro ';"
+        repl_spice = """if ($this->console !== 'telnet') {
+            $flags .= ' -device virtio-serial-pci,id=virtio-serial0 -device virtio-balloon -device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel1,id=channel1,name=org.spice-space.webdav.0 -chardev spiceport,name=org.spice-space.webdav.0,id=charchannel1 -chardev spicevmc,id=vdagent,debug=0,name=vdagent  -device virtserialport,chardev=vdagent,name=com.redhat.spice.0  -device ich9-usb-ehci1,id=usb -device ich9-usb-uhci1,masterbus=usb.0,firstport=0,multifunction=on -device ich9-usb-uhci2,masterbus=usb.0,firstport=2 -device ich9-usb-uhci3,masterbus=usb.0,firstport=4 -chardev spicevmc,name=usbredir,id=usbredirchardev1 -device usb-redir,chardev=usbredirchardev1,id=usbredirdev1 -chardev spicevmc,name=usbredir,id=usbredirchardev2 -device usb-redir,chardev=usbredirchardev2,id=usbredirdev2 -chardev spicevmc,name=usbredir,id=usbredirchardev3 -device usb-redir,chardev=usbredirchardev3,id=usbredirdev3 -device ich9-intel-hda -device hda-micro ';
+        } else {
+            $flags .= ' -device virtio-balloon ';
+        }"""
+        if target_spice in code:
+            code = code.replace(target_spice, repl_spice)
+            with open(dev_file, 'w', encoding='utf-8') as f: f.write(code)
+            print("  [✔] device_qemu.php streamlined: Headless nodes use lightweight virtio-balloon")
+    except Exception as e:
+        print(f"  [!] device_qemu note: {e}")
+PYEOF
 
 # 2. Configure PHP OPcache & Realpath Cache (256MB Bytecode Acceleration)
 echo "[2/4] Accelerating PHP Backend (OPcache 256MB + Realpath Cache)..."
